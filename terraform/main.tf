@@ -149,6 +149,9 @@ resource "aws_instance" "app" {
   vpc_security_group_ids      = [aws_security_group.app.id]
   key_name                    = var.key_name
   associate_public_ip_address = true
+  user_data = templatefile("${path.module}/user_data.sh.tftpl", {
+    app_port = var.app_port
+  })
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-app-server"
