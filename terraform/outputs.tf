@@ -27,3 +27,23 @@ output "app_instance_public_ip" {
   description = "Public IP address of the application server."
   value       = aws_instance.app.public_ip
 }
+
+output "db_security_group_id" {
+  description = "Security group ID for the database."
+  value       = aws_security_group.db.id
+}
+
+output "db_subnet_group_name" {
+  description = "DB subnet group name."
+  value       = aws_db_subnet_group.main.name
+}
+
+output "db_instance_endpoint" {
+  description = "RDS endpoint address."
+  value       = aws_db_instance.main.address
+}
+
+output "db_instance_id" {
+  description = "RDS instance identifier."
+  value       = aws_db_instance.main.id
+}

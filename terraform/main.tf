@@ -157,3 +157,59 @@ resource "aws_instance" "app" {
     Name = "${local.name_prefix}-app-server"
   })
 }
+
+resource "aws_security_group" "db" {
+  name        = "${local.name_prefix}-db-sg"
+  description = "Security group for the database"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "MySQL from application server"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-db-sg"
+  })
+}
+
+resource "aws_db_subnet_group" "main" {
+  name       = "${local.name_prefix}-db-subnet-group"
+  subnet_ids = [for subnet in aws_subnet.private : subnet.id]
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-db-subnet-group"
+  })
+}
+
+resource "aws_db_instance" "main" {
+  identifier             = "${local.name_prefix}-db"
+  engine                 = "mysql"
+  engine_version         = var.db_engine_version
+  instance_class         = var.db_instance_class
+  allocated_storage      = var.db_allocated_storage
+  db_name                = var.db_name
+  username               = var.db_username
+  password               = var.db_password
+  port                   = 3306
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  vpc_security_group_ids = [aws_security_group.db.id]
+  publicly_accessible    = false
+  skip_final_snapshot    = true
+  deletion_protection    = false
+  multi_az               = false
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-db"
+  })
+}
