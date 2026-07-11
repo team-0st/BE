@@ -40,4 +40,5 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+terraform/terraform.tfvars
 terraform/*.secret.tfvars

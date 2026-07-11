@@ -1,11 +1,10 @@
 locals {
-  name_prefix = "${var.project_name}-${var.environment}"
+  name_prefix = var.project_name
   primary_public_subnet_key = "0"
 
   common_tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    ManagedBy   = "terraform"
+    Project   = var.project_name
+    ManagedBy = "terraform"
   }
 }
 

@@ -3,11 +3,6 @@ variable "aws_region" {
   type        = string
 }
 
-variable "environment" {
-  description = "Deployment environment name, for example dev or prod."
-  type        = string
-}
-
 variable "project_name" {
   description = "Project name used in resource tags and naming."
   type        = string
@@ -66,6 +61,7 @@ variable "db_name" {
 variable "db_username" {
   description = "Master username for RDS."
   type        = string
+  sensitive   = true
 }
 
 variable "db_password" {
