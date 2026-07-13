@@ -46,6 +46,11 @@ variable "ami_id" {
 variable "app_port" {
   description = "Application port exposed by the backend server."
   type        = number
+
+  validation {
+    condition     = floor(var.app_port) == var.app_port && var.app_port >= 1 && var.app_port <= 65535
+    error_message = "app_port must be an integer between 1 and 65535."
+  }
 }
 
 variable "allowed_ssh_cidr" {

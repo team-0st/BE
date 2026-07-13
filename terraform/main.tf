@@ -184,21 +184,24 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_instance" "main" {
-  identifier             = "${local.name_prefix}-db"
-  engine                 = "mysql"
-  engine_version         = var.db_engine_version
-  instance_class         = var.db_instance_class
-  allocated_storage      = var.db_allocated_storage
-  db_name                = var.db_name
-  username               = var.db_username
-  password               = var.db_password
-  port                   = 3306
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.db.id]
-  publicly_accessible    = false
-  skip_final_snapshot    = true
-  deletion_protection    = false
-  multi_az               = false
+  identifier                = "${local.name_prefix}-db"
+  engine                    = "mysql"
+  engine_version            = var.db_engine_version
+  instance_class            = var.db_instance_class
+  allocated_storage         = var.db_allocated_storage
+  db_name                   = var.db_name
+  username                  = var.db_username
+  password                  = var.db_password
+  port                      = 3306
+  db_subnet_group_name      = aws_db_subnet_group.main.name
+  vpc_security_group_ids    = [aws_security_group.db.id]
+  publicly_accessible       = false
+  storage_encrypted         = true
+  backup_retention_period   = 7
+  skip_final_snapshot       = false
+  final_snapshot_identifier = "${local.name_prefix}-db-final"
+  deletion_protection       = false
+  multi_az                  = false
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-db"
