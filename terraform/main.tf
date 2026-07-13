@@ -1,5 +1,5 @@
 locals {
-  name_prefix = var.project_name
+  name_prefix               = var.project_name
   primary_public_subnet_key = "0"
 
   common_tags = {
@@ -117,14 +117,6 @@ resource "aws_security_group" "app" {
     description = "HTTP"
     from_port   = 80
     to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Application"
-    from_port   = var.app_port
-    to_port     = var.app_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
