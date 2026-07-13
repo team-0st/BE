@@ -183,6 +183,10 @@ resource "aws_db_subnet_group" "main" {
   })
 }
 
+resource "random_id" "db_final_snapshot" {
+  byte_length = 4
+}
+
 resource "aws_db_instance" "main" {
   identifier                = "${local.name_prefix}-db"
   engine                    = "mysql"
@@ -199,7 +203,7 @@ resource "aws_db_instance" "main" {
   storage_encrypted         = true
   backup_retention_period   = 7
   skip_final_snapshot       = false
-  final_snapshot_identifier = "${local.name_prefix}-db-final"
+  final_snapshot_identifier = "${local.name_prefix}-db-final-${random_id.db_final_snapshot.hex}"
   deletion_protection       = false
   multi_az                  = false
 
