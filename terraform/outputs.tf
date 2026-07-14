@@ -47,3 +47,13 @@ output "db_instance_id" {
   description = "RDS instance identifier."
   value       = aws_db_instance.main.id
 }
+
+output "ecr_repository_name" {
+  description = "ECR repository name."
+  value       = aws_ecr_repository.app.name
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL."
+  value       = aws_ecr_repository.app.repository_url
+}

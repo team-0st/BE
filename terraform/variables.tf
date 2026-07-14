@@ -89,3 +89,8 @@ variable "db_engine_version" {
   description = "MySQL engine version for RDS."
   type        = string
 }
+
+variable "ecr_repository_name" {
+  description = "ECR repository name used for application images."
+  type        = string
+}

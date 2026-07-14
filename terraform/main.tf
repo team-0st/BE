@@ -187,6 +187,40 @@ resource "random_id" "db_final_snapshot" {
   byte_length = 4
 }
 
+resource "aws_ecr_repository" "app" {
+  name                 = var.ecr_repository_name
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-ecr"
+  })
+}
+
+resource "aws_ecr_lifecycle_policy" "app" {
+  repository = aws_ecr_repository.app.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Keep the latest 20 images"
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 20
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+
 resource "aws_db_instance" "main" {
   identifier                = "${local.name_prefix}-db"
   engine                    = "mysql"

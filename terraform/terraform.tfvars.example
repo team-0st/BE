@@ -24,3 +24,4 @@ db_password          = "replace-with-your-db-password"
 db_instance_class    = "db.t3.micro"
 db_allocated_storage = 20
 db_engine_version    = "8.0"
+ecr_repository_name  = "zerost-api"
