@@ -59,10 +59,15 @@ jobs:
           if aws ecr describe-images \
             --repository-name "${ECR_REPOSITORY}" \
             --image-ids imageTag="${IMAGE_TAG}" \
-            >/dev/null 2>&1; then
+            >/tmp/ecr-image-check.log 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            if grep -q "ImageNotFoundException" /tmp/ecr-image-check.log; then
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+            else
+              cat /tmp/ecr-image-check.log
+              exit 1
+            fi
           fi
 
       - name: Build Docker image
