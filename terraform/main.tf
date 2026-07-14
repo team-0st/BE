@@ -1,10 +1,39 @@
 locals {
   name_prefix               = var.project_name
   primary_public_subnet_key = "0"
+  github_oidc_subjects = [
+    for branch in var.github_oidc_branches :
+    "repo:${var.github_repository}:ref:refs/heads/${branch}"
+  ]
 
   common_tags = {
     Project   = var.project_name
     ManagedBy = "terraform"
+  }
+}
+
+data "aws_iam_policy_document" "github_actions_oidc_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github_actions.arn]
+    }
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = local.github_oidc_subjects
+    }
   }
 }
 
@@ -149,6 +178,15 @@ resource "aws_instance" "app" {
   })
 }
 
+resource "aws_eip" "app" {
+  domain   = "vpc"
+  instance = aws_instance.app.id
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-app-eip"
+  })
+}
+
 resource "aws_security_group" "db" {
   name        = "${local.name_prefix}-db-sg"
   description = "Security group for the database"
@@ -185,6 +223,98 @@ resource "aws_db_subnet_group" "main" {
 
 resource "random_id" "db_final_snapshot" {
   byte_length = 4
+}
+
+resource "aws_ecr_repository" "app" {
+  name                 = var.ecr_repository_name
+  image_tag_mutability = "IMMUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-ecr"
+  })
+}
+
+resource "aws_ecr_lifecycle_policy" "app" {
+  repository = aws_ecr_repository.app.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Keep the latest 20 images"
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 20
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = [
+    "ffffffffffffffffffffffffffffffffffffffff"
+  ]
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-github-oidc"
+  })
+}
+
+resource "aws_iam_role" "github_actions_deploy" {
+  name               = "${local.name_prefix}-github-actions-deploy-role"
+  assume_role_policy = data.aws_iam_policy_document.github_actions_oidc_assume_role.json
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-github-actions-deploy-role"
+  })
+}
+
+data "aws_iam_policy_document" "github_actions_ecr" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeImages",
+      "ecr:DescribeRepositories",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:InitiateLayerUpload",
+      "ecr:ListImages",
+      "ecr:PutImage",
+      "ecr:UploadLayerPart",
+    ]
+    resources = [aws_ecr_repository.app.arn]
+  }
+}
+
+resource "aws_iam_policy" "github_actions_ecr" {
+  name   = "${local.name_prefix}-github-actions-ecr-policy"
+  policy = data.aws_iam_policy_document.github_actions_ecr.json
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_ecr" {
+  role       = aws_iam_role.github_actions_deploy.name
+  policy_arn = aws_iam_policy.github_actions_ecr.arn
 }
 
 resource "aws_db_instance" "main" {

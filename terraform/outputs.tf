@@ -25,7 +25,12 @@ output "app_instance_id" {
 
 output "app_instance_public_ip" {
   description = "Public IP address of the application server."
-  value       = aws_instance.app.public_ip
+  value       = aws_eip.app.public_ip
+}
+
+output "app_elastic_ip_allocation_id" {
+  description = "Allocation ID of the Elastic IP attached to the application server."
+  value       = aws_eip.app.id
 }
 
 output "db_security_group_id" {
@@ -46,4 +51,19 @@ output "db_instance_endpoint" {
 output "db_instance_id" {
   description = "RDS instance identifier."
   value       = aws_db_instance.main.id
+}
+
+output "ecr_repository_name" {
+  description = "ECR repository name."
+  value       = aws_ecr_repository.app.name
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL."
+  value       = aws_ecr_repository.app.repository_url
+}
+
+output "github_actions_role_arn" {
+  description = "IAM role ARN assumed by GitHub Actions via OIDC."
+  value       = aws_iam_role.github_actions_deploy.arn
 }

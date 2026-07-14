@@ -89,3 +89,18 @@ variable "db_engine_version" {
   description = "MySQL engine version for RDS."
   type        = string
 }
+
+variable "ecr_repository_name" {
+  description = "ECR repository name used for application images."
+  type        = string
+}
+
+variable "github_repository" {
+  description = "GitHub repository in owner/name format allowed to assume the deploy role."
+  type        = string
+}
+
+variable "github_oidc_branches" {
+  description = "Git branches allowed to assume the GitHub Actions deploy role."
+  type        = list(string)
+}
