@@ -2,12 +2,16 @@
 set -euxo pipefail
 
 dnf update -y
-dnf install -y java-21-amazon-corretto nginx
+dnf install -y java-21-amazon-corretto nginx docker
 
+systemctl enable docker
 systemctl enable nginx
 
-mkdir -p /opt/app
-chown ec2-user:ec2-user /opt/app
+systemctl start docker
+usermod -aG docker ec2-user
+
+mkdir -p /opt/zerost/nginx
+chown -R ec2-user:ec2-user /opt/zerost
 
 cat <<'EOF' > /etc/nginx/conf.d/default.conf
 server {
