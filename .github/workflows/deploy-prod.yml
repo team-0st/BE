@@ -87,7 +87,6 @@ jobs:
           scp -i ~/.ssh/zerost_key.pem compose.yaml "${EC2_USER}@${EC2_HOST}:${APP_DIR}/compose.yaml"
           scp -i ~/.ssh/zerost_key.pem scripts/deploy.sh "${EC2_USER}@${EC2_HOST}:${APP_DIR}/deploy.sh"
           scp -i ~/.ssh/zerost_key.pem nginx/prod.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/prod.conf"
-          scp -i ~/.ssh/zerost_key.pem nginx/dev.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/dev.conf"
 
       - name: Upload prod environment file
         env:

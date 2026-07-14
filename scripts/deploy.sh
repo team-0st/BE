@@ -38,8 +38,12 @@ PROD_IMAGE_TAG=${PROD_IMAGE_TAG}
 DEV_IMAGE_TAG=${DEV_IMAGE_TAG}
 EOF
 
-cp "${APP_DIR}/nginx/prod.conf" /etc/nginx/conf.d/zerost-prod.conf
-cp "${APP_DIR}/nginx/dev.conf" /etc/nginx/conf.d/zerost-dev.conf
+if [[ "${TARGET_ENV}" == "prod" ]]; then
+  cp "${APP_DIR}/nginx/prod.conf" /etc/nginx/conf.d/zerost-prod.conf
+elif [[ "${TARGET_ENV}" == "dev" ]]; then
+  cp "${APP_DIR}/nginx/dev.conf" /etc/nginx/conf.d/zerost-dev.conf
+fi
+
 rm -f /etc/nginx/conf.d/default.conf
 
 nginx -t
