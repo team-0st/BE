@@ -38,8 +38,8 @@ jobs:
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
 
-      - name: Test and build
-        run: ./gradlew test bootJar --no-daemon
+      - name: Run tests
+        run: ./gradlew test --no-daemon
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -51,7 +51,27 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Check existing image
+        id: image-check
+        env:
+          IMAGE_TAG: dev-${{ github.sha }}
+        run: |
+          if aws ecr describe-images \
+            --repository-name "${ECR_REPOSITORY}" \
+            --image-ids imageTag="${IMAGE_TAG}" \
+            >/tmp/ecr-image-check.log 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            if grep -q "ImageNotFoundException" /tmp/ecr-image-check.log; then
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+            else
+              cat /tmp/ecr-image-check.log
+              exit 1
+            fi
+          fi
+
       - name: Build Docker image
+        if: steps.image-check.outputs.exists == 'false'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: dev-${{ github.sha }}
@@ -61,6 +81,7 @@ jobs:
             .
 
       - name: Push Docker image
+        if: steps.image-check.outputs.exists == 'false'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: dev-${{ github.sha }}
