@@ -168,13 +168,22 @@ resource "aws_instance" "app" {
   subnet_id                   = aws_subnet.public[local.primary_public_subnet_key].id
   vpc_security_group_ids      = [aws_security_group.app.id]
   key_name                    = var.key_name
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
     app_port = var.app_port
   })
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-app-server"
+  })
+}
+
+resource "aws_eip" "app" {
+  domain   = "vpc"
+  instance = aws_instance.app.id
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-app-eip"
   })
 }
 

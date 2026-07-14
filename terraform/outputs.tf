@@ -25,7 +25,12 @@ output "app_instance_id" {
 
 output "app_instance_public_ip" {
   description = "Public IP address of the application server."
-  value       = aws_instance.app.public_ip
+  value       = aws_eip.app.public_ip
+}
+
+output "app_elastic_ip_allocation_id" {
+  description = "Allocation ID of the Elastic IP attached to the application server."
+  value       = aws_eip.app.id
 }
 
 output "db_security_group_id" {
