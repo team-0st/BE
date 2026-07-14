@@ -51,3 +51,7 @@ systemctl reload nginx
 
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" pull "app-${TARGET_ENV}"
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" up -d --wait --wait-timeout 180 "app-${TARGET_ENV}"
+
+# Remove only safely reclaimable resources after a successful deploy.
+docker image prune -f
+docker container prune -f
