@@ -129,4 +129,4 @@ jobs:
           ECR_PASSWORD="$(aws ecr get-login-password --region "${AWS_REGION}")"
           ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "chmod +x ${APP_DIR}/deploy.sh"
           ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "docker login --username AWS --password-stdin ${ECR_REGISTRY}" <<< "${ECR_PASSWORD}"
-          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "${APP_DIR}/deploy.sh dev ${ECR_REGISTRY} ${ECR_REPOSITORY} ${IMAGE_TAG}"
+          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "sudo ${APP_DIR}/deploy.sh dev ${ECR_REGISTRY} ${ECR_REPOSITORY} ${IMAGE_TAG}"
