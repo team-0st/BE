@@ -1,0 +1,9 @@
+.git
+.github
+.gradle
+.idea
+build
+terraform
+*.log
+.env
+.env.*
