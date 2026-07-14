@@ -1,10 +1,39 @@
 locals {
   name_prefix               = var.project_name
   primary_public_subnet_key = "0"
+  github_oidc_subjects = [
+    for branch in var.github_oidc_branches :
+    "repo:${var.github_repository}:ref:refs/heads/${branch}"
+  ]
 
   common_tags = {
     Project   = var.project_name
     ManagedBy = "terraform"
+  }
+}
+
+data "aws_iam_policy_document" "github_actions_oidc_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github_actions.arn]
+    }
+
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = local.github_oidc_subjects
+    }
   }
 }
 
@@ -219,6 +248,34 @@ resource "aws_ecr_lifecycle_policy" "app" {
       }
     ]
   })
+}
+
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = [
+    "ffffffffffffffffffffffffffffffffffffffff"
+  ]
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-github-oidc"
+  })
+}
+
+resource "aws_iam_role" "github_actions_deploy" {
+  name               = "${local.name_prefix}-github-actions-deploy-role"
+  assume_role_policy = data.aws_iam_policy_document.github_actions_oidc_assume_role.json
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-github-actions-deploy-role"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_ecr_power_user" {
+  role       = aws_iam_role.github_actions_deploy.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 }
 
 resource "aws_db_instance" "main" {

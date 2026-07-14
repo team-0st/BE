@@ -22,6 +22,13 @@
 
 - `terraform.tfvars`
 
+추가로 설정하는 값:
+
+- `github_repository`: OIDC AssumeRole을 허용할 GitHub 레포지토리
+- `github_oidc_branches`: 배포를 허용할 브랜치 목록
+
+적용 후 Terraform output의 `github_actions_role_arn` 값을 GitHub Secret `AWS_ROLE_ARN`에 등록합니다.
+
 ## 기본 실행 명령어
 
 ```bash
