@@ -39,15 +39,15 @@ DEV_IMAGE_TAG=${DEV_IMAGE_TAG}
 EOF
 
 if [[ "${TARGET_ENV}" == "prod" ]]; then
-  cp "${APP_DIR}/nginx/prod.conf" /etc/nginx/conf.d/zerost-prod.conf
+  sudo cp "${APP_DIR}/nginx/prod.conf" /etc/nginx/conf.d/zerost-prod.conf
 elif [[ "${TARGET_ENV}" == "dev" ]]; then
-  cp "${APP_DIR}/nginx/dev.conf" /etc/nginx/conf.d/zerost-dev.conf
+  sudo cp "${APP_DIR}/nginx/dev.conf" /etc/nginx/conf.d/zerost-dev.conf
 fi
 
-rm -f /etc/nginx/conf.d/default.conf
+sudo rm -f /etc/nginx/conf.d/default.conf
 
-nginx -t
-systemctl reload nginx
+sudo nginx -t
+sudo systemctl reload nginx
 
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" pull "app-${TARGET_ENV}"
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" up -d --wait --wait-timeout 180 "app-${TARGET_ENV}"
