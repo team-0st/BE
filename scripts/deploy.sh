@@ -15,8 +15,8 @@ if [[ ! -f "${COMPOSE_ENV_FILE}" ]]; then
   cat <<EOF > "${COMPOSE_ENV_FILE}"
 ECR_REGISTRY=${ECR_REGISTRY}
 ECR_REPOSITORY=${ECR_REPOSITORY}
-PROD_IMAGE_TAG=prod-latest
-DEV_IMAGE_TAG=dev-latest
+PROD_IMAGE_TAG=prod-initial
+DEV_IMAGE_TAG=dev-initial
 EOF
 fi
 
@@ -46,4 +46,4 @@ nginx -t
 systemctl reload nginx
 
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" pull "app-${TARGET_ENV}"
-docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" up -d "app-${TARGET_ENV}"
+docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" up -d --wait --wait-timeout 180 "app-${TARGET_ENV}"

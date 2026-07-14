@@ -218,7 +218,7 @@ resource "random_id" "db_final_snapshot" {
 
 resource "aws_ecr_repository" "app" {
   name                 = var.ecr_repository_name
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
@@ -273,9 +273,39 @@ resource "aws_iam_role" "github_actions_deploy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "github_actions_ecr_power_user" {
+data "aws_iam_policy_document" "github_actions_ecr" {
+  statement {
+    effect    = "Allow"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:CompleteLayerUpload",
+      "ecr:DescribeImages",
+      "ecr:DescribeRepositories",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:InitiateLayerUpload",
+      "ecr:ListImages",
+      "ecr:PutImage",
+      "ecr:UploadLayerPart",
+    ]
+    resources = [aws_ecr_repository.app.arn]
+  }
+}
+
+resource "aws_iam_policy" "github_actions_ecr" {
+  name   = "${local.name_prefix}-github-actions-ecr-policy"
+  policy = data.aws_iam_policy_document.github_actions_ecr.json
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_ecr" {
   role       = aws_iam_role.github_actions_deploy.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
+  policy_arn = aws_iam_policy.github_actions_ecr.arn
 }
 
 resource "aws_db_instance" "main" {

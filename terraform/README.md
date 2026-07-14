@@ -24,10 +24,25 @@
 
 추가로 설정하는 값:
 
+- `ecr_repository_name`: 배포 이미지를 저장할 ECR 리포지토리 이름
 - `github_repository`: OIDC AssumeRole을 허용할 GitHub 레포지토리
 - `github_oidc_branches`: 배포를 허용할 브랜치 목록
 
 적용 후 Terraform output의 `github_actions_role_arn` 값을 GitHub Secret `AWS_ROLE_ARN`에 등록합니다.
+
+GitHub Actions에 추가로 설정하는 값:
+
+- Variables
+  - `AWS_REGION`
+  - `ECR_REPOSITORY`
+- Secrets
+  - `AWS_ROLE_ARN`
+  - `EC2_HOST`
+  - `EC2_USER`
+  - `EC2_SSH_KEY`
+  - `EC2_KNOWN_HOSTS`
+  - `ENV_FILE_DEV`
+  - `ENV_FILE_PROD`
 
 ## 기본 실행 명령어
 
