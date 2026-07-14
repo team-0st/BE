@@ -9,6 +9,21 @@ IMAGE_TAG="${4:?image tag is required}"
 APP_DIR="/opt/zerost"
 COMPOSE_ENV_FILE="${APP_DIR}/.env.compose"
 
+cleanup_local_images() {
+  local current_prod_ref="${ECR_REGISTRY}/${ECR_REPOSITORY}:${PROD_IMAGE_TAG}"
+  local current_dev_ref="${ECR_REGISTRY}/${ECR_REPOSITORY}:${DEV_IMAGE_TAG}"
+
+  mapfile -t repo_image_refs < <(docker images "${ECR_REGISTRY}/${ECR_REPOSITORY}" --format '{{.Repository}}:{{.Tag}}' | sort -u)
+
+  for image_ref in "${repo_image_refs[@]}"; do
+    if [[ "${image_ref}" != "${current_prod_ref}" && "${image_ref}" != "${current_dev_ref}" ]]; then
+      docker image rm "${image_ref}" >/dev/null 2>&1 || echo "Warning: failed to remove old image ${image_ref}" >&2
+    fi
+  done
+
+  docker image prune -f >/dev/null 2>&1 || echo "Warning: failed to prune dangling images" >&2
+}
+
 mkdir -p "${APP_DIR}" "${APP_DIR}/nginx"
 
 if [[ ! -f "${COMPOSE_ENV_FILE}" ]]; then
@@ -52,6 +67,5 @@ sudo systemctl reload nginx
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" pull "app-${TARGET_ENV}"
 docker compose --env-file "${COMPOSE_ENV_FILE}" -f "${APP_DIR}/compose.yaml" up -d --wait --wait-timeout 180 "app-${TARGET_ENV}"
 
-# Remove only safely reclaimable resources after a successful deploy.
-docker image prune -f
-docker container prune -f
+# Clean up old local deployment images without changing the deployment result.
+cleanup_local_images
