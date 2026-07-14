@@ -1,9 +1,8 @@
-name: Deploy
+name: Deploy Prod
 
 on:
   push:
     branches:
-      - develop
       - main
 
 permissions:
@@ -16,7 +15,7 @@ env:
   APP_DIR: /opt/zerost
 
 jobs:
-  deploy:
+  deploy-prod:
     runs-on: ubuntu-latest
 
     steps:
@@ -48,36 +47,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Resolve deployment target
-        id: target
-        run: |
-          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
-            echo "environment=prod" >> "$GITHUB_OUTPUT"
-            echo "image_tag=prod-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-            echo "env_file_secret=ENV_FILE_PROD" >> "$GITHUB_OUTPUT"
-          else
-            echo "environment=dev" >> "$GITHUB_OUTPUT"
-            echo "image_tag=dev-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-            echo "env_file_secret=ENV_FILE_DEV" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Build Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.target.outputs.image_tag }}
+          IMAGE_TAG: prod-${{ github.sha }}
         run: |
           docker build \
             -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" \
-            -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.target.outputs.environment }}-latest" \
+            -t "${ECR_REGISTRY}/${ECR_REPOSITORY}:prod-latest" \
             .
 
       - name: Push Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.target.outputs.image_tag }}
+          IMAGE_TAG: prod-${{ github.sha }}
         run: |
           docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:${{ steps.target.outputs.environment }}-latest"
+          docker push "${ECR_REGISTRY}/${ECR_REPOSITORY}:prod-latest"
 
       - name: Prepare SSH key
         env:
@@ -98,33 +84,24 @@ jobs:
           scp -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no nginx/prod.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/prod.conf"
           scp -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no nginx/dev.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/dev.conf"
 
-      - name: Upload environment file
+      - name: Upload prod environment file
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          TARGET_ENV: ${{ steps.target.outputs.environment }}
           ENV_FILE_PROD: ${{ secrets.ENV_FILE_PROD }}
-          ENV_FILE_DEV: ${{ secrets.ENV_FILE_DEV }}
         run: |
-          if [[ "${TARGET_ENV}" == "prod" ]]; then
-            ENV_FILE_CONTENT="${ENV_FILE_PROD}"
-          else
-            ENV_FILE_CONTENT="${ENV_FILE_DEV}"
-          fi
-
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "cat > ${APP_DIR}/.env.${TARGET_ENV}" <<EOF
-          ${ENV_FILE_CONTENT}
+          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "cat > ${APP_DIR}/.env.prod" <<EOF
+          ${ENV_FILE_PROD}
           EOF
 
-      - name: Deploy to EC2
+      - name: Deploy prod to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-          TARGET_ENV: ${{ steps.target.outputs.environment }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.target.outputs.image_tag }}
+          IMAGE_TAG: prod-${{ github.sha }}
         run: |
           ECR_PASSWORD="$(aws ecr get-login-password --region "${AWS_REGION}")"
           ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "chmod +x ${APP_DIR}/deploy.sh"
           ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "docker login --username AWS --password-stdin ${ECR_REGISTRY}" <<< "${ECR_PASSWORD}"
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "${APP_DIR}/deploy.sh ${TARGET_ENV} ${ECR_REGISTRY} ${ECR_REPOSITORY} ${IMAGE_TAG}"
+          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "${APP_DIR}/deploy.sh prod ${ECR_REGISTRY} ${ECR_REPOSITORY} ${IMAGE_TAG}"
