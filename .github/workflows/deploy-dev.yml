@@ -14,6 +14,10 @@ env:
   ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
   APP_DIR: /opt/zerost
 
+concurrency:
+  group: zerost-ec2-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
@@ -68,21 +72,24 @@ jobs:
       - name: Prepare SSH key
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/zerost_key.pem
           chmod 600 ~/.ssh/zerost_key.pem
+          printf '%s\n' "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Sync deployment files
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "mkdir -p ${APP_DIR}/nginx"
-          scp -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no compose.yaml "${EC2_USER}@${EC2_HOST}:${APP_DIR}/compose.yaml"
-          scp -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no scripts/deploy.sh "${EC2_USER}@${EC2_HOST}:${APP_DIR}/deploy.sh"
-          scp -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no nginx/prod.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/prod.conf"
-          scp -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no nginx/dev.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/dev.conf"
+          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "mkdir -p ${APP_DIR}/nginx"
+          scp -i ~/.ssh/zerost_key.pem compose.yaml "${EC2_USER}@${EC2_HOST}:${APP_DIR}/compose.yaml"
+          scp -i ~/.ssh/zerost_key.pem scripts/deploy.sh "${EC2_USER}@${EC2_HOST}:${APP_DIR}/deploy.sh"
+          scp -i ~/.ssh/zerost_key.pem nginx/prod.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/prod.conf"
+          scp -i ~/.ssh/zerost_key.pem nginx/dev.conf "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/dev.conf"
 
       - name: Upload dev environment file
         env:
@@ -90,7 +97,7 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           ENV_FILE_DEV: ${{ secrets.ENV_FILE_DEV }}
         run: |
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "cat > ${APP_DIR}/.env.dev" <<EOF
+          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "umask 177 && cat > ${APP_DIR}/.env.dev" <<EOF
           ${ENV_FILE_DEV}
           EOF
 
@@ -102,6 +109,6 @@ jobs:
           IMAGE_TAG: dev-${{ github.sha }}
         run: |
           ECR_PASSWORD="$(aws ecr get-login-password --region "${AWS_REGION}")"
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "chmod +x ${APP_DIR}/deploy.sh"
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "docker login --username AWS --password-stdin ${ECR_REGISTRY}" <<< "${ECR_PASSWORD}"
-          ssh -i ~/.ssh/zerost_key.pem -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "${APP_DIR}/deploy.sh dev ${ECR_REGISTRY} ${ECR_REPOSITORY} ${IMAGE_TAG}"
+          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "chmod +x ${APP_DIR}/deploy.sh"
+          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "docker login --username AWS --password-stdin ${ECR_REGISTRY}" <<< "${ECR_PASSWORD}"
+          ssh -i ~/.ssh/zerost_key.pem "${EC2_USER}@${EC2_HOST}" "${APP_DIR}/deploy.sh dev ${ECR_REGISTRY} ${ECR_REPOSITORY} ${IMAGE_TAG}"
