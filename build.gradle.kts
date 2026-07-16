@@ -42,6 +42,9 @@ dependencies {
 	// Flyway
 	implementation("org.springframework.boot:spring-boot-flyway")
 	implementation("org.flywaydb:flyway-mysql")
+
+	// Swagger
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 }
 
 kotlin {
