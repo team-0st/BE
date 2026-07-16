@@ -38,4 +38,16 @@ class User(
 
     @Column(name = "onboarding_completed", nullable = false)
     var onboardingCompleted: Boolean = false,
-) : BaseEntity()
+) : BaseEntity() {
+
+    fun completeOnboarding(
+        nickname: String,
+        phoneNumber: String,
+        shop: Shop
+    ) {
+        this.nickname = nickname
+        this.phoneNumber = phoneNumber
+        this.shop = shop
+        this.onboardingCompleted = true
+    }
+}
