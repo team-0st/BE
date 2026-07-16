@@ -25,5 +25,5 @@ data class CompleteOnboardingRequest(
 
     @field:NotNull(message = "상점 ID는 필수입니다.")
     @Schema(description = "선택한 상점 식별자", example = "1")
-    val shopId: Long,
+    val shopId: Long?,
 )

@@ -46,7 +46,7 @@ class OnboardingController(
             deviceId = deviceId,
             nickname = request.nickname,
             phoneNumber = request.phoneNumber,
-            shopId = request.shopId,
+            shopId = requireNotNull(request.shopId),
         )
 
         val response = onboardingService.complete(command)

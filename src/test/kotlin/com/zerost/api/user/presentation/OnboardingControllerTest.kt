@@ -72,4 +72,18 @@ class OnboardingControllerTest {
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
     }
+
+    @Test
+    fun `상점 아이디가 없으면 온보딩 완료에 실패한다`() {
+        mockMvc.perform(
+            post("/api/v1/onboarding/complete")
+                .header("X-Device-Id", "device-1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createOnboardingRequestBody(shopId = null)),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
+            .andExpect(jsonPath("$.error.message").value("상점 ID는 필수입니다."))
+    }
 }

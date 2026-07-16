@@ -53,11 +53,18 @@ fun createRegisterUserRequestBody(
 fun createOnboardingRequestBody(
     nickname: String = "펭귄탐험가",
     phoneNumber: String = "010-1234-5678",
-    shopId: Long = 1L,
-): String = """
-    {
-      "nickname": "$nickname",
-      "phoneNumber": "$phoneNumber",
-      "shopId": $shopId
-    }
-""".trimIndent()
+    shopId: Long? = 1L,
+): String {
+    val shopIdField = shopId?.let {
+        """
+          ,
+          "shopId": $it
+        """.trimIndent()
+    } ?: ""
+    return """
+        {
+          "nickname": "$nickname",
+          "phoneNumber": "$phoneNumber"$shopIdField
+        }
+    """.trimIndent()
+}
