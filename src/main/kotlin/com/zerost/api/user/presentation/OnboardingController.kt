@@ -40,7 +40,7 @@ class OnboardingController(
         @Valid @RequestBody request: CompleteOnboardingRequest,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<CompleteOnboardingResponse> {
-        val deviceId = httpServletRequest.getHeader(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
 
         val command = CompleteOnboardingCommand(
             deviceId = deviceId,
