@@ -26,7 +26,7 @@ class MissionVerificationService(
         missionId: Long,
         photoUrl: String,
     ): SubmitMissionVerificationResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+        val user = userRepository.findByDeviceIdForUpdate(deviceId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val mission = missionRepository.findById(missionId)

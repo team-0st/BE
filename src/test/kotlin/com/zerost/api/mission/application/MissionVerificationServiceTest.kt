@@ -38,7 +38,7 @@ class MissionVerificationServiceTest {
         val user = createUser()
         val mission = createMission()
         val (start, end) = todayRange()
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -77,7 +77,7 @@ class MissionVerificationServiceTest {
         val mission = createMission()
         val completion = createMissionCompletion(status = MissionCompletionStatus.PENDING)
         val (start, end) = todayRange()
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -102,7 +102,7 @@ class MissionVerificationServiceTest {
         val mission = createMission()
         val completion = createMissionCompletion(status = MissionCompletionStatus.APPROVED)
         val (start, end) = todayRange()
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
