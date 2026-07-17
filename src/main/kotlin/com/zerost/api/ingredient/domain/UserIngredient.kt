@@ -32,7 +32,7 @@ class UserIngredient(
     var quantity: Int = 0,
 ) : BaseEntity() {
 
-    fun incrementQuantity(amount: Int = 1) {
+    fun increaseQuantity(amount: Int = 1) {
         this.quantity += amount
     }
 }
