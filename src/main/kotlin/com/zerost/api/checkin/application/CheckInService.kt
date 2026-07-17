@@ -3,6 +3,7 @@ package com.zerost.api.checkin.application
 import com.zerost.api.checkin.domain.CheckIn
 import com.zerost.api.checkin.domain.CheckInRepository
 import com.zerost.api.checkin.presentation.dto.CheckInResponse
+import com.zerost.api.checkin.presentation.dto.CheckInStatusResponse
 import com.zerost.api.checkin.presentation.dto.RewardedIngredientResponse
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
@@ -13,6 +14,7 @@ import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class CheckInService(
@@ -64,5 +66,15 @@ class CheckInService(
                 imageUrl = rewardedIngredient.imageUrl,
             )
         )
+    }
+
+    @Transactional(readOnly = true)
+    fun getTodayStatus(deviceId: String): CheckInStatusResponse {
+        val user = userRepository.findByDeviceId(deviceId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+
+        val checkedIn = checkInRepository.existByUserIdAndCheckedDate(requireNotNull(user.id), LocalDate.now())
+
+        return CheckInStatusResponse(checkedIn = checkedIn)
     }
 }
