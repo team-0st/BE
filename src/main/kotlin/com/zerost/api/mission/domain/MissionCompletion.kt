@@ -48,4 +48,21 @@ class MissionCompletion(
 
     @Column(name = "reviewed_at")
     var reviewedAt: LocalDateTime? = null,
-) : BaseEntity()
+) : BaseEntity() {
+    companion object {
+        fun submit(
+            user: User,
+            mission: Mission,
+            photoUrl: String,
+            submittedAt: LocalDateTime,
+        ): MissionCompletion {
+            return MissionCompletion(
+                user = user,
+                mission = mission,
+                photoUrl = photoUrl,
+                status = MissionCompletionStatus.PENDING,
+                submittedAt = submittedAt,
+            )
+        }
+    }
+}

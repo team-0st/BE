@@ -19,4 +19,6 @@ enum class ErrorCode(
     ALREADY_CHECKED_IN(HttpStatus.CONFLICT, "ALREADY_CHECKED_IN", "오늘은 이미 출석했습니다."),
     INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "INGREDIENT_NOT_FOUND", "재료 정보를 찾을 수 없습니다."),
     MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_NOT_FOUND", "미션 정보를 찾을 수 없습니다."),
+    MISSION_UNDER_REVIEW(HttpStatus.CONFLICT, "MISSION_UNDER_REVIEW", "오늘 제출한 미션이 아직 검수 중입니다."),
+    MISSION_ALREADY_COMPLETED(HttpStatus.CONFLICT, "MISSION_ALREADY_COMPLETED", "오늘 제출한 미션이 이미 승인되었습니다."),
 }
