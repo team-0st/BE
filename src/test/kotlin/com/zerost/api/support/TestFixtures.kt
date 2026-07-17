@@ -1,6 +1,9 @@
 package com.zerost.api.support
 
 import com.zerost.api.shop.domain.Shop
+import com.zerost.api.ingredient.domain.Ingredient
+import com.zerost.api.ingredient.domain.IngredientType
+import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
 
@@ -30,6 +33,30 @@ fun createShop(
     name = name,
     description = description,
     imageUrl = imageUrl,
+)
+
+fun createIngredient(
+    id: Long = 1L,
+    name: String = "버려진 천",
+    type: IngredientType = IngredientType.COMMON,
+    imageUrl: String? = null,
+): Ingredient = Ingredient(
+    id = id,
+    name = name,
+    type = type,
+    imageUrl = imageUrl,
+)
+
+fun createUserIngredient(
+    id: Long = 1L,
+    user: User = createUser(),
+    ingredient: Ingredient = createIngredient(),
+    quantity: Int = 0,
+): UserIngredient = UserIngredient(
+    id = id,
+    user = user,
+    ingredient = ingredient,
+    quantity = quantity,
 )
 
 fun createOnboardingCommand(
