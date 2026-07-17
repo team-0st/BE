@@ -47,15 +47,19 @@ class MissionVerificationConcurrencyTest(
         val executor = Executors.newFixedThreadPool(2)
         val startLatch = CountDownLatch(1)
 
-        val futures = listOf(
-            executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), "https://example.com/1.jpg")),
-            executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), "https://example.com/2.jpg")),
-        )
+        val results = try {
+            val futures = listOf(
+                executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), "https://example.com/1.jpg")),
+                executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), "https://example.com/2.jpg")),
+            )
 
-        startLatch.countDown()
+            startLatch.countDown()
 
-        val results = futures.map { it.get(5, TimeUnit.SECONDS) }
-        executor.shutdown()
+            futures.map { it.get(5, TimeUnit.SECONDS) }
+        } finally {
+            executor.shutdown()
+            executor.awaitTermination(5, TimeUnit.SECONDS)
+        }
 
         val successCount = results.count { it.isSuccess }
         val failureResults = results.filter { it.isFailure }
