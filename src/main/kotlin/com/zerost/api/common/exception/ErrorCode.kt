@@ -18,4 +18,5 @@ enum class ErrorCode(
     SHOP_NOT_FOUND(HttpStatus.NOT_FOUND, "SHOP_NOT_FOUND", "선택한 상점을 찾을 수 없습니다."),
     ALREADY_CHECKED_IN(HttpStatus.CONFLICT, "ALREADY_CHECKED_IN", "오늘은 이미 출석했습니다."),
     INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "INGREDIENT_NOT_FOUND", "재료 정보를 찾을 수 없습니다."),
+    MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_NOT_FOUND", "미션 정보를 찾을 수 없습니다."),
 }
