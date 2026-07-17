@@ -4,6 +4,7 @@ import com.zerost.api.common.device.DeviceConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.MissionQueryService
 import com.zerost.api.mission.domain.MissionVerificationService
+import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
 import com.zerost.api.mission.presentation.dto.MissionSummaryResponse
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationRequest
@@ -92,6 +93,25 @@ class MissionController(
             missionId = missionId,
             photoUrl = request.photoUrl,
         )
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "내 미션 제출 내역 조회",
+        description = "내가 제출한 미션 인증 내역과 검수 결과를 조회합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저를 찾을 수 없음"),
+        ],
+    )
+    @GetMapping("/completions")
+    fun getMissionCompletions(
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<List<MissionCompletionHistoryResponse>> {
+        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val response = missionQueryService.getMissionCompletions(deviceId)
         return ApiResponse.success(response)
     }
 }

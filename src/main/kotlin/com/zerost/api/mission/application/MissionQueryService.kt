@@ -7,7 +7,9 @@ import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mission.domain.MissionRepository
+import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
+import com.zerost.api.mission.presentation.dto.MissionRewardedIngredientResponse
 import com.zerost.api.mission.presentation.dto.MissionSummaryResponse
 import com.zerost.api.mission.presentation.dto.MissionTodayStatus
 import com.zerost.api.user.domain.UserRepository
@@ -74,6 +76,31 @@ class MissionQueryService(
             imageUrl = mission.imageUrl,
             todayStatus = todayCompletion?.status?.toTodayStatus(),
         )
+    }
+
+    @Transactional(readOnly = true)
+    fun getMissionCompletions(deviceId: String): List<MissionCompletionHistoryResponse> {
+        val user = userRepository.findByDeviceId(deviceId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+
+        return missionCompletionRepository.findAllByUserIdOrderBySubmittedAtDesc(requireNotNull(user.id))
+            .map { completion ->
+                MissionCompletionHistoryResponse(
+                    completionId = requireNotNull(completion.id),
+                    missionId = requireNotNull(completion.mission.id),
+                    missionTitle = completion.mission.title,
+                    status = completion.status.name,
+                    rewardedIngredient = completion.rewardedIngredient?.let { ingredient ->
+                        MissionRewardedIngredientResponse(
+                            id = requireNotNull(ingredient.id),
+                            name = ingredient.name,
+                            imageUrl = ingredient.imageUrl,
+                        )
+                    },
+                    submittedAt = completion.submittedAt.toString(),
+                    reviewedAt = completion.reviewedAt?.toString(),
+                )
+            }
     }
 
     private fun getTodayRange(): Pair<LocalDateTime, LocalDateTime> {
