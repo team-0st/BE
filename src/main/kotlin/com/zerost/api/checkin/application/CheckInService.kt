@@ -14,7 +14,6 @@ import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 @Service
 class CheckInService(
@@ -30,7 +29,7 @@ class CheckInService(
             .orElseThrow{ BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val today = LocalDate.now()
-        if (checkInRepository.existByUserIdAndCheckedDate(requireNotNull(user.id), today)) {
+        if (checkInRepository.existsByUserIdAndCheckedDate(requireNotNull(user.id), today)) {
             throw BusinessException(ErrorCode.ALREADY_CHECKED_IN)
         }
 
@@ -73,7 +72,7 @@ class CheckInService(
         val user = userRepository.findByDeviceId(deviceId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
-        val checkedIn = checkInRepository.existByUserIdAndCheckedDate(requireNotNull(user.id), LocalDate.now())
+        val checkedIn = checkInRepository.existsByUserIdAndCheckedDate(requireNotNull(user.id), LocalDate.now())
 
         return CheckInStatusResponse(checkedIn = checkedIn)
     }

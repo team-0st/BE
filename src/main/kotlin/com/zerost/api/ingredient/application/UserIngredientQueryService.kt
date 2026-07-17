@@ -22,7 +22,7 @@ class UserIngredientQueryService(
         return userIngredientRepository.findAllByUserIdOrderByIdAsc(requireNotNull(user.id))
             .map{ userIngredient ->
                 UserIngredientResponse(
-                    ingredientId = requireNotNull(userIngredient.id),
+                    ingredientId = requireNotNull(userIngredient.ingredient.id),
                     name = userIngredient.ingredient.name,
                     type = userIngredient.ingredient.type.name,
                     imageUrl = userIngredient.ingredient.imageUrl,
