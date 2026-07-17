@@ -4,8 +4,12 @@ import com.zerost.api.shop.domain.Shop
 import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
+import com.zerost.api.mission.domain.Mission
+import com.zerost.api.mission.domain.MissionCompletion
+import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
+import java.time.LocalDateTime
 
 fun createUser(
     id: Long = 1L,
@@ -95,3 +99,43 @@ fun createOnboardingRequestBody(
         }
     """.trimIndent()
 }
+
+fun createMission(
+    id: Long = 1L,
+    title: String = "텀블러 사용하기",
+    description: String? = "개인 컵 또는 텀블러를 사용한 사진을 제출합니다.",
+    imageUrl: String? = "https://example.com/images/mission-1.png",
+    rewardIngredientPool: String = "[1,2,3]",
+): Mission = Mission(
+    id = id,
+    title = title,
+    description = description,
+    imageUrl = imageUrl,
+    rewardIngredientPool = rewardIngredientPool,
+)
+
+fun createMissionCompletion(
+    id: Long = 1L,
+    user: User = createUser(),
+    mission: Mission = createMission(),
+    photoUrl: String = "https://example.com/uploads/mission-1.jpg",
+    status: MissionCompletionStatus = MissionCompletionStatus.PENDING,
+    rewardedIngredient: Ingredient? = null,
+    submittedAt: LocalDateTime = LocalDateTime.of(2026, 7, 17, 10, 0, 0),
+    reviewedAt: LocalDateTime? = null,
+): MissionCompletion = MissionCompletion(
+    id = id,
+    user = user,
+    mission = mission,
+    photoUrl = photoUrl,
+    status = status,
+    rewardedIngredient = rewardedIngredient,
+    submittedAt = submittedAt,
+    reviewedAt = reviewedAt,
+)
+
+fun createSubmitMissionVerificationRequestBody(
+    photoUrl: String = "https://example.com/uploads/mission-1.jpg",
+): String = """
+    {"photoUrl":"$photoUrl"}
+""".trimIndent()
