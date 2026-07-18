@@ -10,8 +10,8 @@ data class SubmitMissionVerificationRequest(
     @field:NotBlank(message = "photoUrl은 필수입니다.")
     @field:Size(max = 255, message = "photoUrl은 255자 이하여야 합니다.")
     @Schema(
-        description = "업로드된 인증 사진 URL",
-        example = "https://example.com/uploads/mission-1.jpg",
+        description = "파일 업로드 API를 통해 업로드한 미션 인증 사진 URL",
+        example = "https://zerost-s3-bucket.s3.ap-northeast-2.amazonaws.com/missions/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
     )
     val photoUrl: String,
 )
