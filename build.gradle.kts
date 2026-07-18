@@ -45,6 +45,10 @@ dependencies {
 
 	// Swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+
+	// S3
+	implementation(platform("software.amazon.awssdk:bom:2.32.6"))
+	implementation("software.amazon.awssdk:s3")
 }
 
 kotlin {

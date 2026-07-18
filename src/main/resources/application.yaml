@@ -14,3 +14,9 @@ spring:
 
 server:
   port: 8080
+
+app:
+  storage:
+    s3:
+      bucket: ${APP_STORAGE_S3_BUCKET:}
+      region: ${APP_STORAGE_S3_REGION:ap-northeast-2}

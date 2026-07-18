@@ -15,3 +15,9 @@ spring:
 
   flyway:
     enabled: true
+
+app:
+  storage:
+    s3:
+      bucket: test-bucket
+      region: ap-northeast-2

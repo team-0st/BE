@@ -1,0 +1,21 @@
+package com.zerost.api.common.config
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+
+@Configuration
+@EnableConfigurationProperties(S3Properties::class)
+class S3Config {
+
+    @Bean
+    fun s3Client(properties: S3Properties): S3Client {
+        return S3Client.builder()
+            .region(Region.of(properties.region))
+            .credentialsProvider(DefaultCredentialsProvider.builder().build())
+            .build()
+    }
+}
