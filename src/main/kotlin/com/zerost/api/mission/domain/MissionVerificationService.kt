@@ -2,6 +2,7 @@ package com.zerost.api.mission.domain
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
@@ -18,13 +19,14 @@ class MissionVerificationService(
     private val userRepository: UserRepository,
     private val missionRepository: MissionRepository,
     private val missionCompletionRepository: MissionCompletionRepository,
+    private val fileUploadService: FileUploadService,
 ) {
 
     @Transactional
     fun submitVerification(
         deviceId: String,
         missionId: Long,
-        photoUrl: String,
+        photoKey: String,
     ): SubmitMissionVerificationResponse {
         val user = userRepository.findByDeviceIdForUpdate(deviceId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
@@ -47,11 +49,13 @@ class MissionVerificationService(
             MissionCompletionStatus.REJECTED, null -> Unit
         }
 
+        fileUploadService.validateMissionImageKey(deviceId, missionId, photoKey)
+
         val completion = missionCompletionRepository.save(
             MissionCompletion.submit(
                 user = user,
                 mission = mission,
-                photoUrl = photoUrl,
+                photoKey = photoKey,
                 submittedAt = LocalDateTime.now(),
             )
         )

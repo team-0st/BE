@@ -23,6 +23,16 @@ output "app_instance_id" {
   value       = aws_instance.app.id
 }
 
+output "app_instance_profile_name" {
+  description = "Instance profile name attached to the application server."
+  value       = aws_iam_instance_profile.app.name
+}
+
+output "app_role_arn" {
+  description = "IAM role ARN attached to the application server."
+  value       = aws_iam_role.app.arn
+}
+
 output "app_instance_public_ip" {
   description = "Public IP address of the application server."
   value       = aws_eip.app.public_ip
@@ -61,6 +71,16 @@ output "ecr_repository_name" {
 output "ecr_repository_url" {
   description = "ECR repository URL."
   value       = aws_ecr_repository.app.repository_url
+}
+
+output "upload_bucket_name" {
+  description = "S3 bucket name for application file uploads."
+  value       = aws_s3_bucket.upload.bucket
+}
+
+output "upload_bucket_arn" {
+  description = "S3 bucket ARN for application file uploads."
+  value       = aws_s3_bucket.upload.arn
 }
 
 output "github_actions_role_arn" {

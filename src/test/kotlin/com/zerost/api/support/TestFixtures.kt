@@ -118,7 +118,7 @@ fun createMissionCompletion(
     id: Long = 1L,
     user: User = createUser(),
     mission: Mission = createMission(),
-    photoUrl: String = "https://example.com/uploads/mission-1.jpg",
+    photoKey: String = "missions/device-1/1/2026/07/18/mission-1.jpg",
     status: MissionCompletionStatus = MissionCompletionStatus.PENDING,
     rewardedIngredient: Ingredient? = null,
     submittedAt: LocalDateTime = LocalDateTime.of(2026, 7, 17, 10, 0, 0),
@@ -127,7 +127,7 @@ fun createMissionCompletion(
     id = id,
     user = user,
     mission = mission,
-    photoUrl = photoUrl,
+    photoKey = photoKey,
     status = status,
     rewardedIngredient = rewardedIngredient,
     submittedAt = submittedAt,
@@ -135,7 +135,7 @@ fun createMissionCompletion(
 )
 
 fun createSubmitMissionVerificationRequestBody(
-    photoUrl: String = "https://example.com/uploads/mission-1.jpg",
+    photoKey: String = "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
 ): String = """
-    {"photoUrl":"$photoUrl"}
+    {"photoKey":"$photoKey"}
 """.trimIndent()

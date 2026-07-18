@@ -37,6 +37,19 @@ data "aws_iam_policy_document" "github_actions_oidc_assume_role" {
   }
 }
 
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -167,6 +180,7 @@ resource "aws_instance" "app" {
   instance_type               = var.instance_type
   subnet_id                   = aws_subnet.public[local.primary_public_subnet_key].id
   vpc_security_group_ids      = [aws_security_group.app.id]
+  iam_instance_profile        = aws_iam_instance_profile.app.name
   key_name                    = var.key_name
   associate_public_ip_address = true
   user_data = templatefile("${path.module}/user_data.sh.tftpl", {
@@ -257,6 +271,74 @@ resource "aws_ecr_lifecycle_policy" "app" {
       }
     ]
   })
+}
+
+resource "aws_s3_bucket" "upload" {
+  bucket = var.upload_bucket_name
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-upload-bucket"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "upload" {
+  bucket = aws_s3_bucket.upload.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "upload" {
+  bucket = aws_s3_bucket.upload.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_iam_role" "app" {
+  name               = "${local.name_prefix}-app-role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-app-role"
+  })
+}
+
+data "aws_iam_policy_document" "app_s3_upload" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+    ]
+    resources = ["${aws_s3_bucket.upload.arn}/*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:ListBucket",
+    ]
+    resources = [aws_s3_bucket.upload.arn]
+  }
+}
+
+resource "aws_iam_policy" "app_s3_upload" {
+  name   = "${local.name_prefix}-app-s3-upload-policy"
+  policy = data.aws_iam_policy_document.app_s3_upload.json
+}
+
+resource "aws_iam_role_policy_attachment" "app_s3_upload" {
+  role       = aws_iam_role.app.name
+  policy_arn = aws_iam_policy.app_s3_upload.arn
+}
+
+resource "aws_iam_instance_profile" "app" {
+  name = "${local.name_prefix}-app-instance-profile"
+  role = aws_iam_role.app.name
 }
 
 resource "aws_iam_openid_connect_provider" "github_actions" {

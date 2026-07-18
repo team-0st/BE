@@ -98,7 +98,7 @@ class MissionControllerTest {
             missionVerificationService.submitVerification(
                 "device-1",
                 1L,
-                "https://example.com/uploads/mission-1.jpg",
+                "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
             ),
         ).thenReturn(
             SubmitMissionVerificationResponse(
@@ -120,17 +120,17 @@ class MissionControllerTest {
         verify(missionVerificationService).submitVerification(
             "device-1",
             1L,
-            "https://example.com/uploads/mission-1.jpg",
+            "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
         )
     }
 
     @Test
-    fun `photoUrl이 비어 있으면 미션 인증 제출에 실패한다`() {
+    fun `photoKey가 비어 있으면 미션 인증 제출에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/missions/1/verify")
                 .header("X-Device-Id", "device-1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(createSubmitMissionVerificationRequestBody(photoUrl = "")),
+                .content(createSubmitMissionVerificationRequestBody(photoKey = "")),
         )
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.success").value(false))

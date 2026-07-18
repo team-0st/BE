@@ -2,6 +2,7 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mission.domain.MissionRepository
@@ -27,10 +28,12 @@ class MissionVerificationServiceTest {
     private val userRepository = mock(UserRepository::class.java)
     private val missionRepository = mock(MissionRepository::class.java)
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
+    private val fileUploadService = mock(FileUploadService::class.java)
     private val missionVerificationService = MissionVerificationService(
         userRepository = userRepository,
         missionRepository = missionRepository,
         missionCompletionRepository = missionCompletionRepository,
+        fileUploadService = fileUploadService,
     )
 
     @Test
@@ -54,7 +57,7 @@ class MissionVerificationServiceTest {
                 id = 55L,
                 user = saved.user,
                 mission = saved.mission,
-                photoUrl = saved.photoUrl,
+                photoKey = saved.photoKey,
                 status = saved.status,
                 submittedAt = saved.submittedAt,
                 reviewedAt = saved.reviewedAt,
@@ -64,7 +67,7 @@ class MissionVerificationServiceTest {
         val response = missionVerificationService.submitVerification(
             deviceId = "device-1",
             missionId = 1L,
-            photoUrl = "https://example.com/uploads/mission-1.jpg",
+            photoKey = "missions/device-1/1/2026/07/18/mission-1.jpg",
         )
 
         assertEquals(55L, response.completionId)
@@ -89,7 +92,7 @@ class MissionVerificationServiceTest {
         ).thenReturn(completion)
 
         val exception = assertThrows<BusinessException> {
-            missionVerificationService.submitVerification("device-1", 1L, "https://example.com/uploads/mission-1.jpg")
+            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/1/2026/07/18/mission-1.jpg")
         }
 
         assertEquals(ErrorCode.MISSION_UNDER_REVIEW, exception.errorCode)
@@ -114,7 +117,7 @@ class MissionVerificationServiceTest {
         ).thenReturn(completion)
 
         val exception = assertThrows<BusinessException> {
-            missionVerificationService.submitVerification("device-1", 1L, "https://example.com/uploads/mission-1.jpg")
+            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/1/2026/07/18/mission-1.jpg")
         }
 
         assertEquals(ErrorCode.MISSION_ALREADY_COMPLETED, exception.errorCode)

@@ -2,6 +2,7 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionRepository
@@ -11,6 +12,7 @@ import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.context.ActiveProfiles
 import java.util.UUID
 import java.util.concurrent.Callable
@@ -19,6 +21,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.`when`
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -28,6 +32,9 @@ class MissionVerificationConcurrencyTest(
     @Autowired private val missionRepository: MissionRepository,
     @Autowired private val missionCompletionRepository: MissionCompletionRepository,
 ) {
+
+    @MockitoBean
+    lateinit var fileUploadService: FileUploadService
 
     @Test
     fun `같은 유저가 같은 미션을 동시에 제출해도 하나만 성공한다`() {
@@ -43,14 +50,16 @@ class MissionVerificationConcurrencyTest(
                 rewardIngredientPool = "[1,2,3]",
             ),
         )
+        val photoKey = "missions/$deviceId/${requireNotNull(mission.id)}/2026/07/18/mission.jpg"
+        doNothing().`when`(fileUploadService).validateMissionImageKey(deviceId, requireNotNull(mission.id), photoKey)
 
         val executor = Executors.newFixedThreadPool(2)
         val startLatch = CountDownLatch(1)
 
         val results = try {
             val futures = listOf(
-                executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), "https://example.com/1.jpg")),
-                executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), "https://example.com/2.jpg")),
+                executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), photoKey)),
+                executor.submit(submitTask(startLatch, deviceId, requireNotNull(mission.id), photoKey)),
             )
 
             startLatch.countDown()
@@ -79,14 +88,14 @@ class MissionVerificationConcurrencyTest(
         startLatch: CountDownLatch,
         deviceId: String,
         missionId: Long,
-        photoUrl: String,
+        photoKey: String,
     ): Callable<Result<Unit>> = Callable {
         startLatch.await()
         runCatching {
             missionVerificationService.submitVerification(
                 deviceId = deviceId,
                 missionId = missionId,
-                photoUrl = photoUrl,
+                photoKey = photoKey,
             )
         }.map { Unit }
     }

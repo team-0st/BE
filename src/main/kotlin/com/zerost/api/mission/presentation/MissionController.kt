@@ -71,14 +71,14 @@ class MissionController(
 
     @Operation(
         summary = "미션 인증 제출",
-        description = "미션 인증 사진을 제출하고 검수 대기 상태로 저장합니다.",
+        description = "파일 업로드 API로 업로드한 인증 이미지 파일 키를 받아 미션 인증을 제출하고 검수 대기 상태로 저장합니다.",
     )
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "제출 성공"),
             SwaggerApiResponse(responseCode = "400", description = "잘못된 요청"),
             SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 미션을 찾을 수 없음"),
-            SwaggerApiResponse(responseCode = "409", description = "오늘 이미 검수 중이거나 승인된 미션임"),
+            SwaggerApiResponse(responseCode = "409", description = "오늘 이미 검수 중이거나 승인된 미션입니다."),
         ],
     )
     @PostMapping("/{missionId}/verify")
@@ -91,7 +91,7 @@ class MissionController(
         val response = missionVerificationService.submitVerification(
             deviceId = deviceId,
             missionId = missionId,
-            photoUrl = request.photoUrl,
+            photoKey = request.photoKey,
         )
         return ApiResponse.success(response)
     }

@@ -2,6 +2,10 @@ spring:
   config:
     activate:
       on-profile: test
+  servlet:
+    multipart:
+      max-file-size: 5242880
+      max-request-size: 6291456
 
   datasource:
     url: jdbc:h2:mem:zerost-test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -15,3 +19,11 @@ spring:
 
   flyway:
     enabled: true
+
+app:
+  storage:
+    s3:
+      bucket: test-bucket
+      region: ap-northeast-2
+      max-file-size: 5242880
+      presigned-url-duration-seconds: 600

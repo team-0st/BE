@@ -25,6 +25,7 @@ db_instance_class    = "db.t3.micro"
 db_allocated_storage = 20
 db_engine_version    = "8.0"
 ecr_repository_name  = "zerost-api"
+upload_bucket_name   = "replace-with-your-upload-bucket-name"
 github_repository    = "team-0st/BE"
 github_oidc_branches = [
   "main",

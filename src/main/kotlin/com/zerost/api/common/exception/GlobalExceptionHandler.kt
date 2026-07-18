@@ -70,6 +70,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             HttpServletResponse.SC_NOT_FOUND -> ErrorCode.RESOURCE_NOT_FOUND
             HttpServletResponse.SC_METHOD_NOT_ALLOWED -> ErrorCode.METHOD_NOT_ALLOWED
             HttpServletResponse.SC_NOT_ACCEPTABLE -> ErrorCode.NOT_ACCEPTABLE
+            HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE -> ErrorCode.FILE_SIZE_EXCEEDED
             HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE -> ErrorCode.UNSUPPORTED_MEDIA_TYPE
             else -> ErrorCode.INTERNAL_SERVER_ERROR
         }
@@ -77,21 +78,6 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         return ResponseEntity
             .status(statusCode)
             .headers(headers)
-            .body(
-                ApiResponse.failure(
-                    ApiErrorResponse(
-                        code = errorCode.code,
-                        message = errorCode.message
-                    )
-                )
-            )
-    }
-
-    @ExceptionHandler(RuntimeException::class)
-    fun handleRuntimeException(ex: RuntimeException): ResponseEntity<ApiResponse<Nothing>> {
-        val errorCode = ErrorCode.INTERNAL_SERVER_ERROR
-        return ResponseEntity
-            .status(errorCode.httpStatus)
             .body(
                 ApiResponse.failure(
                     ApiErrorResponse(
