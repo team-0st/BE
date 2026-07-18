@@ -1,6 +1,10 @@
 spring:
   application:
     name: api
+  servlet:
+    multipart:
+      max-file-size: ${APP_STORAGE_S3_MAX_FILE_SIZE:5242880}
+      max-request-size: ${APP_STORAGE_S3_MAX_FILE_SIZE:5242880}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
@@ -18,6 +22,7 @@ server:
 app:
   storage:
     s3:
-      bucket: ${APP_STORAGE_S3_BUCKET:}
+      bucket: ${APP_STORAGE_S3_BUCKET}
       region: ${APP_STORAGE_S3_REGION:ap-northeast-2}
       max-file-size: ${APP_STORAGE_S3_MAX_FILE_SIZE:5242880}
+      presigned-url-duration-seconds: ${APP_STORAGE_S3_PRESIGNED_URL_DURATION_SECONDS:600}
