@@ -23,6 +23,16 @@ output "app_instance_id" {
   value       = aws_instance.app.id
 }
 
+output "app_instance_profile_name" {
+  description = "Instance profile name attached to the application server."
+  value       = aws_iam_instance_profile.app.name
+}
+
+output "app_role_arn" {
+  description = "IAM role ARN attached to the application server."
+  value       = aws_iam_role.app.arn
+}
+
 output "app_instance_public_ip" {
   description = "Public IP address of the application server."
   value       = aws_eip.app.public_ip
