@@ -16,6 +16,10 @@ class DeviceIdInterceptor : HandlerInterceptor {
         response: HttpServletResponse,
         handler: Any,
     ) : Boolean {
+        if (request.method == "OPTIONS") {
+            return true
+        }
+
         val deviceId = request.getHeader(DeviceConstants.DEVICE_ID_HEADER)?.trim()
 
         if (deviceId.isNullOrEmpty()) {
