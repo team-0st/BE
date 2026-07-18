@@ -18,6 +18,7 @@ class FileUploadServiceTest {
     private val s3Properties = S3Properties(
         bucket = "test-bucket",
         region = "ap-northeast-2",
+        maxFileSize = 5 * 1024 * 1024,
     )
     private val fileUploadService = FileUploadService(
         s3Client = s3Client,
