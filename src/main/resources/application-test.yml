@@ -21,3 +21,4 @@ app:
     s3:
       bucket: test-bucket
       region: ap-northeast-2
+      max-file-size: 5242880

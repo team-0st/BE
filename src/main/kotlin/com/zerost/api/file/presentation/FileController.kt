@@ -26,7 +26,7 @@ class FileController(
 
     @Operation(
         summary = "미션 인증 이미지 업로드",
-        description = "미션 인증 제출에 사용할 이미지를 업로드합니다.",
+        description = "미션 인증 제출에 사용할 이미지를 업로드합니다. JPG, PNG, WEBP 형식만 허용합니다.",
         requestBody = RequestBody(
             required = true,
             content = [
@@ -40,7 +40,7 @@ class FileController(
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "업로드 성공"),
-            SwaggerApiResponse(responseCode = "400", description = "잘못된 요청"),
+            SwaggerApiResponse(responseCode = "400", description = "빈 파일, 파일 크기 초과, 지원하지 않는 파일 형식"),
         ],
     )
     @PostMapping("/upload", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
