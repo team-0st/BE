@@ -12,10 +12,11 @@ class MissionCompletionTest {
         val completion = MissionCompletion.submit(
             user = createUser(),
             mission = createMission(),
-            photoUrl = "https://example.com/uploads/mission-1.jpg",
+            photoKey = "missions/device-1/2026/07/18/mission-1.jpg",
             submittedAt = java.time.LocalDateTime.of(2026, 7, 17, 10, 0, 0),
         )
 
         assertEquals(MissionCompletionStatus.PENDING, completion.status)
+        assertEquals("missions/device-1/2026/07/18/mission-1.jpg", completion.photoKey)
     }
 }

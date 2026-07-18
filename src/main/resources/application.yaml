@@ -4,7 +4,7 @@ spring:
   servlet:
     multipart:
       max-file-size: ${APP_STORAGE_S3_MAX_FILE_SIZE:5242880}
-      max-request-size: ${APP_STORAGE_S3_MAX_FILE_SIZE:5242880}
+      max-request-size: ${APP_STORAGE_S3_MAX_REQUEST_SIZE:6291456}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:

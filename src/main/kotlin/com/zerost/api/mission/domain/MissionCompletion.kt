@@ -33,7 +33,7 @@ class MissionCompletion(
     val mission: Mission,
 
     @Column(name = "photo_url", nullable = false, length = 255)
-    var photoUrl: String,
+    var photoKey: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -53,13 +53,13 @@ class MissionCompletion(
         fun submit(
             user: User,
             mission: Mission,
-            photoUrl: String,
+            photoKey: String,
             submittedAt: LocalDateTime,
         ): MissionCompletion {
             return MissionCompletion(
                 user = user,
                 mission = mission,
-                photoUrl = photoUrl,
+                photoKey = photoKey,
                 status = MissionCompletionStatus.PENDING,
                 submittedAt = submittedAt,
             )

@@ -51,15 +51,13 @@ class MissionVerificationServiceTest {
                 end,
             ),
         ).thenReturn(null)
-        `when`(fileUploadService.createObjectUrl("missions/device-1/2026/07/18/mission-1.jpg"))
-            .thenReturn("https://test-bucket.s3.ap-northeast-2.amazonaws.com/missions/device-1/2026/07/18/mission-1.jpg")
         `when`(missionCompletionRepository.save(any(com.zerost.api.mission.domain.MissionCompletion::class.java))).thenAnswer { invocation ->
             val saved = invocation.arguments[0] as com.zerost.api.mission.domain.MissionCompletion
             createMissionCompletion(
                 id = 55L,
                 user = saved.user,
                 mission = saved.mission,
-                photoUrl = saved.photoUrl,
+                photoKey = saved.photoKey,
                 status = saved.status,
                 submittedAt = saved.submittedAt,
                 reviewedAt = saved.reviewedAt,

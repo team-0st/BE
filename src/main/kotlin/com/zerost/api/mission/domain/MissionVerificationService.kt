@@ -50,13 +50,12 @@ class MissionVerificationService(
         }
 
         fileUploadService.validateMissionImageKey(deviceId, photoKey)
-        val photoUrl = fileUploadService.createObjectUrl(photoKey)
 
         val completion = missionCompletionRepository.save(
             MissionCompletion.submit(
                 user = user,
                 mission = mission,
-                photoUrl = photoUrl,
+                photoKey = photoKey,
                 submittedAt = LocalDateTime.now(),
             )
         )

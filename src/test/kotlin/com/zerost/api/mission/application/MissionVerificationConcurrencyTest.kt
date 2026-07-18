@@ -52,8 +52,6 @@ class MissionVerificationConcurrencyTest(
         )
         val photoKey = "missions/$deviceId/2026/07/18/mission.jpg"
         doNothing().`when`(fileUploadService).validateMissionImageKey(deviceId, photoKey)
-        `when`(fileUploadService.createObjectUrl(photoKey))
-            .thenReturn("https://test-bucket.s3.ap-northeast-2.amazonaws.com/$photoKey")
 
         val executor = Executors.newFixedThreadPool(2)
         val startLatch = CountDownLatch(1)

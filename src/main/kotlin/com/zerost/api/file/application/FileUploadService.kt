@@ -115,10 +115,6 @@ class FileUploadService(
         }
     }
 
-    fun createObjectUrl(fileKey: String): String {
-        return "https://${s3Properties.bucket}.s3.${s3Properties.region}.amazonaws.com/$fileKey"
-    }
-
     private fun createPresignedUrl(fileKey: String): String {
         val getObjectRequest = GetObjectRequest.builder()
             .bucket(s3Properties.bucket)
