@@ -50,8 +50,8 @@ class MissionVerificationConcurrencyTest(
                 rewardIngredientPool = "[1,2,3]",
             ),
         )
-        val photoKey = "missions/$deviceId/2026/07/18/mission.jpg"
-        doNothing().`when`(fileUploadService).validateMissionImageKey(deviceId, photoKey)
+        val photoKey = "missions/$deviceId/${requireNotNull(mission.id)}/2026/07/18/mission.jpg"
+        doNothing().`when`(fileUploadService).validateMissionImageKey(deviceId, requireNotNull(mission.id), photoKey)
 
         val executor = Executors.newFixedThreadPool(2)
         val startLatch = CountDownLatch(1)

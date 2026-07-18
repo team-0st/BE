@@ -49,7 +49,7 @@ class MissionVerificationService(
             MissionCompletionStatus.REJECTED, null -> Unit
         }
 
-        fileUploadService.validateMissionImageKey(deviceId, photoKey)
+        fileUploadService.validateMissionImageKey(deviceId, missionId, photoKey)
 
         val completion = missionCompletionRepository.save(
             MissionCompletion.submit(

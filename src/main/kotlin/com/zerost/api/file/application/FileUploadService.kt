@@ -32,12 +32,13 @@ class FileUploadService(
     )
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
-    fun upload(file: MultipartFile, directory: String, deviceId: String): FileUploadResponse {
+    fun upload(file: MultipartFile, directory: String, deviceId: String, missionId: Long): FileUploadResponse {
         validate(file)
 
         val fileKey = buildFileKey(
             directory = directory,
             deviceId = deviceId,
+            missionId = missionId,
             originalFilename = file.originalFilename,
         )
 
@@ -75,13 +76,14 @@ class FileUploadService(
     private fun buildFileKey(
         directory: String,
         deviceId: String,
+        missionId: Long,
         originalFilename: String?,
     ): String {
         val datePath = LocalDate.now().format(dateFormatter)
         val extension = extractExtension(originalFilename)
         val normalizedDeviceId = normalizePathSegment(deviceId)
 
-        return "$directory/$normalizedDeviceId/$datePath/${UUID.randomUUID()}$extension"
+        return "$directory/$normalizedDeviceId/$missionId/$datePath/${UUID.randomUUID()}$extension"
     }
 
     private fun extractExtension(originalFilename: String?): String {
@@ -94,8 +96,8 @@ class FileUploadService(
         return ".$extension"
     }
 
-    fun validateMissionImageKey(deviceId: String, fileKey: String) {
-        val expectedPrefix = "missions/${normalizePathSegment(deviceId)}/"
+    fun validateMissionImageKey(deviceId: String, missionId: Long, fileKey: String) {
+        val expectedPrefix = "missions/${normalizePathSegment(deviceId)}/$missionId/"
         if (!fileKey.startsWith(expectedPrefix)) {
             throw BusinessException(ErrorCode.INVALID_FILE_KEY)
         }

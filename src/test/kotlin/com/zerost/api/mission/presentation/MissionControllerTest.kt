@@ -98,7 +98,7 @@ class MissionControllerTest {
             missionVerificationService.submitVerification(
                 "device-1",
                 1L,
-                "missions/device-1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+                "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
             ),
         ).thenReturn(
             SubmitMissionVerificationResponse(
@@ -120,7 +120,7 @@ class MissionControllerTest {
         verify(missionVerificationService).submitVerification(
             "device-1",
             1L,
-            "missions/device-1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+            "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
         )
     }
 

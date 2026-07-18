@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
@@ -48,10 +49,11 @@ class FileController(
     @PostMapping("/upload", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun uploadMissionImage(
         @RequestPart file: MultipartFile,
+        @RequestParam missionId: Long,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<FileUploadResponse> {
         val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = fileUploadService.upload(file, "missions", deviceId)
+        val response = fileUploadService.upload(file, "missions", deviceId, missionId)
         return ApiResponse.success(response)
     }
 }

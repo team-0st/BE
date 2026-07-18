@@ -67,7 +67,7 @@ class MissionVerificationServiceTest {
         val response = missionVerificationService.submitVerification(
             deviceId = "device-1",
             missionId = 1L,
-            photoKey = "missions/device-1/2026/07/18/mission-1.jpg",
+            photoKey = "missions/device-1/1/2026/07/18/mission-1.jpg",
         )
 
         assertEquals(55L, response.completionId)
@@ -92,7 +92,7 @@ class MissionVerificationServiceTest {
         ).thenReturn(completion)
 
         val exception = assertThrows<BusinessException> {
-            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/2026/07/18/mission-1.jpg")
+            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/1/2026/07/18/mission-1.jpg")
         }
 
         assertEquals(ErrorCode.MISSION_UNDER_REVIEW, exception.errorCode)
@@ -117,7 +117,7 @@ class MissionVerificationServiceTest {
         ).thenReturn(completion)
 
         val exception = assertThrows<BusinessException> {
-            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/2026/07/18/mission-1.jpg")
+            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/1/2026/07/18/mission-1.jpg")
         }
 
         assertEquals(ErrorCode.MISSION_ALREADY_COMPLETED, exception.errorCode)
