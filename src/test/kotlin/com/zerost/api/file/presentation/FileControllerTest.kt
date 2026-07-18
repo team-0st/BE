@@ -39,10 +39,10 @@ class FileControllerTest {
             MediaType.IMAGE_JPEG_VALUE,
             "image-content".toByteArray(),
         )
-        `when`(fileUploadService.upload(anyFile(), anyDirectory())).thenReturn(
+        `when`(fileUploadService.upload(anyFile(), anyDirectory(), anyDeviceId())).thenReturn(
             FileUploadResponse(
-                fileUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/missions/2026/7/18/file.jpg",
-                fileKey = "missions/2026/7/18/file.jpg",
+                fileUrl = "https://signed.example.com/missions/device-1/2026/07/18/file.jpg",
+                fileKey = "missions/device-1/2026/07/18/file.jpg",
             ),
         )
 
@@ -53,9 +53,9 @@ class FileControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.fileKey").value("missions/2026/7/18/file.jpg"))
+            .andExpect(jsonPath("$.data.fileKey").value("missions/device-1/2026/07/18/file.jpg"))
 
-        verify(fileUploadService).upload(anyFile(), anyDirectory())
+        verify(fileUploadService).upload(anyFile(), anyDirectory(), anyDeviceId())
     }
 
     @Test
@@ -84,6 +84,12 @@ class FileControllerTest {
 
     @Suppress("UNCHECKED_CAST")
     private fun anyDirectory(): String {
+        ArgumentMatchers.anyString()
+        return uninitialized()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun anyDeviceId(): String {
         ArgumentMatchers.anyString()
         return uninitialized()
     }
