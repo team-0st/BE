@@ -71,7 +71,7 @@ class MissionController(
 
     @Operation(
         summary = "미션 인증 제출",
-        description = "파일 업로드 API로 업로드한 인증 사진 URL을 받아 미션 인증을 제출하고 검수 대기 상태로 저장합니다.",
+        description = "파일 업로드 API로 업로드한 인증 이미지 파일 키를 받아 미션 인증을 제출하고 검수 대기 상태로 저장합니다.",
     )
     @ApiResponses(
         value = [
@@ -91,7 +91,7 @@ class MissionController(
         val response = missionVerificationService.submitVerification(
             deviceId = deviceId,
             missionId = missionId,
-            photoUrl = request.photoUrl,
+            photoKey = request.photoKey,
         )
         return ApiResponse.success(response)
     }
