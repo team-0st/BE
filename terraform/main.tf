@@ -259,6 +259,31 @@ resource "aws_ecr_lifecycle_policy" "app" {
   })
 }
 
+resource "aws_s3_bucket" "upload" {
+  bucket = var.upload_bucket_name
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-upload-bucket"
+  })
+}
+
+resource "aws_s3_bucket_public_access_block" "upload" {
+  bucket = aws_s3_bucket.upload.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "upload" {
+  bucket = aws_s3_bucket.upload.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
 resource "aws_iam_openid_connect_provider" "github_actions" {
   url = "https://token.actions.githubusercontent.com"
 

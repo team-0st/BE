@@ -63,6 +63,16 @@ output "ecr_repository_url" {
   value       = aws_ecr_repository.app.repository_url
 }
 
+output "upload_bucket_name" {
+  description = "S3 bucket name for application file uploads."
+  value       = aws_s3_bucket.upload.bucket
+}
+
+output "upload_bucket_arn" {
+  description = "S3 bucket ARN for application file uploads."
+  value       = aws_s3_bucket.upload.arn
+}
+
 output "github_actions_role_arn" {
   description = "IAM role ARN assumed by GitHub Actions via OIDC."
   value       = aws_iam_role.github_actions_deploy.arn

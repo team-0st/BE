@@ -95,6 +95,11 @@ variable "ecr_repository_name" {
   type        = string
 }
 
+variable "upload_bucket_name" {
+  description = "S3 bucket name used for application file uploads."
+  type        = string
+}
+
 variable "github_repository" {
   description = "GitHub repository in owner/name format allowed to assume the deploy role."
   type        = string
