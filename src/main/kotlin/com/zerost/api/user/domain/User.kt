@@ -36,8 +36,8 @@ class User(
     @Column(name = "eco_jam", nullable = false)
     var ecoJam: Int = 0,
 
-    @Column(name = "almang_point", nullable = false)
-    var almangPoint: Int = 0,
+    @Column(name = "point", nullable = false)
+    var point: Int = 0,
 
     @Column(name = "onboarding_completed", nullable = false)
     var onboardingCompleted: Boolean = false,
@@ -58,7 +58,7 @@ class User(
         this.ecoJam += amount
     }
 
-    fun increaseAlmangPoint(amount: Int) {
-        this.almangPoint += amount
+    fun increasePoint(amount: Int) {
+        this.point += amount
     }
 }

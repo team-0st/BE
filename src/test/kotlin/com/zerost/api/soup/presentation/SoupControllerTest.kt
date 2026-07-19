@@ -42,7 +42,7 @@ class SoupControllerTest {
                 recipeType = "COMMON",
                 rewardGrade = "JACKPOT",
                 rewardEcoJam = 0,
-                rewardAlmangPoint = 2_000,
+                rewardPoint = 2_000,
                 rewardedIngredients = emptyList(),
             ),
         )

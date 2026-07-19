@@ -2,11 +2,17 @@ package com.zerost.api.soup.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ecojam.domain.EcoJamHistory
+import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
+import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.point.domain.PointHistory
+import com.zerost.api.point.domain.PointHistoryRepository
+import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRewardGrade
@@ -21,6 +27,8 @@ class SoupRewardService(
     private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val soupRewardIngredientRepository: SoupRewardIngredientRepository,
+    private val ecoJamHistoryRepository: EcoJamHistoryRepository,
+    private val pointHistoryRepository: PointHistoryRepository,
     private val randomProvider: RandomProvider,
 ) {
 
@@ -36,7 +44,7 @@ class SoupRewardService(
         return SoupRewardSummary(
             rewardGrade = reward.rewardGrade.name,
             ecoJam = reward.ecoJam,
-            almangPoint = reward.almangPoint,
+            point = reward.point,
             rewardedIngredients = reward.rewardedIngredients.map { ingredientReward ->
                 SoupRewardIngredientResponse(
                     ingredientId = requireNotNull(ingredientReward.ingredient.id),
@@ -53,15 +61,15 @@ class SoupRewardService(
         return when {
             roll < 5 -> RewardResult(
                 rewardGrade = SoupRewardGrade.JACKPOT,
-                almangPoint = 2_000,
+                point = 2_000,
             )
             roll < 15 -> RewardResult(
                 rewardGrade = SoupRewardGrade.MIDDLE,
-                almangPoint = 1_000,
+                point = 1_000,
             )
             roll < 35 -> RewardResult(
                 rewardGrade = SoupRewardGrade.SMALL,
-                almangPoint = 500,
+                point = 500,
             )
             roll < 60 -> RewardResult(
                 rewardGrade = SoupRewardGrade.INGREDIENT,
@@ -84,22 +92,22 @@ class SoupRewardService(
             roll < 5 -> RewardResult(
                 rewardGrade = SoupRewardGrade.JACKPOT,
                 ecoJam = baseEcoJam + 200,
-                almangPoint = basePoint + 2_000,
+                point = basePoint + 2_000,
             )
             roll < 25 -> RewardResult(
                 rewardGrade = SoupRewardGrade.MIDDLE,
                 ecoJam = baseEcoJam + 100,
-                almangPoint = basePoint + 1_000,
+                point = basePoint + 1_000,
             )
             roll < 90 -> RewardResult(
                 rewardGrade = SoupRewardGrade.SMALL,
                 ecoJam = baseEcoJam + 50,
-                almangPoint = basePoint + 500,
+                point = basePoint + 500,
             )
             else -> RewardResult(
                 rewardGrade = SoupRewardGrade.INGREDIENT,
                 ecoJam = baseEcoJam + 100,
-                almangPoint = basePoint,
+                point = basePoint,
                 rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
             )
         }
@@ -114,22 +122,22 @@ class SoupRewardService(
             roll < 5 -> RewardResult(
                 rewardGrade = SoupRewardGrade.JACKPOT,
                 ecoJam = baseEcoJam + 300,
-                almangPoint = basePoint + 4_000,
+                point = basePoint + 4_000,
             )
             roll < 25 -> RewardResult(
                 rewardGrade = SoupRewardGrade.MIDDLE,
                 ecoJam = baseEcoJam + 200,
-                almangPoint = basePoint + 3_000,
+                point = basePoint + 3_000,
             )
             roll < 90 -> RewardResult(
                 rewardGrade = SoupRewardGrade.SMALL,
                 ecoJam = baseEcoJam + 100,
-                almangPoint = basePoint + 2_000,
+                point = basePoint + 2_000,
             )
             else -> RewardResult(
                 rewardGrade = SoupRewardGrade.INGREDIENT,
                 ecoJam = baseEcoJam + 200,
-                almangPoint = basePoint,
+                point = basePoint,
                 rewardedIngredients = listOf(
                     IngredientReward(randomHiddenIngredient(), 1),
                     IngredientReward(randomCommonIngredient(), 1),
@@ -142,10 +150,11 @@ class SoupRewardService(
     private fun applyReward(soup: Soup, reward: RewardResult) {
         soup.rewardGrade = reward.rewardGrade
         soup.rewardEcoJam = reward.ecoJam
-        soup.rewardAlmangPoint = reward.almangPoint
+        soup.rewardPoint = reward.point
 
         soup.user.increaseEcoJam(reward.ecoJam)
-        soup.user.increaseAlmangPoint(reward.almangPoint)
+        soup.user.increasePoint(reward.point)
+        saveHistories(soup, reward)
 
         reward.rewardedIngredients.forEach { ingredientReward ->
             val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, ingredientReward.ingredient)
@@ -170,6 +179,32 @@ class SoupRewardService(
         }
     }
 
+    private fun saveHistories(soup: Soup, reward: RewardResult) {
+        val soupId = requireNotNull(soup.id)
+
+        if (reward.ecoJam > 0) {
+            ecoJamHistoryRepository.save(
+                EcoJamHistory.earn(
+                    user = soup.user,
+                    amount = reward.ecoJam,
+                    sourceType = EcoJamHistorySourceType.SOUP,
+                    sourceId = soupId,
+                ),
+            )
+        }
+
+        if (reward.point > 0) {
+            pointHistoryRepository.save(
+                PointHistory.earn(
+                    user = soup.user,
+                    amount = reward.point,
+                    sourceType = PointHistorySourceType.SOUP,
+                    sourceId = soupId,
+                ),
+            )
+        }
+    }
+
     private fun randomCommonIngredient(): Ingredient = ingredientRepository.findAllByType(IngredientType.COMMON)
         .takeIf { it.isNotEmpty() }
         ?.let { ingredients -> ingredients[randomProvider.nextInt(ingredients.size)] }
@@ -183,7 +218,7 @@ class SoupRewardService(
     private data class RewardResult(
         val rewardGrade: SoupRewardGrade,
         val ecoJam: Int = 0,
-        val almangPoint: Int = 0,
+        val point: Int = 0,
         val rewardedIngredients: List<IngredientReward> = emptyList(),
     )
 

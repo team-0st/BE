@@ -50,7 +50,7 @@ class SoupBrewingService(
             recipeType = recipe.type.name,
             rewardGrade = reward.rewardGrade,
             rewardEcoJam = reward.ecoJam,
-            rewardAlmangPoint = reward.almangPoint,
+            rewardPoint = reward.point,
             rewardedIngredients = reward.rewardedIngredients,
         )
     }

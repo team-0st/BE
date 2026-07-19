@@ -38,6 +38,6 @@ class Soup(
     @Column(name = "reward_eco_jam", nullable = false)
     var rewardEcoJam: Int = 0,
 
-    @Column(name = "reward_almang_point", nullable = false)
-    var rewardAlmangPoint: Int = 0,
+    @Column(name = "reward_point", nullable = false)
+    var rewardPoint: Int = 0,
 ) : BaseEntity()
