@@ -2,7 +2,9 @@ package com.zerost.api.soup.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
 import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.recipe.domain.Recipe
 import com.zerost.api.recipe.domain.RecipeIngredient
 import com.zerost.api.recipe.domain.RecipeIngredientRepository
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import java.util.Optional
@@ -34,11 +37,15 @@ class SoupBrewingServiceTest {
     private val soupRepository = mock(SoupRepository::class.java)
     private val ingredientRepository = mock(com.zerost.api.ingredient.domain.IngredientRepository::class.java)
     private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
+    private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
+    private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
     private val randomProvider = mock(RandomProvider::class.java)
     private val soupRewardService = SoupRewardService(
         ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
         soupRewardIngredientRepository = soupRewardIngredientRepository,
+        ecoJamHistoryRepository = ecoJamHistoryRepository,
+        pointHistoryRepository = pointHistoryRepository,
         randomProvider = randomProvider,
     )
     private val soupBrewingService = SoupBrewingService(
@@ -109,6 +116,8 @@ class SoupBrewingServiceTest {
         assertEquals(0, userIngredients[1].quantity)
         assertEquals(0, userIngredients[2].quantity)
         verify(soupRepository).save(any(Soup::class.java))
+        verify(pointHistoryRepository).save(any())
+        verify(ecoJamHistoryRepository, never()).save(any())
     }
 
     @Test

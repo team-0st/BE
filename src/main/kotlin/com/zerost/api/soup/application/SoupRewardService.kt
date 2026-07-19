@@ -2,11 +2,17 @@ package com.zerost.api.soup.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ecojam.domain.EcoJamHistory
+import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
+import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.point.domain.PointHistory
+import com.zerost.api.point.domain.PointHistoryRepository
+import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRewardGrade
@@ -21,6 +27,8 @@ class SoupRewardService(
     private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val soupRewardIngredientRepository: SoupRewardIngredientRepository,
+    private val ecoJamHistoryRepository: EcoJamHistoryRepository,
+    private val pointHistoryRepository: PointHistoryRepository,
     private val randomProvider: RandomProvider,
 ) {
 
@@ -146,6 +154,7 @@ class SoupRewardService(
 
         soup.user.increaseEcoJam(reward.ecoJam)
         soup.user.increasePoint(reward.point)
+        saveHistories(soup, reward)
 
         reward.rewardedIngredients.forEach { ingredientReward ->
             val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, ingredientReward.ingredient)
@@ -165,6 +174,32 @@ class SoupRewardService(
                     soup = soup,
                     ingredient = ingredientReward.ingredient,
                     quantity = ingredientReward.quantity,
+                ),
+            )
+        }
+    }
+
+    private fun saveHistories(soup: Soup, reward: RewardResult) {
+        val soupId = requireNotNull(soup.id)
+
+        if (reward.ecoJam > 0) {
+            ecoJamHistoryRepository.save(
+                EcoJamHistory.earn(
+                    user = soup.user,
+                    amount = reward.ecoJam,
+                    sourceType = EcoJamHistorySourceType.SOUP,
+                    sourceId = soupId,
+                ),
+            )
+        }
+
+        if (reward.point > 0) {
+            pointHistoryRepository.save(
+                PointHistory.earn(
+                    user = soup.user,
+                    amount = reward.point,
+                    sourceType = PointHistorySourceType.SOUP,
+                    sourceId = soupId,
                 ),
             )
         }
