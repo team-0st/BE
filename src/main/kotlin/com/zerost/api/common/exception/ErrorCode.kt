@@ -33,6 +33,11 @@ enum class ErrorCode(
     SOUP_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "SOUP_RECIPE_NOT_FOUND", "일치하는 스프 레시피를 찾을 수 없습니다."),
     INSUFFICIENT_INGREDIENT_QUANTITY(HttpStatus.CONFLICT, "INSUFFICIENT_INGREDIENT_QUANTITY", "보유 재료 수량이 부족합니다."),
 
+    // GACHA
+    INSUFFICIENT_ECO_JAM(HttpStatus.CONFLICT, "INSUFFICIENT_ECO_JAM", "보유 에코잼이 부족합니다."),
+    GACHA_REWARD_POLICY_NOT_FOUND(HttpStatus.NOT_FOUND, "GACHA_REWARD_POLICY_NOT_FOUND", "활성화된 가챠 보상 정책을 찾을 수 없습니다."),
+    INVALID_GACHA_REWARD_POLICY(HttpStatus.INTERNAL_SERVER_ERROR, "INVALID_GACHA_REWARD_POLICY", "가챠 보상 정책이 올바르지 않습니다."),
+
     // FILE
     INVALID_FILE_KEY(HttpStatus.BAD_REQUEST, "INVALID_FILE_KEY", "유효하지 않은 업로드 파일 키입니다."),
     UPLOADED_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "UPLOADED_FILE_NOT_FOUND", "업로드한 파일을 찾을 수 없습니다."),
