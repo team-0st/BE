@@ -80,6 +80,10 @@ class MissionCompletion(
         this.reviewedAt = reviewedAt
     }
 
+    fun assignRewardedIngredient(ingredient: Ingredient) {
+        this.rewardedIngredient = ingredient
+    }
+
     private fun validatePendingStatus() {
         if (this.status != MissionCompletionStatus.PENDING) {
             throw BusinessException(ErrorCode.INVALID_MISSION_REVIEW_STATUS)

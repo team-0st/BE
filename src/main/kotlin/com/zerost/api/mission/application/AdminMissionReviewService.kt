@@ -2,6 +2,10 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientRepository
+import com.zerost.api.ingredient.domain.UserIngredient
+import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.presentation.dto.ReviewMissionCompletionResponse
 import org.springframework.stereotype.Service
@@ -11,6 +15,8 @@ import java.time.LocalDateTime
 @Service
 class AdminMissionReviewService(
     private val missionCompletionRepository: MissionCompletionRepository,
+    private val ingredientRepository: IngredientRepository,
+    private val userIngredientRepository: UserIngredientRepository,
 ) {
 
     @Transactional
@@ -24,7 +30,10 @@ class AdminMissionReviewService(
         val reviewedAt = LocalDateTime.now()
 
         when (status) {
-            "APPROVED" -> completion.approve(reviewedAt)
+            "APPROVED" -> {
+                completion.approve(reviewedAt)
+                rewardIngredient(completion)
+            }
             "REJECTED" -> completion.reject(reviewedAt)
             else -> throw BusinessException(ErrorCode.INVALID_INPUT_VALUE)
         }
@@ -34,5 +43,25 @@ class AdminMissionReviewService(
             status = completion.status.name,
             reviewedAt = requireNotNull(completion.reviewedAt).toString(),
         )
+    }
+
+    private fun rewardIngredient(completion: MissionCompletion) {
+        val rewardIngredientId = completion.mission.extractRewardIngredientIds().random()
+
+        val ingredient = ingredientRepository.findById(rewardIngredientId)
+            .orElseThrow { BusinessException(ErrorCode.INGREDIENT_NOT_FOUND) }
+
+        val userIngredient = userIngredientRepository.findByUserAndIngredient(completion.user, ingredient)
+            .orElseGet {
+                UserIngredient(
+                    user = completion.user,
+                    ingredient = ingredient,
+                    quantity = 0,
+                )
+            }
+
+        userIngredient.increaseQuantity()
+        userIngredientRepository.save(userIngredient)
+        completion.assignRewardedIngredient(ingredient)
     }
 }

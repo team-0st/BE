@@ -1,6 +1,8 @@
 package com.zerost.api.mission.domain
 
 import com.zerost.api.common.entity.BaseEntity
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -27,4 +29,17 @@ class Mission(
 
     @Column(name = "reward_ingredient_pool", nullable = false, columnDefinition = "json")
     var rewardIngredientPool: String,
-) : BaseEntity()
+) : BaseEntity() {
+    fun extractRewardIngredientIds(): List<Long> {
+        return rewardIngredientPool
+            .removePrefix("[")
+            .removeSuffix("]")
+            .split(",")
+            .mapNotNull { token ->
+                token.trim()
+                    .takeIf { it.isNotBlank() }
+                    ?.toLongOrNull()
+            }
+            .ifEmpty { throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND) }
+    }
+}

@@ -2,12 +2,20 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientRepository
+import com.zerost.api.ingredient.domain.UserIngredient
+import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
+import com.zerost.api.support.createIngredient
+import com.zerost.api.support.createMission
 import com.zerost.api.support.createMissionCompletion
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import java.util.Optional
 import kotlin.test.assertEquals
@@ -16,20 +24,36 @@ import kotlin.test.assertNotNull
 class AdminMissionReviewServiceTest {
 
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
-    private val adminMissionReviewService = AdminMissionReviewService(missionCompletionRepository)
+    private val ingredientRepository = mock(IngredientRepository::class.java)
+    private val userIngredientRepository = mock(UserIngredientRepository::class.java)
+
+    private val adminMissionReviewService = AdminMissionReviewService(
+        missionCompletionRepository = missionCompletionRepository,
+        ingredientRepository = ingredientRepository,
+        userIngredientRepository = userIngredientRepository,
+    )
 
     @Test
-    fun `검수 대기 미션 인증을 승인할 수 있다`() {
+    fun `검수 대기 미션 인증을 승인하면 보상 재료를 지급한다`() {
+        val mission = createMission(rewardIngredientPool = "[1]")
         val completion = createMissionCompletion(
+            mission = mission,
             status = MissionCompletionStatus.PENDING,
         )
+        val ingredient = createIngredient(id = 1L)
+
         `when`(missionCompletionRepository.findById(1L)).thenReturn(Optional.of(completion))
+        `when`(ingredientRepository.findById(1L)).thenReturn(Optional.of(ingredient))
+        `when`(userIngredientRepository.findByUserAndIngredient(completion.user, ingredient)).thenReturn(Optional.empty())
+        `when`(userIngredientRepository.save(any(UserIngredient::class.java))).thenAnswer { it.arguments[0] as UserIngredient }
 
         val response = adminMissionReviewService.reviewMissionCompletion(1L, "APPROVED")
 
         assertEquals(1L, response.completionId)
         assertEquals("APPROVED", response.status)
         assertNotNull(completion.reviewedAt)
+        assertEquals(ingredient, completion.rewardedIngredient)
+        verify(userIngredientRepository).save(any(UserIngredient::class.java))
     }
 
     @Test
@@ -44,6 +68,7 @@ class AdminMissionReviewServiceTest {
         assertEquals(1L, response.completionId)
         assertEquals("REJECTED", response.status)
         assertNotNull(completion.reviewedAt)
+        verify(ingredientRepository, never()).findById(any(Long::class.java))
     }
 
     @Test
