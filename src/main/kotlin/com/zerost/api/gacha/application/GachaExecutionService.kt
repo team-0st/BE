@@ -10,6 +10,9 @@ import com.zerost.api.gacha.domain.GachaRepository
 import com.zerost.api.gacha.domain.GachaRewardPolicy
 import com.zerost.api.gacha.domain.GachaRewardPolicyRepository
 import com.zerost.api.gacha.presentation.dto.ExecuteGachaResponse
+import com.zerost.api.ingredient.domain.IngredientHistory
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.point.domain.PointHistory
@@ -27,6 +30,7 @@ class GachaExecutionService(
     private val gachaRewardPolicyRepository: GachaRewardPolicyRepository,
     private val gachaRepository: GachaRepository,
     private val userIngredientRepository: UserIngredientRepository,
+    private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
     private val pointHistoryRepository: PointHistoryRepository,
     private val gachaRandomProvider: GachaRandomProvider,
@@ -64,7 +68,7 @@ class GachaExecutionService(
             ),
         )
 
-        applyReward(user, selectedPolicy)
+        applyReward(user, selectedPolicy, requireNotNull(gacha.id))
         saveHistories(user, gacha)
 
         return ExecuteGachaResponse(
@@ -109,7 +113,8 @@ class GachaExecutionService(
 
     private fun applyReward(
         user: User,
-        selectedPolicy: GachaRewardPolicy
+        selectedPolicy: GachaRewardPolicy,
+        gachaId: Long,
     ) {
         if (selectedPolicy.pointAmount > 0) {
             user.increasePoint(selectedPolicy.pointAmount)
@@ -132,6 +137,15 @@ class GachaExecutionService(
 
             userIngredient.increaseQuantity(selectedPolicy.ingredientQuantity)
             userIngredientRepository.save(userIngredient)
+            ingredientHistoryRepository.save(
+                IngredientHistory.earn(
+                    user = user,
+                    ingredient = ingredient,
+                    amount = selectedPolicy.ingredientQuantity,
+                    sourceType = IngredientHistorySourceType.GACHA,
+                    sourceId = gachaId,
+                ),
+            )
         }
     }
 

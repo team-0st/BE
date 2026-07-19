@@ -1,8 +1,10 @@
 package com.zerost.api.checkin.application
 
 import com.zerost.api.checkin.domain.CheckInRepository
+import com.zerost.api.checkin.domain.CheckIn
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.UserIngredient
@@ -28,12 +30,14 @@ class CheckInServiceTest {
     private val ingredientRepository = mock(IngredientRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
     private val checkInRepository = mock(CheckInRepository::class.java)
+    private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val checkInRandomProvider = mock(CheckInRandomProvider::class.java)
     private val checkInService = CheckInService(
         userRepository = userRepository,
         ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
         checkInRepository = checkInRepository,
+        ingredientHistoryRepository = ingredientHistoryRepository,
         checkInRandomProvider = checkInRandomProvider,
     )
 
@@ -48,6 +52,15 @@ class CheckInServiceTest {
         `when`(checkInRandomProvider.nextInt(2)).thenReturn(1)
         `when`(userIngredientRepository.findByUserAndIngredient(user, ingredient2)).thenReturn(Optional.empty())
         `when`(userIngredientRepository.save(any(UserIngredient::class.java))).thenAnswer { it.arguments[0] as UserIngredient }
+        `when`(checkInRepository.save(any(CheckIn::class.java))).thenAnswer { invocation ->
+            val checkIn = invocation.arguments[0] as CheckIn
+            CheckIn(
+                id = 10L,
+                user = checkIn.user,
+                rewardedIngredient = checkIn.rewardedIngredient,
+                checkedDate = checkIn.checkedDate,
+            )
+        }
 
         val response = checkInService.checkIn("device-1")
 
@@ -57,6 +70,7 @@ class CheckInServiceTest {
         assertEquals("image-4", response.rewardedIngredient.imageUrl)
         verify(userIngredientRepository).save(any(UserIngredient::class.java))
         verify(checkInRepository).save(any())
+        verify(ingredientHistoryRepository).save(any())
     }
 
     @Test

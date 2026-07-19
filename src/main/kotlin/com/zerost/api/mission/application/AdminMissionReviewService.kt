@@ -2,6 +2,9 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientHistory
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
@@ -18,6 +21,7 @@ class AdminMissionReviewService(
     private val missionCompletionRepository: MissionCompletionRepository,
     private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
+    private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val userRepository: UserRepository,
 ) {
 
@@ -66,6 +70,15 @@ class AdminMissionReviewService(
 
         userIngredient.increaseQuantity()
         userIngredientRepository.save(userIngredient)
+        ingredientHistoryRepository.save(
+            IngredientHistory.earn(
+                user = lockedUser,
+                ingredient = ingredient,
+                amount = 1,
+                sourceType = IngredientHistorySourceType.MISSION,
+                sourceId = requireNotNull(completion.id),
+            ),
+        )
         completion.assignRewardedIngredient(ingredient)
     }
 }
