@@ -21,6 +21,9 @@ spring:
     enabled: true
 
 app:
+  cors:
+    allowed-origins:
+      - http://localhost:3000
   storage:
     s3:
       bucket: test-bucket
