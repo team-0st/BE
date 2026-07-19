@@ -1,5 +1,6 @@
 package com.zerost.api.mission.domain
 
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDateTime
 
@@ -12,4 +13,7 @@ interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
         start: LocalDateTime,
         end: LocalDateTime,
     ): MissionCompletion?
+
+    @EntityGraph(attributePaths = ["user", "missions"])
+    fun findAllByStatusOrderBySubmittedAtAsc(status: MissionCompletionStatus): List<MissionCompletion>
 }
