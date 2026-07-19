@@ -11,7 +11,7 @@ data class RewardedIngredientResponse(
     @Schema(description = "재료 이름", example = "버려진 천")
     val name: String,
 
-    @Schema(description = "재료 타입", example = "COMMON")
+    @Schema(description = "지급된 보상 재료 타입", example = "COMMON")
     val type: String,
 
     @Schema(description = "재료 이미지 URL", example = "https://example.com/images/ingredient-1.png")

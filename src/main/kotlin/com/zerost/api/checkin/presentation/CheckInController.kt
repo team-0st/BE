@@ -24,7 +24,7 @@ class CheckInController(
 
     @Operation(
         summary = "오늘 출석",
-        description = "오늘 출석을 처리하고 보상 재료를 지급합니다.",
+        description = "오늘 출석을 처리하고 일반 재료 목록 중 랜덤 일반 재료 1종을 보상으로 지급합니다.",
     )
     @ApiResponses(
         value = [

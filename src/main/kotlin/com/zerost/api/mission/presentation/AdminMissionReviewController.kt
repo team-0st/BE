@@ -43,7 +43,7 @@ class AdminMissionReviewController(
 
     @Operation(
         summary = "미션 인증 검수 처리",
-        description = "관리자가 미션 인증 제출 건을 승인 또는 반려 처리합니다. completionId는 미션 ID가 아니라 미션 인증 제출 ID이며, APPROVED 처리 시 보상 재료를 함께 지급합니다.",
+        description = "관리자가 미션 인증 제출 건을 승인 또는 반려 처리합니다. completionId는 미션 ID가 아니라 미션 인증 제출 ID이며, APPROVED 처리 시 미션의 보상 재료 풀 기준으로 재료를 지급합니다. 일반 미션은 보상 풀 내 랜덤 일반 재료를, 특별 미션은 단일 보상 풀 기준 고정 히든 재료를 지급합니다.",
     )
     @ApiResponses(
         value = [
