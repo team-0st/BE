@@ -14,13 +14,20 @@ enum class ErrorCode(
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "요청한 리소스를 찾을 수 없습니다."),
     NOT_ACCEPTABLE(HttpStatus.NOT_ACCEPTABLE, "NOT_ACCEPTABLE", "허용되지 않는 Accept 요청입니다."),
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE", "지원하지 않는 Content-Type 입니다."),
+
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "등록된 유저를 찾을 수 없습니다."),
     SHOP_NOT_FOUND(HttpStatus.NOT_FOUND, "SHOP_NOT_FOUND", "선택한 상점을 찾을 수 없습니다."),
     ALREADY_CHECKED_IN(HttpStatus.CONFLICT, "ALREADY_CHECKED_IN", "오늘은 이미 출석했습니다."),
     INGREDIENT_NOT_FOUND(HttpStatus.NOT_FOUND, "INGREDIENT_NOT_FOUND", "재료 정보를 찾을 수 없습니다."),
+
+    // MISSION
     MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_NOT_FOUND", "미션 정보를 찾을 수 없습니다."),
     MISSION_UNDER_REVIEW(HttpStatus.CONFLICT, "MISSION_UNDER_REVIEW", "오늘 제출한 미션이 아직 검수 중입니다."),
     MISSION_ALREADY_COMPLETED(HttpStatus.CONFLICT, "MISSION_ALREADY_COMPLETED", "오늘 제출한 미션이 이미 승인되었습니다."),
+    MISSION_COMPLETION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_COMPLETION_NOT_FOUND", "미션 인증 정보를 찾을 수 없습니다."),
+    INVALID_MISSION_REVIEW_STATUS(HttpStatus.CONFLICT, "INVALID_MISSION_REVIEW_STATUS", "검수할 수 없는 미션 인증 상태입니다."),
+
+    // FILE
     INVALID_FILE_KEY(HttpStatus.BAD_REQUEST, "INVALID_FILE_KEY", "유효하지 않은 업로드 파일 키입니다."),
     UPLOADED_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "UPLOADED_FILE_NOT_FOUND", "업로드한 파일을 찾을 수 없습니다."),
     EMPTY_FILE(HttpStatus.BAD_REQUEST, "EMPTY_FILE", "빈 파일은 업로드할 수 없습니다."),

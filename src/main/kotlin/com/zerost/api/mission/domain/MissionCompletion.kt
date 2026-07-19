@@ -1,6 +1,8 @@
 package com.zerost.api.mission.domain
 
 import com.zerost.api.common.entity.BaseEntity
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.user.domain.User
 import jakarta.persistence.Column
@@ -63,6 +65,24 @@ class MissionCompletion(
                 status = MissionCompletionStatus.PENDING,
                 submittedAt = submittedAt,
             )
+        }
+    }
+
+    fun approve(reviewedAt: LocalDateTime) {
+        validatePendingStatus()
+        this.status = MissionCompletionStatus.APPROVED
+        this.reviewedAt = reviewedAt
+    }
+
+    fun reject(reviewedAt: LocalDateTime) {
+        validatePendingStatus()
+        this.status = MissionCompletionStatus.REJECTED
+        this.reviewedAt = reviewedAt
+    }
+
+    private fun validatePendingStatus() {
+        if (this.status != MissionCompletionStatus.PENDING) {
+            throw BusinessException(ErrorCode.INVALID_MISSION_REVIEW_STATUS)
         }
     }
 }

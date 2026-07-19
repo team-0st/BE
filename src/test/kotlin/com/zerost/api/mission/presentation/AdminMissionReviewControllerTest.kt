@@ -2,6 +2,7 @@ package com.zerost.api.mission.presentation
 
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mission.application.AdminMissionReviewQueryService
+import com.zerost.api.mission.application.AdminMissionReviewService
 import com.zerost.api.mission.presentation.dto.AdminMissionReviewItemResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,12 +18,16 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders
 class AdminMissionReviewControllerTest {
 
     private val adminMissionReviewQueryService = mock(AdminMissionReviewQueryService::class.java)
+    private val adminMissionReviewService = mock(AdminMissionReviewService::class.java)
     private lateinit var mockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-            AdminMissionReviewController(adminMissionReviewQueryService),
+            AdminMissionReviewController(
+                adminMissionReviewQueryService,
+                adminMissionReviewService,
+            ),
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .build()
