@@ -10,6 +10,7 @@ import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createMission
 import com.zerost.api.support.createMissionCompletion
+import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.any
@@ -27,11 +28,13 @@ class AdminMissionReviewServiceTest {
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
     private val ingredientRepository = mock(IngredientRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
+    private val userRepository = mock(UserRepository::class.java)
 
     private val adminMissionReviewService = AdminMissionReviewService(
         missionCompletionRepository = missionCompletionRepository,
         ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
+        userRepository = userRepository,
     )
 
     @Test
@@ -43,7 +46,8 @@ class AdminMissionReviewServiceTest {
         )
         val ingredient = createIngredient(id = 1L)
 
-        `when`(missionCompletionRepository.findById(1L)).thenReturn(Optional.of(completion))
+        `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion.user))
         `when`(ingredientRepository.findById(1L)).thenReturn(Optional.of(ingredient))
         `when`(userIngredientRepository.findByUserAndIngredient(completion.user, ingredient)).thenReturn(Optional.empty())
         `when`(userIngredientRepository.save(any(UserIngredient::class.java))).thenAnswer { it.arguments[0] as UserIngredient }
@@ -62,7 +66,7 @@ class AdminMissionReviewServiceTest {
         val completion = createMissionCompletion(
             status = MissionCompletionStatus.PENDING,
         )
-        `when`(missionCompletionRepository.findById(1L)).thenReturn(Optional.of(completion))
+        `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
         val response = adminMissionReviewService.reviewMissionCompletion(1L, "REJECTED")
 
@@ -77,7 +81,7 @@ class AdminMissionReviewServiceTest {
         val completion = createMissionCompletion(
             status = MissionCompletionStatus.APPROVED,
         )
-        `when`(missionCompletionRepository.findById(1L)).thenReturn(Optional.of(completion))
+        `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
         val exception = assertThrows<BusinessException> {
             adminMissionReviewService.reviewMissionCompletion(1L, "APPROVED")
@@ -88,7 +92,7 @@ class AdminMissionReviewServiceTest {
 
     @Test
     fun `미션 인증 정보가 없으면 예외가 발생한다`() {
-        `when`(missionCompletionRepository.findById(999L)).thenReturn(Optional.empty())
+        `when`(missionCompletionRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty())
 
         val exception = assertThrows<BusinessException> {
             adminMissionReviewService.reviewMissionCompletion(999L, "APPROVED")
@@ -102,12 +106,30 @@ class AdminMissionReviewServiceTest {
         val completion = createMissionCompletion(
             status = MissionCompletionStatus.PENDING,
         )
-        `when`(missionCompletionRepository.findById(1L)).thenReturn(Optional.of(completion))
+        `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
         val exception = assertThrows<BusinessException> {
             adminMissionReviewService.reviewMissionCompletion(1L, "DONE")
         }
 
         assertEquals(ErrorCode.INVALID_INPUT_VALUE, exception.errorCode)
+    }
+
+    @Test
+    fun `보상 재료 설정이 잘못되면 예외가 발생한다`() {
+        val completion = createMissionCompletion(
+            mission = createMission(rewardIngredientPool = "[1, invalid]"),
+            status = MissionCompletionStatus.PENDING,
+        )
+
+        `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion.user))
+
+        val exception = assertThrows<BusinessException> {
+            adminMissionReviewService.reviewMissionCompletion(1L, "APPROVED")
+        }
+
+        assertEquals(ErrorCode.INVALID_MISSION_REWARD_POOL, exception.errorCode)
+        verify(ingredientRepository, never()).findById(anyLong())
     }
 }

@@ -22,6 +22,7 @@ enum class ErrorCode(
 
     // MISSION
     MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_NOT_FOUND", "미션 정보를 찾을 수 없습니다."),
+    INVALID_MISSION_REWARD_POOL(HttpStatus.INTERNAL_SERVER_ERROR, "INVALID_MISSION_REWARD_POOL", "미션 보상 재료 설정이 올바르지 않습니다."),
     MISSION_UNDER_REVIEW(HttpStatus.CONFLICT, "MISSION_UNDER_REVIEW", "오늘 제출한 미션이 아직 검수 중입니다."),
     MISSION_ALREADY_COMPLETED(HttpStatus.CONFLICT, "MISSION_ALREADY_COMPLETED", "오늘 제출한 미션이 이미 승인되었습니다."),
     MISSION_COMPLETION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_COMPLETION_NOT_FOUND", "미션 인증 정보를 찾을 수 없습니다."),

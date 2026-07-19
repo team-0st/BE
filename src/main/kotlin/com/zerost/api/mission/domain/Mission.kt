@@ -31,15 +31,22 @@ class Mission(
     var rewardIngredientPool: String,
 ) : BaseEntity() {
     fun extractRewardIngredientIds(): List<Long> {
-        return rewardIngredientPool
-            .removePrefix("[")
-            .removeSuffix("]")
-            .split(",")
-            .mapNotNull { token ->
+        val trimmedPool = rewardIngredientPool.trim().removeSurrounding("\"")
+        if (!trimmedPool.startsWith("[") || !trimmedPool.endsWith("]")) {
+            throw BusinessException(ErrorCode.INVALID_MISSION_REWARD_POOL)
+        }
+
+        val body = trimmedPool.removePrefix("[").removeSuffix("]").trim()
+        if (body.isBlank()) {
+            throw BusinessException(ErrorCode.INVALID_MISSION_REWARD_POOL)
+        }
+
+        return body.split(",")
+            .map { token ->
                 token.trim()
                     .takeIf { it.isNotBlank() }
                     ?.toLongOrNull()
+                    ?: throw BusinessException(ErrorCode.INVALID_MISSION_REWARD_POOL)
             }
-            .ifEmpty { throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND) }
     }
 }
