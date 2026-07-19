@@ -16,4 +16,15 @@ data class BrewSoupResponse(
 
     @field:Schema(description = "제작된 스프 타입", example = "COMMON")
     val recipeType: String,
+
+    @field:Schema(description = "보상 등급", example = "JACKPOT")
+    val rewardGrade: String,
+
+    @field:Schema(description = "지급된 에코잼", example = "50")
+    val rewardEcoJam: Int,
+
+    @field:Schema(description = "지급된 알맹상점 포인트", example = "500")
+    val rewardAlmangPoint: Int,
+
+    val rewardedIngredients: List<SoupRewardIngredientResponse>,
 )

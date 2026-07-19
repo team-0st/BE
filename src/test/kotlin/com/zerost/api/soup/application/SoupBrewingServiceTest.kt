@@ -10,6 +10,8 @@ import com.zerost.api.recipe.domain.RecipeRepository
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRepository
+import com.zerost.api.soup.domain.SoupRewardGrade
+import com.zerost.api.soup.domain.SoupRewardIngredientRepository
 import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createUser
 import com.zerost.api.support.createUserIngredient
@@ -30,12 +32,22 @@ class SoupBrewingServiceTest {
     private val recipeIngredientRepository = mock(RecipeIngredientRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
     private val soupRepository = mock(SoupRepository::class.java)
+    private val ingredientRepository = mock(com.zerost.api.ingredient.domain.IngredientRepository::class.java)
+    private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
+    private val randomProvider = mock(RandomProvider::class.java)
+    private val soupRewardService = SoupRewardService(
+        ingredientRepository = ingredientRepository,
+        userIngredientRepository = userIngredientRepository,
+        soupRewardIngredientRepository = soupRewardIngredientRepository,
+        randomProvider = randomProvider,
+    )
     private val soupBrewingService = SoupBrewingService(
         userRepository = userRepository,
         recipeRepository = recipeRepository,
         recipeIngredientRepository = recipeIngredientRepository,
         userIngredientRepository = userIngredientRepository,
         soupRepository = soupRepository,
+        soupRewardService = soupRewardService,
     )
 
     @Test
@@ -59,6 +71,7 @@ class SoupBrewingServiceTest {
 
         `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(3)).thenReturn(listOf(recipe))
+        `when`(randomProvider.nextInt(100)).thenReturn(0)
         `when`(
             recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(1L)),
         ).thenReturn(
@@ -75,6 +88,9 @@ class SoupBrewingServiceTest {
                 id = 10L,
                 user = soup.user,
                 recipe = soup.recipe,
+                rewardGrade = soup.rewardGrade,
+                rewardEcoJam = soup.rewardEcoJam,
+                rewardAlmangPoint = soup.rewardAlmangPoint,
             )
         }
 
@@ -84,6 +100,11 @@ class SoupBrewingServiceTest {
         assertEquals(1L, response.recipeId)
         assertEquals("오리지널 스프", response.recipeName)
         assertEquals("COMMON", response.recipeType)
+        assertEquals("JACKPOT", response.rewardGrade)
+        assertEquals(0, response.rewardEcoJam)
+        assertEquals(2_000, response.rewardAlmangPoint)
+        assertEquals(2_000, user.almangPoint)
+        assertEquals(SoupRewardGrade.JACKPOT, response.rewardGrade.let { SoupRewardGrade.valueOf(it) })
         assertEquals(0, userIngredients[0].quantity)
         assertEquals(0, userIngredients[1].quantity)
         assertEquals(0, userIngredients[2].quantity)

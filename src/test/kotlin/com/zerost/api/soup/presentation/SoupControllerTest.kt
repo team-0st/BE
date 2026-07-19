@@ -40,6 +40,10 @@ class SoupControllerTest {
                 recipeId = 1L,
                 recipeName = "오리지널 스프",
                 recipeType = "COMMON",
+                rewardGrade = "JACKPOT",
+                rewardEcoJam = 0,
+                rewardAlmangPoint = 2_000,
+                rewardedIngredients = emptyList(),
             ),
         )
 
@@ -52,6 +56,7 @@ class SoupControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.recipeName").value("오리지널 스프"))
+            .andExpect(jsonPath("$.data.rewardGrade").value("JACKPOT"))
 
         verify(soupBrewingService).brew("device-1", listOf(1L, 2L, 3L))
     }

@@ -7,6 +7,7 @@ import com.zerost.api.recipe.domain.Recipe
 import com.zerost.api.recipe.domain.RecipeIngredientRepository
 import com.zerost.api.recipe.domain.RecipeRepository
 import com.zerost.api.soup.domain.Soup
+import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRepository
 import com.zerost.api.soup.presentation.dto.BrewSoupResponse
 import com.zerost.api.user.domain.UserRepository
@@ -20,6 +21,7 @@ class SoupBrewingService(
     private val recipeIngredientRepository: RecipeIngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val soupRepository: SoupRepository,
+    private val soupRewardService: SoupRewardService,
 ) {
 
     @Transactional
@@ -36,14 +38,20 @@ class SoupBrewingService(
             Soup(
                 user = user,
                 recipe = recipe,
+                rewardGrade = SoupRewardGrade.CONSOLATION,
             ),
         )
+        val reward = soupRewardService.reward(soup)
 
         return BrewSoupResponse(
             soupId = requireNotNull(soup.id),
             recipeId = requireNotNull(recipe.id),
             recipeName = recipe.name,
             recipeType = recipe.type.name,
+            rewardGrade = reward.rewardGrade,
+            rewardEcoJam = reward.ecoJam,
+            rewardAlmangPoint = reward.almangPoint,
+            rewardedIngredients = reward.rewardedIngredients,
         )
     }
 
