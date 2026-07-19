@@ -1,6 +1,8 @@
 package com.zerost.api.ingredient.domain
 
 import com.zerost.api.common.entity.BaseEntity
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.user.domain.User
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -34,5 +36,12 @@ class UserIngredient(
 
     fun increaseQuantity(amount: Int = 1) {
         this.quantity += amount
+    }
+
+    fun decreaseQuantity(amount: Int = 1) {
+        if (this.quantity < amount) {
+            throw BusinessException(ErrorCode.INSUFFICIENT_INGREDIENT_QUANTITY)
+        }
+        this.quantity -= amount
     }
 }
