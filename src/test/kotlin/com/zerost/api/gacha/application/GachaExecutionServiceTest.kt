@@ -8,6 +8,7 @@ import com.zerost.api.gacha.domain.GachaRepository
 import com.zerost.api.gacha.domain.GachaRewardPolicy
 import com.zerost.api.gacha.domain.GachaRewardPolicyRepository
 import com.zerost.api.gacha.domain.GachaRewardType
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.point.domain.PointHistoryRepository
@@ -32,6 +33,7 @@ class GachaExecutionServiceTest {
     private val gachaRewardPolicyRepository = mock(GachaRewardPolicyRepository::class.java)
     private val gachaRepository = mock(GachaRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
+    private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
     private val gachaRandomProvider = mock(GachaRandomProvider::class.java)
@@ -41,6 +43,7 @@ class GachaExecutionServiceTest {
         gachaRewardPolicyRepository = gachaRewardPolicyRepository,
         gachaRepository = gachaRepository,
         userIngredientRepository = userIngredientRepository,
+        ingredientHistoryRepository = ingredientHistoryRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
         pointHistoryRepository = pointHistoryRepository,
         gachaRandomProvider = gachaRandomProvider,
@@ -130,6 +133,7 @@ class GachaExecutionServiceTest {
         assertEquals(1, response.resultIngredientQuantity)
         assertEquals(200, user.ecoJam)
         verify(userIngredientRepository).save(any(UserIngredient::class.java))
+        verify(ingredientHistoryRepository).save(any())
         verify(ecoJamHistoryRepository).save(any())
         verify(pointHistoryRepository, never()).save(any())
     }

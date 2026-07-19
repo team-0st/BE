@@ -2,6 +2,7 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
@@ -28,12 +29,14 @@ class AdminMissionReviewServiceTest {
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
     private val ingredientRepository = mock(IngredientRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
+    private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val userRepository = mock(UserRepository::class.java)
 
     private val adminMissionReviewService = AdminMissionReviewService(
         missionCompletionRepository = missionCompletionRepository,
         ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
+        ingredientHistoryRepository = ingredientHistoryRepository,
         userRepository = userRepository,
     )
 
@@ -59,6 +62,7 @@ class AdminMissionReviewServiceTest {
         assertNotNull(completion.reviewedAt)
         assertEquals(ingredient, completion.rewardedIngredient)
         verify(userIngredientRepository).save(any(UserIngredient::class.java))
+        verify(ingredientHistoryRepository).save(any())
     }
 
     @Test
