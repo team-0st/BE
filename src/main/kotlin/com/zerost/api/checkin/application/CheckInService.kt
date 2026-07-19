@@ -8,6 +8,7 @@ import com.zerost.api.checkin.presentation.dto.RewardedIngredientResponse
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.ingredient.domain.IngredientRepository
+import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.user.domain.UserRepository
@@ -21,6 +22,7 @@ class CheckInService(
     private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val checkInRepository: CheckInRepository,
+    private val checkInRandomProvider: CheckInRandomProvider,
 ) {
 
     @Transactional
@@ -33,9 +35,11 @@ class CheckInService(
             throw BusinessException(ErrorCode.ALREADY_CHECKED_IN)
         }
 
-        // 추후 랜덤으로 변경 예정
-        val rewardedIngredient = ingredientRepository.findFirstByOrderByIdAsc()
-            ?: throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
+        val commonIngredients = ingredientRepository.findAllByType(IngredientType.COMMON)
+        if (commonIngredients.isEmpty()) {
+            throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
+        }
+        val rewardedIngredient = commonIngredients[checkInRandomProvider.nextInt(commonIngredients.size)]
 
         val userIngredient = userIngredientRepository.findByUserAndIngredient(user, rewardedIngredient)
             .orElseGet {

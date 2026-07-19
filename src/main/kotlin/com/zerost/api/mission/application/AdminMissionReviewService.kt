@@ -50,7 +50,7 @@ class AdminMissionReviewService(
     private fun rewardIngredient(completion: MissionCompletion) {
         val lockedUser = userRepository.findByIdForUpdate(requireNotNull(completion.user.id))
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        val rewardIngredientId = completion.mission.extractRewardIngredientIds().random()
+        val rewardIngredientId = completion.mission.pickRewardIngredientId()
 
         val ingredient = ingredientRepository.findById(rewardIngredientId)
             .orElseThrow { BusinessException(ErrorCode.INGREDIENT_NOT_FOUND) }

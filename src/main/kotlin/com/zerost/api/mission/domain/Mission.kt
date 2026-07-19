@@ -49,4 +49,13 @@ class Mission(
                     ?: throw BusinessException(ErrorCode.INVALID_MISSION_REWARD_POOL)
             }
     }
+
+    fun pickRewardIngredientId(): Long {
+        val rewardIngredientIds = extractRewardIngredientIds()
+        return if (rewardIngredientIds.size == 1) {
+            rewardIngredientIds.first()
+        } else {
+            rewardIngredientIds.random()
+        }
+    }
 }
