@@ -21,7 +21,7 @@ data class AdminMissionReviewItemResponse(
     val missionTitle: String,
 
     @field:Schema(
-        description = "업로드된 인증 이미지 파일 키",
+        description = "검수 대상 인증 이미지의 S3 객체 키",
         example = "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
     )
     val photoKey: String,

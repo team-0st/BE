@@ -28,7 +28,7 @@ class AdminMissionReviewController(
 
     @Operation(
         summary = "검수 대기 미션 인증 목록 조회",
-        description = "관리자가 검수해야 하는 미션 인증 목록을 제출 시각 오름차순으로 조회합니다.",
+        description = "관리자가 검수해야 하는 PENDING 상태의 미션 인증 목록을 제출 시각 오름차순으로 조회합니다.",
     )
     @ApiResponses(
         value = [
@@ -43,14 +43,14 @@ class AdminMissionReviewController(
 
     @Operation(
         summary = "미션 인증 검수 처리",
-        description = "관리자가 미션 인증 건을 승인 또는 반려 처리합니다.",
+        description = "관리자가 미션 인증 제출 건을 승인 또는 반려 처리합니다. completionId는 미션 ID가 아니라 미션 인증 제출 ID이며, APPROVED 처리 시 보상 재료를 함께 지급합니다.",
     )
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "검수 처리 성공"),
-            SwaggerApiResponse(responseCode = "400", description = "잘못된 요청"),
+            SwaggerApiResponse(responseCode = "400", description = "잘못된 요청 또는 허용되지 않은 검수 상태값"),
             SwaggerApiResponse(responseCode = "404", description = "미션 인증 정보를 찾을 수 없음"),
-            SwaggerApiResponse(responseCode = "409", description = "검수할 수 없는 미션 인증 상태"),
+            SwaggerApiResponse(responseCode = "409", description = "이미 검수된 미션 인증으로 상태를 변경할 수 없음"),
         ],
     )
     @PostMapping("/completions/{completionId}/review")

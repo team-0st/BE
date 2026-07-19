@@ -8,7 +8,7 @@ data class ReviewMissionCompletionRequest(
 
     @field:NotBlank(message = "상태는 필수입니다.")
     @field:Schema(
-        description = "검수 결과 상태",
+        description = "검수 결과 상태. APPROVED 또는 REJECTED만 허용합니다.",
         example = "APPROVED",
         allowableValues = ["APPROVED", "REJECTED"],
     )
