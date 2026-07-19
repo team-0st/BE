@@ -3,6 +3,7 @@ package com.zerost.api.checkin.application
 import com.zerost.api.checkin.domain.CheckInRepository
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
@@ -27,29 +28,33 @@ class CheckInServiceTest {
     private val ingredientRepository = mock(IngredientRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
     private val checkInRepository = mock(CheckInRepository::class.java)
+    private val checkInRandomProvider = mock(CheckInRandomProvider::class.java)
     private val checkInService = CheckInService(
         userRepository = userRepository,
         ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
         checkInRepository = checkInRepository,
+        checkInRandomProvider = checkInRandomProvider,
     )
 
     @Test
-    fun `출석 시 오늘 첫 재료를 지급하고 출석 기록을 저장한다`() {
+    fun `출석 시 랜덤 일반 재료를 지급하고 출석 기록을 저장한다`() {
         val user = createUser()
-        val ingredient = createIngredient(id = 3L, imageUrl = "image-3")
+        val ingredient1 = createIngredient(id = 3L, name = "양배추", imageUrl = "image-3")
+        val ingredient2 = createIngredient(id = 4L, name = "토마토", imageUrl = "image-4")
         `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(false)
-        `when`(ingredientRepository.findFirstByOrderByIdAsc()).thenReturn(ingredient)
-        `when`(userIngredientRepository.findByUserAndIngredient(user, ingredient)).thenReturn(Optional.empty())
+        `when`(ingredientRepository.findAllByType(IngredientType.COMMON)).thenReturn(listOf(ingredient1, ingredient2))
+        `when`(checkInRandomProvider.nextInt(2)).thenReturn(1)
+        `when`(userIngredientRepository.findByUserAndIngredient(user, ingredient2)).thenReturn(Optional.empty())
         `when`(userIngredientRepository.save(any(UserIngredient::class.java))).thenAnswer { it.arguments[0] as UserIngredient }
 
         val response = checkInService.checkIn("device-1")
 
-        assertEquals(3L, response.rewardedIngredient.id)
-        assertEquals("버려진 천", response.rewardedIngredient.name)
+        assertEquals(4L, response.rewardedIngredient.id)
+        assertEquals("토마토", response.rewardedIngredient.name)
         assertEquals("COMMON", response.rewardedIngredient.type)
-        assertEquals("image-3", response.rewardedIngredient.imageUrl)
+        assertEquals("image-4", response.rewardedIngredient.imageUrl)
         verify(userIngredientRepository).save(any(UserIngredient::class.java))
         verify(checkInRepository).save(any())
     }
@@ -65,7 +70,7 @@ class CheckInServiceTest {
         }
 
         assertEquals(ErrorCode.ALREADY_CHECKED_IN, exception.errorCode)
-        verify(ingredientRepository, never()).findFirstByOrderByIdAsc()
+        verify(ingredientRepository, never()).findAllByType(IngredientType.COMMON)
     }
 
     @Test
@@ -77,5 +82,19 @@ class CheckInServiceTest {
         val response = checkInService.getTodayStatus("device-1")
 
         assertTrue(response.checkedIn)
+    }
+
+    @Test
+    fun `일반 재료가 없으면 출석할 수 없다`() {
+        val user = createUser()
+        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(false)
+        `when`(ingredientRepository.findAllByType(IngredientType.COMMON)).thenReturn(emptyList())
+
+        val exception = assertThrows<BusinessException> {
+            checkInService.checkIn("device-1")
+        }
+
+        assertEquals(ErrorCode.INGREDIENT_NOT_FOUND, exception.errorCode)
     }
 }

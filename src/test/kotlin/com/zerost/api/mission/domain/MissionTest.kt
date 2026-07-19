@@ -28,4 +28,13 @@ class MissionTest {
 
         assertEquals(ErrorCode.INVALID_MISSION_REWARD_POOL, exception.errorCode)
     }
+
+    @Test
+    fun `보상 재료 풀이 하나면 해당 재료를 그대로 선택한다`() {
+        val mission = createMission(rewardIngredientPool = "[7]")
+
+        val rewardIngredientId = mission.pickRewardIngredientId()
+
+        assertEquals(7L, rewardIngredientId)
+    }
 }
