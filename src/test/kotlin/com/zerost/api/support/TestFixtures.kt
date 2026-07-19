@@ -1,12 +1,16 @@
 package com.zerost.api.support
 
 import com.zerost.api.shop.domain.Shop
+import com.zerost.api.ecojam.domain.EcoJamHistory
+import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionStatus
+import com.zerost.api.point.domain.PointHistory
+import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
 import java.time.LocalDateTime
@@ -17,6 +21,8 @@ fun createUser(
     nickname: String? = null,
     phoneNumber: String? = null,
     shop: Shop? = null,
+    ecoJam: Int = 0,
+    point: Int = 0,
     onboardingCompleted: Boolean = false,
 ): User = User(
     id = id,
@@ -24,6 +30,8 @@ fun createUser(
     nickname = nickname,
     phoneNumber = phoneNumber,
     shop = shop,
+    ecoJam = ecoJam,
+    point = point,
     onboardingCompleted = onboardingCompleted,
 )
 
@@ -139,3 +147,39 @@ fun createSubmitMissionVerificationRequestBody(
 ): String = """
     {"photoKey":"$photoKey"}
 """.trimIndent()
+
+fun createEcoJamHistory(
+    id: Long = 1L,
+    user: User = createUser(),
+    amount: Int = 300,
+    sourceType: EcoJamHistorySourceType = EcoJamHistorySourceType.SOUP,
+    sourceId: Long = 10L,
+    createdAt: LocalDateTime = LocalDateTime.of(2026, 7, 19, 22, 30, 0),
+): EcoJamHistory = EcoJamHistory(
+    id = id,
+    user = user,
+    amount = amount,
+    sourceType = sourceType,
+    sourceId = sourceId,
+).apply {
+    this.createdAt = createdAt
+    this.updatedAt = createdAt
+}
+
+fun createPointHistory(
+    id: Long = 1L,
+    user: User = createUser(),
+    amount: Int = 500,
+    sourceType: PointHistorySourceType = PointHistorySourceType.SOUP,
+    sourceId: Long = 10L,
+    createdAt: LocalDateTime = LocalDateTime.of(2026, 7, 19, 22, 30, 0),
+): PointHistory = PointHistory(
+    id = id,
+    user = user,
+    amount = amount,
+    sourceType = sourceType,
+    sourceId = sourceId,
+).apply {
+    this.createdAt = createdAt
+    this.updatedAt = createdAt
+}
