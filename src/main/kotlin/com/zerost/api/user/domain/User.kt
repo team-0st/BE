@@ -58,6 +58,10 @@ class User(
         this.ecoJam += amount
     }
 
+    fun decreaseEcoJam(amount: Int) {
+        this.ecoJam -= amount
+    }
+
     fun increasePoint(amount: Int) {
         this.point += amount
     }
