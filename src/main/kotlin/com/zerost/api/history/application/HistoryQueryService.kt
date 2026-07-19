@@ -19,7 +19,7 @@ class HistoryQueryService(
     @Transactional(readOnly = true)
     fun getEcoJamHistories(deviceId: String): List<AssetHistoryResponse> {
         val userId = getUserId(deviceId)
-        return ecoJamHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
+        return ecoJamHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(userId)
             .map { history ->
                 AssetHistoryResponse(
                     historyId = requireNotNull(history.id),
@@ -34,7 +34,7 @@ class HistoryQueryService(
     @Transactional(readOnly = true)
     fun getPointHistories(deviceId: String): List<AssetHistoryResponse> {
         val userId = getUserId(deviceId)
-        return pointHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
+        return pointHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(userId)
             .map { history ->
                 AssetHistoryResponse(
                     historyId = requireNotNull(history.id),

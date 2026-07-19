@@ -40,7 +40,7 @@ class HistoryQueryServiceTest {
         )
 
         `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
-        `when`(ecoJamHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(1L))
+        `when`(ecoJamHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(1L))
             .thenReturn(listOf(latestHistory, olderHistory))
 
         val response = historyQueryService.getEcoJamHistories("device-1")
@@ -58,7 +58,7 @@ class HistoryQueryServiceTest {
         val pointHistory = createPointHistory(id = 3L, user = user, amount = 2_000, sourceId = 30L)
 
         `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
-        `when`(pointHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(1L))
+        `when`(pointHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(1L))
             .thenReturn(listOf(pointHistory))
 
         val response = historyQueryService.getPointHistories("device-1")

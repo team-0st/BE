@@ -44,6 +44,8 @@ class EcoJamHistory(
             sourceType: EcoJamHistorySourceType,
             sourceId: Long,
         ): EcoJamHistory {
+            require(amount > 0) { "에코잼 적립 이력 금액은 0보다 커야 합니다." }
+
             return EcoJamHistory(
                 user = user,
                 amount = amount,
