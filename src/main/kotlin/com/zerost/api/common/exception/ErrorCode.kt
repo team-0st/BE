@@ -28,6 +28,11 @@ enum class ErrorCode(
     MISSION_COMPLETION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_COMPLETION_NOT_FOUND", "미션 인증 정보를 찾을 수 없습니다."),
     INVALID_MISSION_REVIEW_STATUS(HttpStatus.CONFLICT, "INVALID_MISSION_REVIEW_STATUS", "검수할 수 없는 미션 인증 상태입니다."),
 
+    // SOUP
+    INVALID_SOUP_SLOT_COUNT(HttpStatus.BAD_REQUEST, "INVALID_SOUP_SLOT_COUNT", "스프 제작 재료 수가 올바르지 않습니다."),
+    SOUP_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "SOUP_RECIPE_NOT_FOUND", "일치하는 스프 레시피를 찾을 수 없습니다."),
+    INSUFFICIENT_INGREDIENT_QUANTITY(HttpStatus.CONFLICT, "INSUFFICIENT_INGREDIENT_QUANTITY", "보유 재료 수량이 부족합니다."),
+
     // FILE
     INVALID_FILE_KEY(HttpStatus.BAD_REQUEST, "INVALID_FILE_KEY", "유효하지 않은 업로드 파일 키입니다."),
     UPLOADED_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "UPLOADED_FILE_NOT_FOUND", "업로드한 파일을 찾을 수 없습니다."),

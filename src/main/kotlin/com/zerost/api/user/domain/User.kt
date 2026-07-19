@@ -36,6 +36,9 @@ class User(
     @Column(name = "eco_jam", nullable = false)
     var ecoJam: Int = 0,
 
+    @Column(name = "almang_point", nullable = false)
+    var almangPoint: Int = 0,
+
     @Column(name = "onboarding_completed", nullable = false)
     var onboardingCompleted: Boolean = false,
 ) : BaseEntity() {
@@ -49,5 +52,13 @@ class User(
         this.phoneNumber = phoneNumber
         this.shop = shop
         this.onboardingCompleted = true
+    }
+
+    fun increaseEcoJam(amount: Int) {
+        this.ecoJam += amount
+    }
+
+    fun increaseAlmangPoint(amount: Int) {
+        this.almangPoint += amount
     }
 }

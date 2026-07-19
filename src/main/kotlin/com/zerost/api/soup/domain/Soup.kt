@@ -1,11 +1,12 @@
-package com.zerost.api.ingredient.domain
+package com.zerost.api.soup.domain
 
 import com.zerost.api.common.entity.BaseEntity
-import com.zerost.api.common.exception.BusinessException
-import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.recipe.domain.Recipe
 import com.zerost.api.user.domain.User
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -15,8 +16,8 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "user_ingredients")
-class UserIngredient(
+@Table(name = "soups")
+class Soup(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,21 +28,16 @@ class UserIngredient(
     val user: User,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ingredient_id", nullable = false)
-    val ingredient: Ingredient,
+    @JoinColumn(name = "recipe_id", nullable = false)
+    val recipe: Recipe,
 
-    @Column(nullable = false)
-    var quantity: Int = 0,
-) : BaseEntity() {
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reward_grade", nullable = false, length = 30)
+    var rewardGrade: SoupRewardGrade,
 
-    fun increaseQuantity(amount: Int = 1) {
-        this.quantity += amount
-    }
+    @Column(name = "reward_eco_jam", nullable = false)
+    var rewardEcoJam: Int = 0,
 
-    fun decreaseQuantity(amount: Int = 1) {
-        if (this.quantity < amount) {
-            throw BusinessException(ErrorCode.INSUFFICIENT_INGREDIENT_QUANTITY)
-        }
-        this.quantity -= amount
-    }
-}
+    @Column(name = "reward_almang_point", nullable = false)
+    var rewardAlmangPoint: Int = 0,
+) : BaseEntity()

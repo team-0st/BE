@@ -1,9 +1,7 @@
-package com.zerost.api.ingredient.domain
+package com.zerost.api.soup.domain
 
 import com.zerost.api.common.entity.BaseEntity
-import com.zerost.api.common.exception.BusinessException
-import com.zerost.api.common.exception.ErrorCode
-import com.zerost.api.user.domain.User
+import com.zerost.api.ingredient.domain.Ingredient
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -15,33 +13,21 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "user_ingredients")
-class UserIngredient(
+@Table(name = "soup_reward_ingredients")
+class SoupRewardIngredient(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    val user: User,
+    @JoinColumn(name = "soup_id", nullable = false)
+    val soup: Soup,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ingredient_id", nullable = false)
     val ingredient: Ingredient,
 
     @Column(nullable = false)
-    var quantity: Int = 0,
-) : BaseEntity() {
-
-    fun increaseQuantity(amount: Int = 1) {
-        this.quantity += amount
-    }
-
-    fun decreaseQuantity(amount: Int = 1) {
-        if (this.quantity < amount) {
-            throw BusinessException(ErrorCode.INSUFFICIENT_INGREDIENT_QUANTITY)
-        }
-        this.quantity -= amount
-    }
-}
+    val quantity: Int,
+) : BaseEntity()
