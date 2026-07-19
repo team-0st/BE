@@ -80,15 +80,16 @@ class GachaExecutionService(
     }
 
     private fun selectPolicy(policies: List<GachaRewardPolicy>): GachaRewardPolicy {
-        val weights = policies.map { policy ->
+        val weightedPolicies = policies.mapNotNull { policy ->
             val weight = policy.probability.multiply(PROBABILITY_SCALE).toInt()
-            if (weight <= 0) {
-                throw BusinessException(ErrorCode.INVALID_GACHA_REWARD_POLICY)
+            if (weight > 0) {
+                WeightedPolicy(policy = policy, weight = weight)
+            } else {
+                null
             }
-            weight
         }
 
-        val totalWeight = weights.sum()
+        val totalWeight = weightedPolicies.sumOf { it.weight }
         if (totalWeight <= 0) {
             throw BusinessException(ErrorCode.INVALID_GACHA_REWARD_POLICY)
         }
@@ -96,10 +97,10 @@ class GachaExecutionService(
         val roll = gachaRandomProvider.nextInt(totalWeight)
         var cumulativeWeight = 0
 
-        policies.forEachIndexed { index, policy ->
-            cumulativeWeight += weights[index]
+        weightedPolicies.forEach { weightedPolicy ->
+            cumulativeWeight += weightedPolicy.weight
             if (roll < cumulativeWeight) {
-                return policy
+                return weightedPolicy.policy
             }
         }
 
@@ -176,4 +177,9 @@ class GachaExecutionService(
         private const val GACHA_COST_ECO_JAM = 100
         private val PROBABILITY_SCALE = BigDecimal("100")
     }
+
+    private data class WeightedPolicy(
+        val policy: GachaRewardPolicy,
+        val weight: Int,
+    )
 }

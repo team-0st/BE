@@ -11,7 +11,14 @@ create table gacha_reward_policies (
     created_at timestamp not null default current_timestamp,
     updated_at timestamp not null default current_timestamp on update current_timestamp,
     primary key (id),
-    constraint fk_gacha_reward_policies_ingredient_id foreign key (ingredient_id) references ingredients (id)
+    constraint fk_gacha_reward_policies_ingredient_id foreign key (ingredient_id) references ingredients (id),
+    constraint chk_gacha_reward_policies_probability_non_negative check (probability >= 0),
+    constraint chk_gacha_reward_policies_reward_payload check (
+        (reward_type = 'FAIL' and point_amount = 0 and eco_jam_amount = 0 and ingredient_id is null and ingredient_quantity = 0) or
+        (reward_type = 'ECO_JAM' and point_amount = 0 and eco_jam_amount > 0 and ingredient_id is null and ingredient_quantity = 0) or
+        (reward_type = 'POINT' and point_amount > 0 and eco_jam_amount = 0 and ingredient_id is null and ingredient_quantity = 0) or
+        (reward_type = 'INGREDIENT' and point_amount = 0 and eco_jam_amount = 0 and ingredient_id is not null and ingredient_quantity > 0)
+    )
 );
 
 create table gachas (

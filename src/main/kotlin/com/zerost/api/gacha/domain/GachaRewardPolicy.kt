@@ -48,4 +48,39 @@ class GachaRewardPolicy(
 
     @Column(name = "active", nullable = false)
     val active: Boolean = true,
-) : BaseEntity()
+) : BaseEntity() {
+
+    init {
+        require(probability >= BigDecimal.ZERO) { "가챠 확률은 0 이상이어야 합니다." }
+
+        when (rewardType) {
+            GachaRewardType.FAIL -> {
+                require(pointAmount == 0) { "FAIL 보상은 포인트를 지급할 수 없습니다." }
+                require(ecoJamAmount == 0) { "FAIL 보상은 에코잼을 지급할 수 없습니다." }
+                require(ingredient == null) { "FAIL 보상은 재료를 지급할 수 없습니다." }
+                require(ingredientQuantity == 0) { "FAIL 보상은 재료 수량을 가질 수 없습니다." }
+            }
+
+            GachaRewardType.ECO_JAM -> {
+                require(pointAmount == 0) { "ECO_JAM 보상은 포인트를 함께 지급할 수 없습니다." }
+                require(ecoJamAmount > 0) { "ECO_JAM 보상은 에코잼 수량이 0보다 커야 합니다." }
+                require(ingredient == null) { "ECO_JAM 보상은 재료를 함께 지급할 수 없습니다." }
+                require(ingredientQuantity == 0) { "ECO_JAM 보상은 재료 수량을 가질 수 없습니다." }
+            }
+
+            GachaRewardType.POINT -> {
+                require(pointAmount > 0) { "POINT 보상은 포인트 수량이 0보다 커야 합니다." }
+                require(ecoJamAmount == 0) { "POINT 보상은 에코잼을 함께 지급할 수 없습니다." }
+                require(ingredient == null) { "POINT 보상은 재료를 함께 지급할 수 없습니다." }
+                require(ingredientQuantity == 0) { "POINT 보상은 재료 수량을 가질 수 없습니다." }
+            }
+
+            GachaRewardType.INGREDIENT -> {
+                require(pointAmount == 0) { "INGREDIENT 보상은 포인트를 함께 지급할 수 없습니다." }
+                require(ecoJamAmount == 0) { "INGREDIENT 보상은 에코잼을 함께 지급할 수 없습니다." }
+                require(ingredient != null) { "INGREDIENT 보상은 재료가 필수입니다." }
+                require(ingredientQuantity > 0) { "INGREDIENT 보상은 재료 수량이 0보다 커야 합니다." }
+            }
+        }
+    }
+}

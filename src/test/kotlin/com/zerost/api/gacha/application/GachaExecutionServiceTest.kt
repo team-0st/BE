@@ -173,6 +173,48 @@ class GachaExecutionServiceTest {
     }
 
     @Test
+    fun `가중치가 0인 정책은 건너뛰고 유효한 정책으로 가챠를 실행한다`() {
+        val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 300)
+        val skippedPolicy = GachaRewardPolicy(
+            id = 4L,
+            name = "스킵 대상",
+            rewardType = GachaRewardType.FAIL,
+            probability = BigDecimal("0.00"),
+        )
+        val validPolicy = GachaRewardPolicy(
+            id = 5L,
+            name = "포인트 100",
+            rewardType = GachaRewardType.POINT,
+            probability = BigDecimal("1.00"),
+            pointAmount = 100,
+        )
+
+        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(skippedPolicy, validPolicy))
+        `when`(gachaRandomProvider.nextInt(100)).thenReturn(0)
+        `when`(gachaRepository.save(any(Gacha::class.java))).thenAnswer { invocation ->
+            val gacha = invocation.arguments[0] as Gacha
+            Gacha(
+                id = 13L,
+                user = gacha.user,
+                rewardPolicy = gacha.rewardPolicy,
+                costEcoJam = gacha.costEcoJam,
+                resultType = gacha.resultType,
+                resultPoint = gacha.resultPoint,
+                resultEcoJam = gacha.resultEcoJam,
+                resultIngredient = gacha.resultIngredient,
+                resultIngredientQuantity = gacha.resultIngredientQuantity,
+            )
+        }
+
+        val response = gachaExecutionService.execute("device-1")
+
+        assertEquals(13L, response.gachaId)
+        assertEquals("POINT", response.resultType)
+        assertEquals(100, response.resultPoint)
+    }
+
+    @Test
     fun `에코잼이 부족하면 가챠를 실행할 수 없다`() {
         val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 50)
 
@@ -197,5 +239,25 @@ class GachaExecutionServiceTest {
         }
 
         assertEquals(ErrorCode.GACHA_REWARD_POLICY_NOT_FOUND, exception.errorCode)
+    }
+
+    @Test
+    fun `유효한 가중치 정책이 하나도 없으면 가챠를 실행할 수 없다`() {
+        val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 300)
+        val zeroWeightPolicy = GachaRewardPolicy(
+            id = 6L,
+            name = "확률 0 정책",
+            rewardType = GachaRewardType.FAIL,
+            probability = BigDecimal("0.00"),
+        )
+
+        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(zeroWeightPolicy))
+
+        val exception = assertThrows<BusinessException> {
+            gachaExecutionService.execute("device-1")
+        }
+
+        assertEquals(ErrorCode.INVALID_GACHA_REWARD_POLICY, exception.errorCode)
     }
 }
