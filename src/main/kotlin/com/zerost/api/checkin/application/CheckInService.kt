@@ -7,6 +7,9 @@ import com.zerost.api.checkin.presentation.dto.CheckInStatusResponse
 import com.zerost.api.checkin.presentation.dto.RewardedIngredientResponse
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.ingredient.domain.IngredientHistory
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
@@ -22,6 +25,7 @@ class CheckInService(
     private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val checkInRepository: CheckInRepository,
+    private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val checkInRandomProvider: CheckInRandomProvider,
 ) {
 
@@ -53,12 +57,21 @@ class CheckInService(
         userIngredient.increaseQuantity()
         userIngredientRepository.save(userIngredient)
 
-        checkInRepository.save(
+        val checkIn = checkInRepository.save(
             CheckIn(
                 user = user,
                 rewardedIngredient = rewardedIngredient,
                 checkedDate = today,
-            )
+            ),
+        )
+        ingredientHistoryRepository.save(
+            IngredientHistory.earn(
+                user = user,
+                ingredient = rewardedIngredient,
+                amount = 1,
+                sourceType = IngredientHistorySourceType.CHECKIN,
+                sourceId = requireNotNull(checkIn.id),
+            ),
         )
 
         return CheckInResponse(
