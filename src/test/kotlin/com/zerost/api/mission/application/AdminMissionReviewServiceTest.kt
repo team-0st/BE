@@ -13,6 +13,7 @@ import com.zerost.api.support.createMissionCompletion
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -68,7 +69,7 @@ class AdminMissionReviewServiceTest {
         assertEquals(1L, response.completionId)
         assertEquals("REJECTED", response.status)
         assertNotNull(completion.reviewedAt)
-        verify(ingredientRepository, never()).findById(any(Long::class.java))
+        verify(ingredientRepository, never()).findById(anyLong())
     }
 
     @Test
@@ -83,6 +84,17 @@ class AdminMissionReviewServiceTest {
         }
 
         assertEquals(ErrorCode.INVALID_MISSION_REVIEW_STATUS, exception.errorCode)
+    }
+
+    @Test
+    fun `미션 인증 정보가 없으면 예외가 발생한다`() {
+        `when`(missionCompletionRepository.findById(999L)).thenReturn(Optional.empty())
+
+        val exception = assertThrows<BusinessException> {
+            adminMissionReviewService.reviewMissionCompletion(999L, "APPROVED")
+        }
+
+        assertEquals(ErrorCode.MISSION_COMPLETION_NOT_FOUND, exception.errorCode)
     }
 
     @Test
