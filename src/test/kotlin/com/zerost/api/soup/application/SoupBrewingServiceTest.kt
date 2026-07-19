@@ -90,7 +90,7 @@ class SoupBrewingServiceTest {
                 recipe = soup.recipe,
                 rewardGrade = soup.rewardGrade,
                 rewardEcoJam = soup.rewardEcoJam,
-                rewardAlmangPoint = soup.rewardAlmangPoint,
+                rewardPoint = soup.rewardPoint,
             )
         }
 
@@ -102,8 +102,8 @@ class SoupBrewingServiceTest {
         assertEquals("COMMON", response.recipeType)
         assertEquals("JACKPOT", response.rewardGrade)
         assertEquals(0, response.rewardEcoJam)
-        assertEquals(2_000, response.rewardAlmangPoint)
-        assertEquals(2_000, user.almangPoint)
+        assertEquals(2_000, response.rewardPoint)
+        assertEquals(2_000, user.point)
         assertEquals(SoupRewardGrade.JACKPOT, response.rewardGrade.let { SoupRewardGrade.valueOf(it) })
         assertEquals(0, userIngredients[0].quantity)
         assertEquals(0, userIngredients[1].quantity)

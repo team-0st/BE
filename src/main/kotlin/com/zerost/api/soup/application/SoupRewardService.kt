@@ -36,7 +36,7 @@ class SoupRewardService(
         return SoupRewardSummary(
             rewardGrade = reward.rewardGrade.name,
             ecoJam = reward.ecoJam,
-            almangPoint = reward.almangPoint,
+            point = reward.point,
             rewardedIngredients = reward.rewardedIngredients.map { ingredientReward ->
                 SoupRewardIngredientResponse(
                     ingredientId = requireNotNull(ingredientReward.ingredient.id),
@@ -53,15 +53,15 @@ class SoupRewardService(
         return when {
             roll < 5 -> RewardResult(
                 rewardGrade = SoupRewardGrade.JACKPOT,
-                almangPoint = 2_000,
+                point = 2_000,
             )
             roll < 15 -> RewardResult(
                 rewardGrade = SoupRewardGrade.MIDDLE,
-                almangPoint = 1_000,
+                point = 1_000,
             )
             roll < 35 -> RewardResult(
                 rewardGrade = SoupRewardGrade.SMALL,
-                almangPoint = 500,
+                point = 500,
             )
             roll < 60 -> RewardResult(
                 rewardGrade = SoupRewardGrade.INGREDIENT,
@@ -84,22 +84,22 @@ class SoupRewardService(
             roll < 5 -> RewardResult(
                 rewardGrade = SoupRewardGrade.JACKPOT,
                 ecoJam = baseEcoJam + 200,
-                almangPoint = basePoint + 2_000,
+                point = basePoint + 2_000,
             )
             roll < 25 -> RewardResult(
                 rewardGrade = SoupRewardGrade.MIDDLE,
                 ecoJam = baseEcoJam + 100,
-                almangPoint = basePoint + 1_000,
+                point = basePoint + 1_000,
             )
             roll < 90 -> RewardResult(
                 rewardGrade = SoupRewardGrade.SMALL,
                 ecoJam = baseEcoJam + 50,
-                almangPoint = basePoint + 500,
+                point = basePoint + 500,
             )
             else -> RewardResult(
                 rewardGrade = SoupRewardGrade.INGREDIENT,
                 ecoJam = baseEcoJam + 100,
-                almangPoint = basePoint,
+                point = basePoint,
                 rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
             )
         }
@@ -114,22 +114,22 @@ class SoupRewardService(
             roll < 5 -> RewardResult(
                 rewardGrade = SoupRewardGrade.JACKPOT,
                 ecoJam = baseEcoJam + 300,
-                almangPoint = basePoint + 4_000,
+                point = basePoint + 4_000,
             )
             roll < 25 -> RewardResult(
                 rewardGrade = SoupRewardGrade.MIDDLE,
                 ecoJam = baseEcoJam + 200,
-                almangPoint = basePoint + 3_000,
+                point = basePoint + 3_000,
             )
             roll < 90 -> RewardResult(
                 rewardGrade = SoupRewardGrade.SMALL,
                 ecoJam = baseEcoJam + 100,
-                almangPoint = basePoint + 2_000,
+                point = basePoint + 2_000,
             )
             else -> RewardResult(
                 rewardGrade = SoupRewardGrade.INGREDIENT,
                 ecoJam = baseEcoJam + 200,
-                almangPoint = basePoint,
+                point = basePoint,
                 rewardedIngredients = listOf(
                     IngredientReward(randomHiddenIngredient(), 1),
                     IngredientReward(randomCommonIngredient(), 1),
@@ -142,10 +142,10 @@ class SoupRewardService(
     private fun applyReward(soup: Soup, reward: RewardResult) {
         soup.rewardGrade = reward.rewardGrade
         soup.rewardEcoJam = reward.ecoJam
-        soup.rewardAlmangPoint = reward.almangPoint
+        soup.rewardPoint = reward.point
 
         soup.user.increaseEcoJam(reward.ecoJam)
-        soup.user.increaseAlmangPoint(reward.almangPoint)
+        soup.user.increasePoint(reward.point)
 
         reward.rewardedIngredients.forEach { ingredientReward ->
             val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, ingredientReward.ingredient)
@@ -183,7 +183,7 @@ class SoupRewardService(
     private data class RewardResult(
         val rewardGrade: SoupRewardGrade,
         val ecoJam: Int = 0,
-        val almangPoint: Int = 0,
+        val point: Int = 0,
         val rewardedIngredients: List<IngredientReward> = emptyList(),
     )
 

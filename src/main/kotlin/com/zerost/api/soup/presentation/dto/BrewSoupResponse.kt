@@ -23,8 +23,8 @@ data class BrewSoupResponse(
     @field:Schema(description = "지급된 에코잼", example = "50")
     val rewardEcoJam: Int,
 
-    @field:Schema(description = "지급된 알맹상점 포인트", example = "500")
-    val rewardAlmangPoint: Int,
+    @field:Schema(description = "지급된 포인트", example = "500")
+    val rewardPoint: Int,
 
     val rewardedIngredients: List<SoupRewardIngredientResponse>,
 )
