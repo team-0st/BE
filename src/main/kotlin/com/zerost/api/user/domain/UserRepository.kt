@@ -11,6 +11,10 @@ interface UserRepository : JpaRepository<User, Long> {
     fun findByDeviceId(deviceId: String): Optional<User>
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.id = :userId")
+    fun findByIdForUpdate(@Param("userId") userId: Long): Optional<User>
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.deviceId = :deviceId")
     fun findByDeviceIdForUpdate(@Param("deviceId") deviceId: String): Optional<User>
 }
