@@ -65,4 +65,8 @@ class User(
     fun increasePoint(amount: Int) {
         this.point += amount
     }
+
+    fun decreasePoint(amount: Int) {
+        this.point -= amount
+    }
 }

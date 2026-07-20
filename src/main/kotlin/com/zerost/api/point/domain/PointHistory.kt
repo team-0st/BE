@@ -53,5 +53,21 @@ class PointHistory(
                 sourceId = sourceId,
             )
         }
+
+        fun spend(
+            user: User,
+            amount: Int,
+            sourceType: PointHistorySourceType,
+            sourceId: Long,
+        ): PointHistory {
+            require(amount > 0) { "포인트 사용 이력 금액은 0보다 커야 합니다." }
+
+            return PointHistory(
+                user = user,
+                amount = -amount,
+                sourceType = sourceType,
+                sourceId = sourceId,
+            )
+        }
     }
 }
