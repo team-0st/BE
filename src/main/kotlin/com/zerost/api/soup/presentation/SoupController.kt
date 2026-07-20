@@ -3,14 +3,17 @@ package com.zerost.api.soup.presentation
 import com.zerost.api.common.device.DeviceConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.soup.application.SoupBrewingService
+import com.zerost.api.soup.application.SoupRerollService
 import com.zerost.api.soup.presentation.dto.BrewSoupRequest
 import com.zerost.api.soup.presentation.dto.BrewSoupResponse
+import com.zerost.api.soup.presentation.dto.RerollSoupResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/soups")
 class SoupController(
     private val soupBrewingService: SoupBrewingService,
+    private val soupRerollService: SoupRerollService,
 ) {
 
     @Operation(
@@ -42,6 +46,27 @@ class SoupController(
     ): ApiResponse<BrewSoupResponse> {
         val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
         val response = soupBrewingService.brew(deviceId, request.ingredientIds)
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "스프 보상 리롤",
+        description = "이미 제작한 스프의 보상을 에코잼을 사용해 1회에 한해 다시 추첨합니다. 기존 보상은 회수되고 새 보상이 최종 결과로 적용됩니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "스프 리롤 성공"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 스프 제작 정보를 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "이미 리롤을 완료했거나 현재 보상 등급에서 리롤할 수 없거나 보유 에코잼이 부족함"),
+        ],
+    )
+    @PostMapping("/{soupId}/reroll")
+    fun reroll(
+        @PathVariable soupId: Long,
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<RerollSoupResponse> {
+        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val response = soupRerollService.reroll(deviceId, soupId)
         return ApiResponse.success(response)
     }
 }

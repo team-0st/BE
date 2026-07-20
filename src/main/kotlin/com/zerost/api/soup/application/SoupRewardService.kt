@@ -6,6 +6,9 @@ import com.zerost.api.ecojam.domain.EcoJamHistory
 import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
 import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.ingredient.domain.Ingredient
+import com.zerost.api.ingredient.domain.IngredientHistory
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
@@ -27,6 +30,7 @@ class SoupRewardService(
     private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val soupRewardIngredientRepository: SoupRewardIngredientRepository,
+    private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
     private val pointHistoryRepository: PointHistoryRepository,
     private val randomProvider: RandomProvider,
@@ -40,6 +44,37 @@ class SoupRewardService(
         }
 
         applyReward(soup, reward)
+
+        return SoupRewardSummary(
+            rewardGrade = reward.rewardGrade.name,
+            ecoJam = reward.ecoJam,
+            point = reward.point,
+            rewardedIngredients = reward.rewardedIngredients.map { ingredientReward ->
+                SoupRewardIngredientResponse(
+                    ingredientId = requireNotNull(ingredientReward.ingredient.id),
+                    ingredientName = ingredientReward.ingredient.name,
+                    quantity = ingredientReward.quantity,
+                )
+            },
+        )
+    }
+
+    fun reroll(soup: Soup): SoupRewardSummary {
+        revokeReward(soup)
+
+        val reward = when (soup.recipe.type) {
+            RecipeType.COMMON -> rerollCommonSoup(soup.rewardGrade)
+            RecipeType.HIDDEN -> rerollHiddenSoup(soup.rewardGrade)
+            RecipeType.LEGENDARY -> rerollLegendarySoup(soup.rewardGrade)
+        }
+
+        applyReward(
+            soup = soup,
+            reward = reward,
+            ecoJamHistorySourceType = EcoJamHistorySourceType.SOUP_REROLL,
+            pointHistorySourceType = PointHistorySourceType.SOUP_REROLL,
+            ingredientHistorySourceType = IngredientHistorySourceType.SOUP_REROLL,
+        )
 
         return SoupRewardSummary(
             rewardGrade = reward.rewardGrade.name,
@@ -147,14 +182,232 @@ class SoupRewardService(
         }
     }
 
-    private fun applyReward(soup: Soup, reward: RewardResult) {
+    private fun rerollCommonSoup(currentGrade: SoupRewardGrade): RewardResult {
+        val roll = randomProvider.nextInt(100)
+
+        return when (currentGrade) {
+            SoupRewardGrade.CONSOLATION -> when {
+                roll < 60 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.INGREDIENT,
+                    ecoJam = 50,
+                    rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
+                )
+                roll < 90 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    point = 500,
+                )
+                roll < 98 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    point = 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    point = 2_000,
+                )
+            }
+
+            SoupRewardGrade.INGREDIENT -> when {
+                roll < 65 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.INGREDIENT,
+                    ecoJam = 50,
+                    rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
+                )
+                roll < 90 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    point = 500,
+                )
+                roll < 98 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    point = 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    point = 2_000,
+                )
+            }
+
+            SoupRewardGrade.SMALL -> when {
+                roll < 75 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    point = 500,
+                )
+                roll < 95 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    point = 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    point = 2_000,
+                )
+            }
+
+            SoupRewardGrade.MIDDLE -> when {
+                roll < 90 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    point = 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    point = 2_000,
+                )
+            }
+
+            SoupRewardGrade.JACKPOT -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
+        }
+    }
+
+    private fun rerollHiddenSoup(currentGrade: SoupRewardGrade): RewardResult {
+        val roll = randomProvider.nextInt(100)
+        val baseEcoJam = 300
+        val basePoint = 500
+
+        return when (currentGrade) {
+            SoupRewardGrade.INGREDIENT -> when {
+                roll < 70 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.INGREDIENT,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint,
+                    rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
+                )
+                roll < 90 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    ecoJam = baseEcoJam + 50,
+                    point = basePoint + 500,
+                )
+                roll < 98 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 2_000,
+                )
+            }
+
+            SoupRewardGrade.SMALL -> when {
+                roll < 80 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    ecoJam = baseEcoJam + 50,
+                    point = basePoint + 500,
+                )
+                roll < 95 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 2_000,
+                )
+            }
+
+            SoupRewardGrade.MIDDLE -> when {
+                roll < 92 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 1_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 2_000,
+                )
+            }
+
+            SoupRewardGrade.CONSOLATION,
+            SoupRewardGrade.JACKPOT,
+            -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
+        }
+    }
+
+    private fun rerollLegendarySoup(currentGrade: SoupRewardGrade): RewardResult {
+        val roll = randomProvider.nextInt(100)
+        val baseEcoJam = 500
+        val basePoint = 1_500
+
+        return when (currentGrade) {
+            SoupRewardGrade.INGREDIENT -> when {
+                roll < 75 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.INGREDIENT,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint,
+                    rewardedIngredients = listOf(
+                        IngredientReward(randomHiddenIngredient(), 1),
+                        IngredientReward(randomCommonIngredient(), 1),
+                        IngredientReward(randomCommonIngredient(), 1),
+                    ),
+                )
+                roll < 93 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 2_000,
+                )
+                roll < 98 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 3_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 300,
+                    point = basePoint + 4_000,
+                )
+            }
+
+            SoupRewardGrade.SMALL -> when {
+                roll < 82 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 2_000,
+                )
+                roll < 97 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 3_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 300,
+                    point = basePoint + 4_000,
+                )
+            }
+
+            SoupRewardGrade.MIDDLE -> when {
+                roll < 95 -> RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 3_000,
+                )
+                else -> RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 300,
+                    point = basePoint + 4_000,
+                )
+            }
+
+            SoupRewardGrade.CONSOLATION,
+            SoupRewardGrade.JACKPOT,
+            -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
+        }
+    }
+
+    private fun applyReward(
+        soup: Soup,
+        reward: RewardResult,
+        ecoJamHistorySourceType: EcoJamHistorySourceType = EcoJamHistorySourceType.SOUP,
+        pointHistorySourceType: PointHistorySourceType = PointHistorySourceType.SOUP,
+        ingredientHistorySourceType: IngredientHistorySourceType = IngredientHistorySourceType.SOUP,
+    ) {
         soup.rewardGrade = reward.rewardGrade
         soup.rewardEcoJam = reward.ecoJam
         soup.rewardPoint = reward.point
 
         soup.user.increaseEcoJam(reward.ecoJam)
         soup.user.increasePoint(reward.point)
-        saveHistories(soup, reward)
+        saveHistories(soup, reward, ecoJamHistorySourceType, pointHistorySourceType)
 
         reward.rewardedIngredients.forEach { ingredientReward ->
             val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, ingredientReward.ingredient)
@@ -169,6 +422,16 @@ class SoupRewardService(
             userIngredient.increaseQuantity(ingredientReward.quantity)
             userIngredientRepository.save(userIngredient)
 
+            ingredientHistoryRepository.save(
+                IngredientHistory.earn(
+                    user = soup.user,
+                    ingredient = ingredientReward.ingredient,
+                    amount = ingredientReward.quantity,
+                    sourceType = ingredientHistorySourceType,
+                    sourceId = requireNotNull(soup.id),
+                ),
+            )
+
             soupRewardIngredientRepository.save(
                 SoupRewardIngredient(
                     soup = soup,
@@ -179,7 +442,57 @@ class SoupRewardService(
         }
     }
 
-    private fun saveHistories(soup: Soup, reward: RewardResult) {
+    private fun revokeReward(soup: Soup) {
+        val soupId = requireNotNull(soup.id)
+
+        if (soup.rewardEcoJam > 0) {
+            soup.user.decreaseEcoJam(soup.rewardEcoJam)
+            ecoJamHistoryRepository.save(
+                EcoJamHistory.spend(
+                    user = soup.user,
+                    amount = soup.rewardEcoJam,
+                    sourceType = EcoJamHistorySourceType.SOUP_REROLL,
+                    sourceId = soupId,
+                ),
+            )
+        }
+
+        if (soup.rewardPoint > 0) {
+            soup.user.decreasePoint(soup.rewardPoint)
+            pointHistoryRepository.save(
+                PointHistory.spend(
+                    user = soup.user,
+                    amount = soup.rewardPoint,
+                    sourceType = PointHistorySourceType.SOUP_REROLL,
+                    sourceId = soupId,
+                ),
+            )
+        }
+
+        val rewardedIngredients = soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(soupId)
+        rewardedIngredients.forEach { rewardedIngredient ->
+            val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, rewardedIngredient.ingredient)
+                .orElseThrow { BusinessException(ErrorCode.INSUFFICIENT_INGREDIENT_QUANTITY) }
+            userIngredient.decreaseQuantity(rewardedIngredient.quantity)
+            ingredientHistoryRepository.save(
+                IngredientHistory.spend(
+                    user = soup.user,
+                    ingredient = rewardedIngredient.ingredient,
+                    amount = rewardedIngredient.quantity,
+                    sourceType = IngredientHistorySourceType.SOUP_REROLL,
+                    sourceId = soupId,
+                ),
+            )
+        }
+        soupRewardIngredientRepository.deleteAll(rewardedIngredients)
+    }
+
+    private fun saveHistories(
+        soup: Soup,
+        reward: RewardResult,
+        ecoJamHistorySourceType: EcoJamHistorySourceType,
+        pointHistorySourceType: PointHistorySourceType,
+    ) {
         val soupId = requireNotNull(soup.id)
 
         if (reward.ecoJam > 0) {
@@ -187,7 +500,7 @@ class SoupRewardService(
                 EcoJamHistory.earn(
                     user = soup.user,
                     amount = reward.ecoJam,
-                    sourceType = EcoJamHistorySourceType.SOUP,
+                    sourceType = ecoJamHistorySourceType,
                     sourceId = soupId,
                 ),
             )
@@ -198,7 +511,7 @@ class SoupRewardService(
                 PointHistory.earn(
                     user = soup.user,
                     amount = reward.point,
-                    sourceType = PointHistorySourceType.SOUP,
+                    sourceType = pointHistorySourceType,
                     sourceId = soupId,
                 ),
             )

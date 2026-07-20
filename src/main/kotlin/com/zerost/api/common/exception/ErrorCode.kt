@@ -29,9 +29,12 @@ enum class ErrorCode(
     INVALID_MISSION_REVIEW_STATUS(HttpStatus.CONFLICT, "INVALID_MISSION_REVIEW_STATUS", "검수할 수 없는 미션 인증 상태입니다."),
 
     // SOUP
+    SOUP_NOT_FOUND(HttpStatus.NOT_FOUND, "SOUP_NOT_FOUND", "스프 제작 정보를 찾을 수 없습니다."),
     INVALID_SOUP_SLOT_COUNT(HttpStatus.BAD_REQUEST, "INVALID_SOUP_SLOT_COUNT", "스프 제작 재료 수가 올바르지 않습니다."),
     SOUP_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "SOUP_RECIPE_NOT_FOUND", "일치하는 스프 레시피를 찾을 수 없습니다."),
     INSUFFICIENT_INGREDIENT_QUANTITY(HttpStatus.CONFLICT, "INSUFFICIENT_INGREDIENT_QUANTITY", "보유 재료 수량이 부족합니다."),
+    SOUP_REROLL_ALREADY_COMPLETED(HttpStatus.CONFLICT, "SOUP_REROLL_ALREADY_COMPLETED", "이미 리롤을 완료한 스프입니다."),
+    SOUP_REROLL_NOT_AVAILABLE(HttpStatus.CONFLICT, "SOUP_REROLL_NOT_AVAILABLE", "현재 보상 등급에서는 리롤을 진행할 수 없습니다."),
 
     // RECIPE
     RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "RECIPE_NOT_FOUND", "레시피 정보를 찾을 수 없습니다."),
