@@ -14,6 +14,7 @@ import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.recipe.domain.Recipe
 import com.zerost.api.recipe.domain.RecipeIngredient
 import com.zerost.api.recipe.domain.RecipeType
+import com.zerost.api.recipe.domain.UserUnlockedRecipe
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
 import java.time.LocalDateTime
@@ -169,6 +170,16 @@ fun createRecipeIngredient(
     recipe = recipe,
     ingredient = ingredient,
     slotOrder = slotOrder,
+)
+
+fun createUserUnlockedRecipe(
+    id: Long = 1L,
+    user: User = createUser(),
+    recipe: Recipe = createRecipe(type = RecipeType.HIDDEN),
+): UserUnlockedRecipe = UserUnlockedRecipe(
+    id = id,
+    user = user,
+    recipe = recipe,
 )
 
 fun createSubmitMissionVerificationRequestBody(
