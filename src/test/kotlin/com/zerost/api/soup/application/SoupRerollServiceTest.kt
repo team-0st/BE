@@ -155,4 +155,29 @@ class SoupRerollServiceTest {
         assertEquals(ErrorCode.SOUP_REROLL_ALREADY_COMPLETED, exception.errorCode)
         verify(ecoJamHistoryRepository, never()).save(any())
     }
+
+    @Test
+    fun `기존 보상을 회수할 수 없으면 리롤 비용 차감 전에 예외가 발생한다`() {
+        val user = createUser(ecoJam = 20, point = 0)
+        val soup = createSoup(
+            id = 10L,
+            user = user,
+            recipe = createRecipe(type = RecipeType.COMMON),
+            rewardGrade = SoupRewardGrade.CONSOLATION,
+            rewardEcoJam = 30,
+            rewardPoint = 0,
+        )
+
+        `when`(soupRepository.findById(10L)).thenReturn(Optional.of(soup))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(soupRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(soup))
+        `when`(soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(10L)).thenReturn(emptyList())
+
+        val exception = assertThrows<BusinessException> {
+            soupRerollService.reroll("device-1", 10L)
+        }
+
+        assertEquals(ErrorCode.SOUP_REROLL_REWARD_RECOVERY_NOT_AVAILABLE, exception.errorCode)
+        verify(ecoJamHistoryRepository, never()).save(any())
+    }
 }

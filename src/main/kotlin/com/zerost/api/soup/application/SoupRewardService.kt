@@ -90,6 +90,22 @@ class SoupRewardService(
         )
     }
 
+    fun validateRewardRecoverable(soup: Soup) {
+        if (soup.user.ecoJam < soup.rewardEcoJam || soup.user.point < soup.rewardPoint) {
+            throw BusinessException(ErrorCode.SOUP_REROLL_REWARD_RECOVERY_NOT_AVAILABLE)
+        }
+
+        val rewardedIngredients = soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(requireNotNull(soup.id))
+        rewardedIngredients.forEach { rewardedIngredient ->
+            val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, rewardedIngredient.ingredient)
+                .orElseThrow { BusinessException(ErrorCode.SOUP_REROLL_REWARD_RECOVERY_NOT_AVAILABLE) }
+
+            if (userIngredient.quantity < rewardedIngredient.quantity) {
+                throw BusinessException(ErrorCode.SOUP_REROLL_REWARD_RECOVERY_NOT_AVAILABLE)
+            }
+        }
+    }
+
     private fun rewardCommonSoup(): RewardResult {
         val roll = randomProvider.nextInt(100)
 

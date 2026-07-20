@@ -39,6 +39,7 @@ class SoupRerollService(
         }
 
         val rerollCost = calculateRerollCost(soup.recipe.type, soup.rewardGrade)
+        soupRewardService.validateRewardRecoverable(soup)
         if (user.ecoJam < rerollCost) {
             throw BusinessException(ErrorCode.INSUFFICIENT_ECO_JAM)
         }

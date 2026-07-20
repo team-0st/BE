@@ -1,6 +1,8 @@
 package com.zerost.api.user.domain
 
 import com.zerost.api.common.entity.BaseEntity
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.shop.domain.Shop
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -59,6 +61,9 @@ class User(
     }
 
     fun decreaseEcoJam(amount: Int) {
+        if (this.ecoJam < amount) {
+            throw BusinessException(ErrorCode.INSUFFICIENT_ECO_JAM)
+        }
         this.ecoJam -= amount
     }
 
@@ -67,6 +72,9 @@ class User(
     }
 
     fun decreasePoint(amount: Int) {
+        if (this.point < amount) {
+            throw BusinessException(ErrorCode.INSUFFICIENT_POINT)
+        }
         this.point -= amount
     }
 }
