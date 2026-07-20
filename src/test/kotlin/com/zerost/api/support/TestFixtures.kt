@@ -15,6 +15,9 @@ import com.zerost.api.recipe.domain.Recipe
 import com.zerost.api.recipe.domain.RecipeIngredient
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.recipe.domain.UserUnlockedRecipe
+import com.zerost.api.soup.domain.Soup
+import com.zerost.api.soup.domain.SoupRewardGrade
+import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
 import java.time.LocalDateTime
@@ -180,6 +183,36 @@ fun createUserUnlockedRecipe(
     id = id,
     user = user,
     recipe = recipe,
+)
+
+fun createSoup(
+    id: Long = 1L,
+    user: User = createUser(),
+    recipe: Recipe = createRecipe(),
+    rewardGrade: SoupRewardGrade = SoupRewardGrade.CONSOLATION,
+    rewardEcoJam: Int = 0,
+    rewardPoint: Int = 0,
+    rerolled: Boolean = false,
+): Soup = Soup(
+    id = id,
+    user = user,
+    recipe = recipe,
+    rewardGrade = rewardGrade,
+    rewardEcoJam = rewardEcoJam,
+    rewardPoint = rewardPoint,
+    rerolled = rerolled,
+)
+
+fun createSoupRewardIngredient(
+    id: Long = 1L,
+    soup: Soup = createSoup(),
+    ingredient: Ingredient = createIngredient(),
+    quantity: Int = 1,
+): SoupRewardIngredient = SoupRewardIngredient(
+    id = id,
+    soup = soup,
+    ingredient = ingredient,
+    quantity = quantity,
 )
 
 fun createSubmitMissionVerificationRequestBody(

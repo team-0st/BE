@@ -3,6 +3,7 @@ package com.zerost.api.soup.application
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientHistoryRepository
 import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.recipe.domain.Recipe
@@ -37,6 +38,7 @@ class SoupBrewingServiceTest {
     private val soupRepository = mock(SoupRepository::class.java)
     private val ingredientRepository = mock(com.zerost.api.ingredient.domain.IngredientRepository::class.java)
     private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
+    private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
     private val randomProvider = mock(RandomProvider::class.java)
@@ -44,6 +46,7 @@ class SoupBrewingServiceTest {
         ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
         soupRewardIngredientRepository = soupRewardIngredientRepository,
+        ingredientHistoryRepository = ingredientHistoryRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
         pointHistoryRepository = pointHistoryRepository,
         randomProvider = randomProvider,

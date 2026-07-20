@@ -3,7 +3,9 @@ package com.zerost.api.soup.presentation
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.soup.application.SoupBrewingService
+import com.zerost.api.soup.application.SoupRerollService
 import com.zerost.api.soup.presentation.dto.BrewSoupResponse
+import com.zerost.api.soup.presentation.dto.RerollSoupResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -20,12 +22,13 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 class SoupControllerTest {
 
     private val soupBrewingService = mock(SoupBrewingService::class.java)
+    private val soupRerollService = mock(SoupRerollService::class.java)
     private lateinit var mockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
         val validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() }
-        mockMvc = MockMvcBuilders.standaloneSetup(SoupController(soupBrewingService))
+        mockMvc = MockMvcBuilders.standaloneSetup(SoupController(soupBrewingService, soupRerollService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
             .addInterceptors(DeviceIdInterceptor())
@@ -59,6 +62,33 @@ class SoupControllerTest {
             .andExpect(jsonPath("$.data.rewardGrade").value("JACKPOT"))
 
         verify(soupBrewingService).brew("device-1", listOf(1L, 2L, 3L))
+    }
+
+    @Test
+    fun `디바이스 아이디가 있으면 스프 보상을 리롤할 수 있다`() {
+        `when`(soupRerollService.reroll("device-1", 10L)).thenReturn(
+            RerollSoupResponse(
+                soupId = 10L,
+                rerollCostEcoJam = 30,
+                remainingEcoJam = 70,
+                rewardGrade = "SMALL",
+                rewardEcoJam = 0,
+                rewardPoint = 500,
+                rewardedIngredients = emptyList(),
+            ),
+        )
+
+        mockMvc.perform(
+            post("/api/v1/soups/10/reroll")
+                .header("X-Device-Id", "device-1"),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.soupId").value(10))
+            .andExpect(jsonPath("$.data.rewardGrade").value("SMALL"))
+            .andExpect(jsonPath("$.data.remainingEcoJam").value(70))
+
+        verify(soupRerollService).reroll("device-1", 10L)
     }
 
     @Test
