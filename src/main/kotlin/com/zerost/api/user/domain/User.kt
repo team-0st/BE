@@ -61,6 +61,7 @@ class User(
     }
 
     fun decreaseEcoJam(amount: Int) {
+        require(amount > 0) { "차감할 에코잼은 0보다 커야 합니다." }
         if (this.ecoJam < amount) {
             throw BusinessException(ErrorCode.INSUFFICIENT_ECO_JAM)
         }
@@ -72,6 +73,7 @@ class User(
     }
 
     fun decreasePoint(amount: Int) {
+        require(amount > 0) { "차감할 포인트는 0보다 커야 합니다." }
         if (this.point < amount) {
             throw BusinessException(ErrorCode.INSUFFICIENT_POINT)
         }
