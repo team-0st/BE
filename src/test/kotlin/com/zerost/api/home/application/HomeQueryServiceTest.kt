@@ -66,7 +66,7 @@ class HomeQueryServiceTest {
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(true)
         `when`(missionRepository.count()).thenReturn(7L)
         `when`(
-            missionCompletionRepository.findAllByUserIdAndSubmittedAtBetween(
+            missionCompletionRepository.findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
                 1L,
                 todayStart,
                 tomorrowStart,
@@ -84,5 +84,27 @@ class HomeQueryServiceTest {
         assertEquals(1, response.missionProgress.pendingMissionCount)
         assertEquals(1, response.missionProgress.approvedMissionCount)
         assertEquals(1, response.missionProgress.rejectedMissionCount)
+    }
+
+    @Test
+    fun `홈 화면 조회는 다음날 자정 이전까지만 오늘 제출 내역으로 집계한다`() {
+        val user = createUser()
+        val todayStart = LocalDate.now().atStartOfDay()
+        val tomorrowStart = LocalDate.now().plusDays(1).atStartOfDay()
+
+        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(false)
+        `when`(missionRepository.count()).thenReturn(7L)
+        `when`(
+            missionCompletionRepository.findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
+                1L,
+                todayStart,
+                tomorrowStart,
+            ),
+        ).thenReturn(emptyList())
+
+        val response = homeQueryService.getHome("device-1")
+
+        assertEquals(0, response.missionProgress.submittedMissionCount)
     }
 }

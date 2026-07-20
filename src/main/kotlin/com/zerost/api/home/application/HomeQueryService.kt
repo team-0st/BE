@@ -29,7 +29,7 @@ class HomeQueryService(
         val userId = requireNotNull(user.id)
         val today = LocalDate.now()
         val todayRange = getTodayRange(today)
-        val todayCompletions = missionCompletionRepository.findAllByUserIdAndSubmittedAtBetween(
+        val todayCompletions = missionCompletionRepository.findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
             userId = userId,
             start = todayRange.first,
             end = todayRange.second,

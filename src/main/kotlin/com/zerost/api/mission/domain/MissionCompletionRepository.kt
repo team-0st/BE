@@ -12,7 +12,7 @@ import java.util.Optional
 interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
     fun findAllByUserIdOrderBySubmittedAtDesc(userId: Long): List<MissionCompletion>
 
-    fun findAllByUserIdAndSubmittedAtBetween(
+    fun findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
         userId: Long,
         start: LocalDateTime,
         end: LocalDateTime,
