@@ -12,12 +12,20 @@ import java.util.Optional
 interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
     fun findAllByUserIdOrderBySubmittedAtDesc(userId: Long): List<MissionCompletion>
 
+    fun findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
+        userId: Long,
+        start: LocalDateTime,
+        end: LocalDateTime,
+    ): List<MissionCompletion>
+
     fun findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
         userId: Long,
         missionId: Long,
         start: LocalDateTime,
         end: LocalDateTime,
     ): MissionCompletion?
+
+    fun countByUserIdAndStatus(userId: Long, status: MissionCompletionStatus): Long
 
     @EntityGraph(attributePaths = ["user", "mission"])
     fun findAllByStatusOrderBySubmittedAtAsc(status: MissionCompletionStatus): List<MissionCompletion>

@@ -1,0 +1,56 @@
+package com.zerost.api.home.application
+
+import com.zerost.api.checkin.domain.CheckInRepository
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.home.presentation.dto.HomeMissionProgressResponse
+import com.zerost.api.home.presentation.dto.HomeResponse
+import com.zerost.api.mission.domain.MissionCompletionStatus
+import com.zerost.api.mission.domain.MissionRepository
+import com.zerost.api.mission.domain.MissionCompletionRepository
+import com.zerost.api.user.domain.UserRepository
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+@Service
+class HomeQueryService(
+    private val userRepository: UserRepository,
+    private val checkInRepository: CheckInRepository,
+    private val missionRepository: MissionRepository,
+    private val missionCompletionRepository: MissionCompletionRepository,
+) {
+
+    @Transactional(readOnly = true)
+    fun getHome(deviceId: String): HomeResponse {
+        val user = userRepository.findByDeviceId(deviceId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val userId = requireNotNull(user.id)
+        val today = LocalDate.now()
+        val todayRange = getTodayRange(today)
+        val todayCompletions = missionCompletionRepository.findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
+            userId = userId,
+            start = todayRange.first,
+            end = todayRange.second,
+        )
+
+        return HomeResponse(
+            nickname = user.nickname,
+            ecoJam = user.ecoJam,
+            point = user.point,
+            checkedInToday = checkInRepository.existsByUserIdAndCheckedDate(userId, today),
+            missionProgress = HomeMissionProgressResponse(
+                totalMissionCount = missionRepository.count().toInt(),
+                submittedMissionCount = todayCompletions.size,
+                pendingMissionCount = todayCompletions.count { it.status == MissionCompletionStatus.PENDING },
+                approvedMissionCount = todayCompletions.count { it.status == MissionCompletionStatus.APPROVED },
+                rejectedMissionCount = todayCompletions.count { it.status == MissionCompletionStatus.REJECTED },
+            ),
+        )
+    }
+
+    private fun getTodayRange(today: LocalDate): Pair<LocalDateTime, LocalDateTime> {
+        return today.atStartOfDay() to today.plusDays(1).atStartOfDay()
+    }
+}
