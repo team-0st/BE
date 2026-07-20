@@ -33,6 +33,9 @@ enum class ErrorCode(
     SOUP_RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "SOUP_RECIPE_NOT_FOUND", "일치하는 스프 레시피를 찾을 수 없습니다."),
     INSUFFICIENT_INGREDIENT_QUANTITY(HttpStatus.CONFLICT, "INSUFFICIENT_INGREDIENT_QUANTITY", "보유 재료 수량이 부족합니다."),
 
+    // RECIPE
+    RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "RECIPE_NOT_FOUND", "레시피 정보를 찾을 수 없습니다."),
+
     // GACHA
     INSUFFICIENT_ECO_JAM(HttpStatus.CONFLICT, "INSUFFICIENT_ECO_JAM", "보유 에코잼이 부족합니다."),
     GACHA_REWARD_POLICY_NOT_FOUND(HttpStatus.NOT_FOUND, "GACHA_REWARD_POLICY_NOT_FOUND", "활성화된 가챠 보상 정책을 찾을 수 없습니다."),
