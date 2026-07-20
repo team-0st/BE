@@ -28,10 +28,6 @@ class RecipeUnlockService(
         val user = userRepository.findByDeviceIdForUpdate(deviceId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
-        if (user.ecoJam < UNLOCK_COST_ECO_JAM) {
-            throw BusinessException(ErrorCode.INSUFFICIENT_ECO_JAM)
-        }
-
         val hiddenRecipes = recipeRepository.findAllByTypeOrderByIdAsc(RecipeType.HIDDEN)
         val unlockedRecipeIds = userUnlockedRecipeRepository.findRecipeIdsByUserId(requireNotNull(user.id)).toSet()
         val unlockableRecipes = hiddenRecipes.filter { recipe ->
@@ -40,6 +36,10 @@ class RecipeUnlockService(
 
         if (unlockableRecipes.isEmpty()) {
             throw BusinessException(ErrorCode.ALL_HIDDEN_RECIPES_ALREADY_UNLOCKED)
+        }
+
+        if (user.ecoJam < UNLOCK_COST_ECO_JAM) {
+            throw BusinessException(ErrorCode.INSUFFICIENT_ECO_JAM)
         }
 
         val unlockedRecipe = unlockableRecipes[recipeUnlockRandomProvider.nextInt(unlockableRecipes.size)]
