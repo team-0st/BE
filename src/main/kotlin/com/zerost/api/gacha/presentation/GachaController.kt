@@ -3,21 +3,25 @@ package com.zerost.api.gacha.presentation
 import com.zerost.api.common.device.DeviceConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.gacha.application.GachaExecutionService
+import com.zerost.api.gacha.application.GachaQueryService
 import com.zerost.api.gacha.presentation.dto.ExecuteGachaResponse
+import com.zerost.api.gacha.presentation.dto.GachaHistoryResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@Tag(name = "Gacha", description = "가챠 실행 API")
+@Tag(name = "Gacha", description = "가챠 실행 및 조회 API")
 @RestController
 @RequestMapping("/api/v1/gachas")
 class GachaController(
     private val gachaExecutionService: GachaExecutionService,
+    private val gachaQueryService: GachaQueryService,
 ) {
 
     @Operation(
@@ -37,6 +41,25 @@ class GachaController(
     ): ApiResponse<ExecuteGachaResponse> {
         val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
         val response = gachaExecutionService.execute(deviceId)
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "가챠 실행 내역 조회",
+        description = "현재 유저의 가챠 실행 결과를 최신순으로 조회합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "가챠 실행 내역 조회 성공"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저를 찾을 수 없음"),
+        ],
+    )
+    @GetMapping("/histories")
+    fun getGachaHistories(
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<List<GachaHistoryResponse>> {
+        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val response = gachaQueryService.getGachaHistories(deviceId)
         return ApiResponse.success(response)
     }
 }
