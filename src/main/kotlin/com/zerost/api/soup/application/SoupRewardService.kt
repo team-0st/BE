@@ -2,6 +2,8 @@ package com.zerost.api.soup.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.common.reward.WeightedCandidate
+import com.zerost.api.common.reward.WeightedRandomSelector
 import com.zerost.api.ecojam.domain.EcoJamHistory
 import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
 import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
@@ -107,246 +109,106 @@ class SoupRewardService(
     }
 
     private fun rewardCommonSoup(): RewardResult {
-        val roll = randomProvider.nextInt(100)
-
-        return when {
-            roll < 5 -> RewardResult(
-                rewardGrade = SoupRewardGrade.JACKPOT,
-                point = 2_000,
-            )
-            roll < 15 -> RewardResult(
-                rewardGrade = SoupRewardGrade.MIDDLE,
-                point = 1_000,
-            )
-            roll < 35 -> RewardResult(
-                rewardGrade = SoupRewardGrade.SMALL,
-                point = 500,
-            )
-            roll < 60 -> RewardResult(
-                rewardGrade = SoupRewardGrade.INGREDIENT,
-                ecoJam = 50,
-                rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
-            )
-            else -> RewardResult(
-                rewardGrade = SoupRewardGrade.CONSOLATION,
-                ecoJam = 30,
-            )
-        }
+        return selectReward(
+            rewardCandidate(weight = 5) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    point = 2_000,
+                )
+            },
+            rewardCandidate(weight = 10) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    point = 1_000,
+                )
+            },
+            rewardCandidate(weight = 20) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    point = 500,
+                )
+            },
+            rewardCandidate(weight = 25) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.INGREDIENT,
+                    ecoJam = 50,
+                    rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
+                )
+            },
+            rewardCandidate(weight = 40) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.CONSOLATION,
+                    ecoJam = 30,
+                )
+            },
+        )
     }
 
     private fun rewardHiddenSoup(): RewardResult {
-        val roll = randomProvider.nextInt(100)
         val baseEcoJam = 300
         val basePoint = 500
 
-        return when {
-            roll < 5 -> RewardResult(
-                rewardGrade = SoupRewardGrade.JACKPOT,
-                ecoJam = baseEcoJam + 200,
-                point = basePoint + 2_000,
-            )
-            roll < 25 -> RewardResult(
-                rewardGrade = SoupRewardGrade.MIDDLE,
-                ecoJam = baseEcoJam + 100,
-                point = basePoint + 1_000,
-            )
-            roll < 90 -> RewardResult(
-                rewardGrade = SoupRewardGrade.SMALL,
-                ecoJam = baseEcoJam + 50,
-                point = basePoint + 500,
-            )
-            else -> RewardResult(
-                rewardGrade = SoupRewardGrade.INGREDIENT,
-                ecoJam = baseEcoJam + 100,
-                point = basePoint,
-                rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
-            )
-        }
-    }
-
-    private fun rewardLegendarySoup(): RewardResult {
-        val roll = randomProvider.nextInt(100)
-        val baseEcoJam = 500
-        val basePoint = 1_500
-
-        return when {
-            roll < 5 -> RewardResult(
-                rewardGrade = SoupRewardGrade.JACKPOT,
-                ecoJam = baseEcoJam + 300,
-                point = basePoint + 4_000,
-            )
-            roll < 25 -> RewardResult(
-                rewardGrade = SoupRewardGrade.MIDDLE,
-                ecoJam = baseEcoJam + 200,
-                point = basePoint + 3_000,
-            )
-            roll < 90 -> RewardResult(
-                rewardGrade = SoupRewardGrade.SMALL,
-                ecoJam = baseEcoJam + 100,
-                point = basePoint + 2_000,
-            )
-            else -> RewardResult(
-                rewardGrade = SoupRewardGrade.INGREDIENT,
-                ecoJam = baseEcoJam + 200,
-                point = basePoint,
-                rewardedIngredients = listOf(
-                    IngredientReward(randomHiddenIngredient(), 1),
-                    IngredientReward(randomCommonIngredient(), 1),
-                    IngredientReward(randomCommonIngredient(), 1),
-                ),
-            )
-        }
-    }
-
-    private fun rerollCommonSoup(currentGrade: SoupRewardGrade): RewardResult {
-        val roll = randomProvider.nextInt(100)
-
-        return when (currentGrade) {
-            SoupRewardGrade.CONSOLATION -> when {
-                roll < 60 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.INGREDIENT,
-                    ecoJam = 50,
-                    rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
+        return selectReward(
+            rewardCandidate(weight = 5) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 2_000,
                 )
-                roll < 90 -> RewardResult(
+            },
+            rewardCandidate(weight = 20) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 1_000,
+                )
+            },
+            rewardCandidate(weight = 65) {
+                RewardResult(
                     rewardGrade = SoupRewardGrade.SMALL,
-                    point = 500,
+                    ecoJam = baseEcoJam + 50,
+                    point = basePoint + 500,
                 )
-                roll < 98 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    point = 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    point = 2_000,
-                )
-            }
-
-            SoupRewardGrade.INGREDIENT -> when {
-                roll < 65 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.INGREDIENT,
-                    ecoJam = 50,
-                    rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
-                )
-                roll < 90 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    point = 500,
-                )
-                roll < 98 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    point = 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    point = 2_000,
-                )
-            }
-
-            SoupRewardGrade.SMALL -> when {
-                roll < 75 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    point = 500,
-                )
-                roll < 95 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    point = 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    point = 2_000,
-                )
-            }
-
-            SoupRewardGrade.MIDDLE -> when {
-                roll < 90 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    point = 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    point = 2_000,
-                )
-            }
-
-            SoupRewardGrade.JACKPOT -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-        }
-    }
-
-    private fun rerollHiddenSoup(currentGrade: SoupRewardGrade): RewardResult {
-        val roll = randomProvider.nextInt(100)
-        val baseEcoJam = 300
-        val basePoint = 500
-
-        return when (currentGrade) {
-            SoupRewardGrade.INGREDIENT -> when {
-                roll < 70 -> RewardResult(
+            },
+            rewardCandidate(weight = 10) {
+                RewardResult(
                     rewardGrade = SoupRewardGrade.INGREDIENT,
                     ecoJam = baseEcoJam + 100,
                     point = basePoint,
                     rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
                 )
-                roll < 90 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    ecoJam = baseEcoJam + 50,
-                    point = basePoint + 500,
-                )
-                roll < 98 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 2_000,
-                )
-            }
-
-            SoupRewardGrade.SMALL -> when {
-                roll < 80 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    ecoJam = baseEcoJam + 50,
-                    point = basePoint + 500,
-                )
-                roll < 95 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 2_000,
-                )
-            }
-
-            SoupRewardGrade.MIDDLE -> when {
-                roll < 92 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 1_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 2_000,
-                )
-            }
-
-            SoupRewardGrade.CONSOLATION,
-            SoupRewardGrade.JACKPOT,
-            -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-        }
+            },
+        )
     }
 
-    private fun rerollLegendarySoup(currentGrade: SoupRewardGrade): RewardResult {
-        val roll = randomProvider.nextInt(100)
+    private fun rewardLegendarySoup(): RewardResult {
         val baseEcoJam = 500
         val basePoint = 1_500
 
-        return when (currentGrade) {
-            SoupRewardGrade.INGREDIENT -> when {
-                roll < 75 -> RewardResult(
+        return selectReward(
+            rewardCandidate(weight = 5) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.JACKPOT,
+                    ecoJam = baseEcoJam + 300,
+                    point = basePoint + 4_000,
+                )
+            },
+            rewardCandidate(weight = 20) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.MIDDLE,
+                    ecoJam = baseEcoJam + 200,
+                    point = basePoint + 3_000,
+                )
+            },
+            rewardCandidate(weight = 65) {
+                RewardResult(
+                    rewardGrade = SoupRewardGrade.SMALL,
+                    ecoJam = baseEcoJam + 100,
+                    point = basePoint + 2_000,
+                )
+            },
+            rewardCandidate(weight = 10) {
+                RewardResult(
                     rewardGrade = SoupRewardGrade.INGREDIENT,
                     ecoJam = baseEcoJam + 200,
                     point = basePoint,
@@ -356,53 +218,273 @@ class SoupRewardService(
                         IngredientReward(randomCommonIngredient(), 1),
                     ),
                 )
-                roll < 93 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 2_000,
-                )
-                roll < 98 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 3_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 300,
-                    point = basePoint + 4_000,
-                )
-            }
+            },
+        )
+    }
 
-            SoupRewardGrade.SMALL -> when {
-                roll < 82 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 2_000,
-                )
-                roll < 97 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 3_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 300,
-                    point = basePoint + 4_000,
-                )
-            }
+    private fun rerollCommonSoup(currentGrade: SoupRewardGrade): RewardResult {
+        return when (currentGrade) {
+            SoupRewardGrade.CONSOLATION -> selectReward(
+                rewardCandidate(weight = 60) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.INGREDIENT,
+                        ecoJam = 50,
+                        rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
+                    )
+                },
+                rewardCandidate(weight = 30) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        point = 500,
+                    )
+                },
+                rewardCandidate(weight = 8) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        point = 1_000,
+                    )
+                },
+                rewardCandidate(weight = 2) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        point = 2_000,
+                    )
+                },
+            )
 
-            SoupRewardGrade.MIDDLE -> when {
-                roll < 95 -> RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 3_000,
-                )
-                else -> RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 300,
-                    point = basePoint + 4_000,
-                )
-            }
+            SoupRewardGrade.INGREDIENT -> selectReward(
+                rewardCandidate(weight = 65) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.INGREDIENT,
+                        ecoJam = 50,
+                        rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
+                    )
+                },
+                rewardCandidate(weight = 25) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        point = 500,
+                    )
+                },
+                rewardCandidate(weight = 8) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        point = 1_000,
+                    )
+                },
+                rewardCandidate(weight = 2) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        point = 2_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.SMALL -> selectReward(
+                rewardCandidate(weight = 75) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        point = 500,
+                    )
+                },
+                rewardCandidate(weight = 20) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        point = 1_000,
+                    )
+                },
+                rewardCandidate(weight = 5) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        point = 2_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.MIDDLE -> selectReward(
+                rewardCandidate(weight = 90) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        point = 1_000,
+                    )
+                },
+                rewardCandidate(weight = 10) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        point = 2_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.JACKPOT -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
+        }
+    }
+
+    private fun rerollHiddenSoup(currentGrade: SoupRewardGrade): RewardResult {
+        val baseEcoJam = 300
+        val basePoint = 500
+
+        return when (currentGrade) {
+            SoupRewardGrade.INGREDIENT -> selectReward(
+                rewardCandidate(weight = 70) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.INGREDIENT,
+                        ecoJam = baseEcoJam + 100,
+                        point = basePoint,
+                        rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
+                    )
+                },
+                rewardCandidate(weight = 20) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        ecoJam = baseEcoJam + 50,
+                        point = basePoint + 500,
+                    )
+                },
+                rewardCandidate(weight = 8) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        ecoJam = baseEcoJam + 100,
+                        point = basePoint + 1_000,
+                    )
+                },
+                rewardCandidate(weight = 2) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint + 2_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.SMALL -> selectReward(
+                rewardCandidate(weight = 80) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        ecoJam = baseEcoJam + 50,
+                        point = basePoint + 500,
+                    )
+                },
+                rewardCandidate(weight = 15) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        ecoJam = baseEcoJam + 100,
+                        point = basePoint + 1_000,
+                    )
+                },
+                rewardCandidate(weight = 5) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint + 2_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.MIDDLE -> selectReward(
+                rewardCandidate(weight = 92) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        ecoJam = baseEcoJam + 100,
+                        point = basePoint + 1_000,
+                    )
+                },
+                rewardCandidate(weight = 8) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint + 2_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.CONSOLATION,
+            SoupRewardGrade.JACKPOT,
+            -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
+        }
+    }
+
+    private fun rerollLegendarySoup(currentGrade: SoupRewardGrade): RewardResult {
+        val baseEcoJam = 500
+        val basePoint = 1_500
+
+        return when (currentGrade) {
+            SoupRewardGrade.INGREDIENT -> selectReward(
+                rewardCandidate(weight = 75) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.INGREDIENT,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint,
+                        rewardedIngredients = listOf(
+                            IngredientReward(randomHiddenIngredient(), 1),
+                            IngredientReward(randomCommonIngredient(), 1),
+                            IngredientReward(randomCommonIngredient(), 1),
+                        ),
+                    )
+                },
+                rewardCandidate(weight = 18) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        ecoJam = baseEcoJam + 100,
+                        point = basePoint + 2_000,
+                    )
+                },
+                rewardCandidate(weight = 5) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint + 3_000,
+                    )
+                },
+                rewardCandidate(weight = 2) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        ecoJam = baseEcoJam + 300,
+                        point = basePoint + 4_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.SMALL -> selectReward(
+                rewardCandidate(weight = 82) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.SMALL,
+                        ecoJam = baseEcoJam + 100,
+                        point = basePoint + 2_000,
+                    )
+                },
+                rewardCandidate(weight = 15) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint + 3_000,
+                    )
+                },
+                rewardCandidate(weight = 3) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        ecoJam = baseEcoJam + 300,
+                        point = basePoint + 4_000,
+                    )
+                },
+            )
+
+            SoupRewardGrade.MIDDLE -> selectReward(
+                rewardCandidate(weight = 95) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.MIDDLE,
+                        ecoJam = baseEcoJam + 200,
+                        point = basePoint + 3_000,
+                    )
+                },
+                rewardCandidate(weight = 5) {
+                    RewardResult(
+                        rewardGrade = SoupRewardGrade.JACKPOT,
+                        ecoJam = baseEcoJam + 300,
+                        point = basePoint + 4_000,
+                    )
+                },
+            )
 
             SoupRewardGrade.CONSOLATION,
             SoupRewardGrade.JACKPOT,
@@ -543,6 +625,19 @@ class SoupRewardService(
         .takeIf { it.isNotEmpty() }
         ?.let { ingredients -> ingredients[randomProvider.nextInt(ingredients.size)] }
         ?: throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
+
+    private fun rewardCandidate(
+        weight: Int,
+        reward: () -> RewardResult,
+    ): WeightedCandidate<() -> RewardResult> = WeightedCandidate(
+        value = reward,
+        weight = weight,
+    )
+
+    private fun selectReward(vararg candidates: WeightedCandidate<() -> RewardResult>): RewardResult =
+        WeightedRandomSelector.select(candidates.toList()) { totalWeight ->
+            randomProvider.nextInt(totalWeight)
+        }.invoke()
 
     private data class RewardResult(
         val rewardGrade: SoupRewardGrade,

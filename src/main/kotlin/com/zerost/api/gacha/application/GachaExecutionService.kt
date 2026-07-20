@@ -2,6 +2,8 @@ package com.zerost.api.gacha.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.common.reward.WeightedCandidate
+import com.zerost.api.common.reward.WeightedRandomSelector
 import com.zerost.api.ecojam.domain.EcoJamHistory
 import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
 import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
@@ -87,28 +89,19 @@ class GachaExecutionService(
         val weightedPolicies = policies.mapNotNull { policy ->
             val weight = policy.probability.multiply(PROBABILITY_SCALE).toInt()
             if (weight > 0) {
-                WeightedPolicy(policy = policy, weight = weight)
+                WeightedCandidate(value = policy, weight = weight)
             } else {
                 null
             }
         }
 
-        val totalWeight = weightedPolicies.sumOf { it.weight }
-        if (totalWeight <= 0) {
+        if (weightedPolicies.isEmpty()) {
             throw BusinessException(ErrorCode.INVALID_GACHA_REWARD_POLICY)
         }
 
-        val roll = gachaRandomProvider.nextInt(totalWeight)
-        var cumulativeWeight = 0
-
-        weightedPolicies.forEach { weightedPolicy ->
-            cumulativeWeight += weightedPolicy.weight
-            if (roll < cumulativeWeight) {
-                return weightedPolicy.policy
-            }
+        return WeightedRandomSelector.select(weightedPolicies) { totalWeight ->
+            gachaRandomProvider.nextInt(totalWeight)
         }
-
-        throw BusinessException(ErrorCode.INVALID_GACHA_REWARD_POLICY)
     }
 
     private fun applyReward(
@@ -191,9 +184,4 @@ class GachaExecutionService(
         private const val GACHA_COST_ECO_JAM = 100
         private val PROBABILITY_SCALE = BigDecimal("100")
     }
-
-    private data class WeightedPolicy(
-        val policy: GachaRewardPolicy,
-        val weight: Int,
-    )
 }
