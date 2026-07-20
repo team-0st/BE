@@ -1,6 +1,8 @@
 package com.zerost.api.user.domain
 
 import com.zerost.api.common.entity.BaseEntity
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.shop.domain.Shop
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -59,10 +61,22 @@ class User(
     }
 
     fun decreaseEcoJam(amount: Int) {
+        require(amount > 0) { "차감할 에코잼은 0보다 커야 합니다." }
+        if (this.ecoJam < amount) {
+            throw BusinessException(ErrorCode.INSUFFICIENT_ECO_JAM)
+        }
         this.ecoJam -= amount
     }
 
     fun increasePoint(amount: Int) {
         this.point += amount
+    }
+
+    fun decreasePoint(amount: Int) {
+        require(amount > 0) { "차감할 포인트는 0보다 커야 합니다." }
+        if (this.point < amount) {
+            throw BusinessException(ErrorCode.INSUFFICIENT_POINT)
+        }
+        this.point -= amount
     }
 }

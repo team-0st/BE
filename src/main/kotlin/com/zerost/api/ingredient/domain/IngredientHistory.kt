@@ -59,5 +59,23 @@ class IngredientHistory(
                 sourceId = sourceId,
             )
         }
+
+        fun spend(
+            user: User,
+            ingredient: Ingredient,
+            amount: Int,
+            sourceType: IngredientHistorySourceType,
+            sourceId: Long,
+        ): IngredientHistory {
+            require(amount > 0) { "재료 사용 이력 수량은 0보다 커야 합니다." }
+
+            return IngredientHistory(
+                user = user,
+                ingredient = ingredient,
+                amount = -amount,
+                sourceType = sourceType,
+                sourceId = sourceId,
+            )
+        }
     }
 }

@@ -40,4 +40,12 @@ class Soup(
 
     @Column(name = "reward_point", nullable = false)
     var rewardPoint: Int = 0,
-) : BaseEntity()
+
+    @Column(nullable = false)
+    var rerolled: Boolean = false,
+) : BaseEntity() {
+
+    fun markRerolled() {
+        this.rerolled = true
+    }
+}
