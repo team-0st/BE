@@ -5,6 +5,8 @@ import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.recipe.domain.Recipe
 import com.zerost.api.recipe.domain.RecipeIngredientRepository
 import com.zerost.api.recipe.domain.RecipeRepository
+import com.zerost.api.recipe.domain.RecipeType
+import com.zerost.api.recipe.domain.UserUnlockedRecipeRepository
 import com.zerost.api.recipe.presentation.dto.RecipeDetailIngredientResponse
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
 import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
@@ -17,31 +19,34 @@ class RecipeQueryService(
     private val userRepository: UserRepository,
     private val recipeRepository: RecipeRepository,
     private val recipeIngredientRepository: RecipeIngredientRepository,
+    private val userUnlockedRecipeRepository: UserUnlockedRecipeRepository,
 ) {
 
     @Transactional(readOnly = true)
     fun getRecipes(deviceId: String): List<RecipeSummaryResponse> {
-        validateUser(deviceId)
+        val user = getUser(deviceId)
+        val unlockedRecipeIds = userUnlockedRecipeRepository.findRecipeIdsByUserId(requireNotNull(user.id)).toSet()
 
         return recipeRepository.findAllByOrderByIdAsc()
             .map { recipe ->
                 RecipeSummaryResponse(
                     recipeId = requireNotNull(recipe.id),
-                    name = recipe.getDisplayName(),
+                    name = recipe.getDisplayName(unlockedRecipeIds),
                     type = recipe.type.name,
                     slotCount = recipe.slotCount,
-                    recipeVisible = recipe.isVisible(),
+                    recipeVisible = recipe.isVisible(unlockedRecipeIds),
                 )
             }
     }
 
     @Transactional(readOnly = true)
     fun getRecipe(deviceId: String, recipeId: Long): RecipeDetailResponse {
-        validateUser(deviceId)
+        val user = getUser(deviceId)
+        val unlockedRecipeIds = userUnlockedRecipeRepository.findRecipeIdsByUserId(requireNotNull(user.id)).toSet()
 
         val recipe = recipeRepository.findById(recipeId)
             .orElseThrow { BusinessException(ErrorCode.RECIPE_NOT_FOUND) }
-        val ingredients = if (recipe.isVisible()) {
+        val ingredients = if (recipe.isVisible(unlockedRecipeIds)) {
             recipeIngredientRepository.findAllByRecipeIdOrderBySlotOrderAsc(recipeId)
                 .map { recipeIngredient ->
                     RecipeDetailIngredientResponse(
@@ -58,23 +63,28 @@ class RecipeQueryService(
 
         return RecipeDetailResponse(
             recipeId = recipeId,
-            name = recipe.getDisplayName(),
+            name = recipe.getDisplayName(unlockedRecipeIds),
             type = recipe.type.name,
             slotCount = recipe.slotCount,
-            recipeVisible = recipe.isVisible(),
+            recipeVisible = recipe.isVisible(unlockedRecipeIds),
             ingredients = ingredients,
         )
     }
 
-    private fun validateUser(deviceId: String) {
+    private fun getUser(deviceId: String) =
         userRepository.findByDeviceId(deviceId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+
+    private fun Recipe.getDisplayName(unlockedRecipeIds: Set<Long>): String =
+        if (isVisible(unlockedRecipeIds)) name else MASKED_RECIPE_NAME
+
+    private fun Recipe.isVisible(unlockedRecipeIds: Set<Long>): Boolean {
+        if (!hidden) {
+            return true
+        }
+
+        return type == RecipeType.HIDDEN && requireNotNull(id) in unlockedRecipeIds
     }
-
-    private fun Recipe.getDisplayName(): String =
-        if (hidden) MASKED_RECIPE_NAME else name
-
-    private fun Recipe.isVisible(): Boolean = !hidden
 
     companion object {
         private const val MASKED_RECIPE_NAME = "???"

@@ -35,6 +35,7 @@ enum class ErrorCode(
 
     // RECIPE
     RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "RECIPE_NOT_FOUND", "레시피 정보를 찾을 수 없습니다."),
+    ALL_HIDDEN_RECIPES_ALREADY_UNLOCKED(HttpStatus.CONFLICT, "ALL_HIDDEN_RECIPES_ALREADY_UNLOCKED", "해금 가능한 희귀 레시피를 모두 획득했습니다."),
 
     // GACHA
     INSUFFICIENT_ECO_JAM(HttpStatus.CONFLICT, "INSUFFICIENT_ECO_JAM", "보유 에코잼이 부족합니다."),
