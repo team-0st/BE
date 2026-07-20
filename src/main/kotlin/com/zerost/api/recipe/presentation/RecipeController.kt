@@ -24,7 +24,7 @@ class RecipeController(
 
     @Operation(
         summary = "레시피 목록 조회",
-        description = "현재 서비스에 등록된 레시피 목록을 조회합니다. 비공개 레시피는 이름과 재료 조합이 마스킹됩니다.",
+        description = "현재 서비스에 등록된 레시피 목록을 조회합니다. 비공개 레시피는 이름이 ???로 마스킹되어 반환됩니다.",
     )
     @ApiResponses(
         value = [
