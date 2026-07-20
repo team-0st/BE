@@ -3,8 +3,10 @@ package com.zerost.api.recipe.presentation
 import com.zerost.api.common.device.DeviceConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.recipe.application.RecipeQueryService
+import com.zerost.api.recipe.application.RecipeUnlockService
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
 import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
+import com.zerost.api.recipe.presentation.dto.UnlockHiddenRecipeResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/recipes")
 class RecipeController(
     private val recipeQueryService: RecipeQueryService,
+    private val recipeUnlockService: RecipeUnlockService,
 ) {
 
     @Operation(
@@ -58,6 +62,26 @@ class RecipeController(
     ): ApiResponse<RecipeDetailResponse> {
         val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
         val response = recipeQueryService.getRecipe(deviceId, recipeId)
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "희귀 레시피 랜덤 해금",
+        description = "에코잼 500개를 사용해 아직 해금하지 않은 희귀 레시피 1종을 랜덤으로 해금합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "희귀 레시피 해금 성공"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저를 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "보유 에코잼이 부족하거나 해금 가능한 희귀 레시피가 없음"),
+        ],
+    )
+    @PostMapping("/unlock/hidden")
+    fun unlockRandomHiddenRecipe(
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<UnlockHiddenRecipeResponse> {
+        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val response = recipeUnlockService.unlockRandomHiddenRecipe(deviceId)
         return ApiResponse.success(response)
     }
 }
