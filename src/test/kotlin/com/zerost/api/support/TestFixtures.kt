@@ -11,6 +11,9 @@ import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.point.domain.PointHistory
 import com.zerost.api.point.domain.PointHistorySourceType
+import com.zerost.api.recipe.domain.Recipe
+import com.zerost.api.recipe.domain.RecipeIngredient
+import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
 import java.time.LocalDateTime
@@ -140,6 +143,32 @@ fun createMissionCompletion(
     rewardedIngredient = rewardedIngredient,
     submittedAt = submittedAt,
     reviewedAt = reviewedAt,
+)
+
+fun createRecipe(
+    id: Long = 1L,
+    name: String = "오리지널 스프",
+    type: RecipeType = RecipeType.COMMON,
+    slotCount: Int = 3,
+    hidden: Boolean = false,
+): Recipe = Recipe(
+    id = id,
+    name = name,
+    type = type,
+    slotCount = slotCount,
+    hidden = hidden,
+)
+
+fun createRecipeIngredient(
+    id: Long = 1L,
+    recipe: Recipe = createRecipe(),
+    ingredient: Ingredient = createIngredient(),
+    slotOrder: Int = 1,
+): RecipeIngredient = RecipeIngredient(
+    id = id,
+    recipe = recipe,
+    ingredient = ingredient,
+    slotOrder = slotOrder,
 )
 
 fun createSubmitMissionVerificationRequestBody(
