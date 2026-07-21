@@ -25,12 +25,7 @@ class CommunityMissionQueryService(
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         val userId = requireNotNull(user.id)
 
-        val communityMissions = communityMissionRepository.findAllByActiveTrue()
-            .sortedWith(
-                compareBy<CommunityMission> { it.difficulty.order }
-                    .thenBy { it.stage }
-                    .thenBy { it.id },
-            )
+        val communityMissions = CommunityMissionUnlockPolicy.sort(communityMissionRepository.findAllByActiveTrue())
 
         if (communityMissions.isEmpty()) {
             return emptyList()
@@ -68,7 +63,8 @@ class CommunityMissionQueryService(
                 participantCount = participantCount,
                 totalUserCount = totalUserCount,
                 succeeded = isSucceeded(exactAchievementRatio, communityMission.targetRatio),
-                unlocked = isUnlocked(communityMissions, communityMission, completedMissionIds),
+                unlocked = CommunityMissionUnlockPolicy.isUnlocked(communityMissions, communityMission, completedMissionIds),
+                completed = missionId in completedMissionIds,
             )
         }
     }
@@ -92,21 +88,5 @@ class CommunityMissionQueryService(
         targetRatio: BigDecimal,
     ): Boolean {
         return achievementRatio >= targetRatio
-    }
-
-    private fun isUnlocked(
-        communityMissions: List<CommunityMission>,
-        communityMission: CommunityMission,
-        completedMissionIds: Set<Long>,
-    ): Boolean {
-        if (communityMission.stage == 1) {
-            return true
-        }
-
-        return communityMissions
-            .firstOrNull {
-                it.difficulty == communityMission.difficulty && it.stage == communityMission.stage - 1
-            }
-            ?.id in completedMissionIds
     }
 }
