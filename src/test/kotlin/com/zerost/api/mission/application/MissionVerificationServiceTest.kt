@@ -14,6 +14,8 @@ import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -121,6 +123,125 @@ class MissionVerificationServiceTest {
         }
 
         assertEquals(ErrorCode.MISSION_ALREADY_COMPLETED, exception.errorCode)
+    }
+
+    @Test
+    fun `검수 대기 상태의 미션 인증 이미지를 수정할 수 있다`() {
+        val user = createUser(id = 1L)
+        val mission = createMission(id = 3L)
+        val completion = createMissionCompletion(
+            id = 55L,
+            user = user,
+            mission = mission,
+            photoKey = "missions/1/3/2026/07/18/old.jpg",
+            status = MissionCompletionStatus.PENDING,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
+
+        val response = missionVerificationService.updateVerification(
+            userId = 1L,
+            completionId = 55L,
+            photoKey = "missions/1/3/2026/07/18/new.jpg",
+        )
+
+        assertEquals(55L, response.completionId)
+        assertEquals("PENDING", response.status)
+        assertEquals("missions/1/3/2026/07/18/new.jpg", response.photoKey)
+        verify(fileUploadService).validateMissionImageKey(1L, 3L, "missions/1/3/2026/07/18/new.jpg")
+        verify(fileUploadService).delete("missions/1/3/2026/07/18/old.jpg")
+    }
+
+    @Test
+    fun `같은 photoKey로 수정 요청하면 기존 파일을 삭제하지 않는다`() {
+        val user = createUser(id = 1L)
+        val mission = createMission(id = 3L)
+        val completion = createMissionCompletion(
+            id = 55L,
+            user = user,
+            mission = mission,
+            photoKey = "missions/1/3/2026/07/18/same.jpg",
+            status = MissionCompletionStatus.REJECTED,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
+
+        missionVerificationService.updateVerification(
+            userId = 1L,
+            completionId = 55L,
+            photoKey = "missions/1/3/2026/07/18/same.jpg",
+        )
+
+        verify(fileUploadService).validateMissionImageKey(1L, 3L, "missions/1/3/2026/07/18/same.jpg")
+        verify(fileUploadService, never()).delete("missions/1/3/2026/07/18/same.jpg")
+    }
+
+    @Test
+    fun `승인된 미션 인증은 수정할 수 없다`() {
+        val user = createUser(id = 1L)
+        val mission = createMission(id = 3L)
+        val completion = createMissionCompletion(
+            id = 55L,
+            user = user,
+            mission = mission,
+            status = MissionCompletionStatus.APPROVED,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
+
+        val exception = assertThrows<BusinessException> {
+            missionVerificationService.updateVerification(1L, 55L, "missions/1/3/2026/07/18/new.jpg")
+        }
+
+        assertEquals(ErrorCode.MISSION_COMPLETION_MODIFICATION_NOT_ALLOWED, exception.errorCode)
+        verify(fileUploadService, never()).delete(anyString())
+    }
+
+    @Test
+    fun `내 미션 인증을 삭제할 수 있다`() {
+        val user = createUser(id = 1L)
+        val mission = createMission(id = 3L)
+        val completion = createMissionCompletion(
+            id = 55L,
+            user = user,
+            mission = mission,
+            photoKey = "missions/1/3/2026/07/18/delete.jpg",
+            status = MissionCompletionStatus.REJECTED,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
+
+        val response = missionVerificationService.deleteVerification(
+            userId = 1L,
+            completionId = 55L,
+        )
+
+        assertEquals(55L, response.completionId)
+        verify(missionCompletionRepository).delete(completion)
+        verify(fileUploadService).delete("missions/1/3/2026/07/18/delete.jpg")
+    }
+
+    @Test
+    fun `다른 유저의 미션 인증은 수정할 수 없다`() {
+        val user = createUser(id = 1L)
+        val completion = createMissionCompletion(
+            id = 55L,
+            user = createUser(id = 2L),
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
+
+        val exception = assertThrows<BusinessException> {
+            missionVerificationService.updateVerification(1L, 55L, "missions/1/1/2026/07/18/new.jpg")
+        }
+
+        assertEquals(ErrorCode.MISSION_COMPLETION_NOT_FOUND, exception.errorCode)
+        verify(fileUploadService, never()).validateMissionImageKey(anyLong(), anyLong(), anyString())
     }
 
     private fun todayRange(): Pair<LocalDateTime, LocalDateTime> {

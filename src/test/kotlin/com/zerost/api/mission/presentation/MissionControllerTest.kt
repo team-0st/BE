@@ -9,7 +9,9 @@ import com.zerost.api.mission.presentation.dto.MissionDetailResponse
 import com.zerost.api.mission.presentation.dto.MissionRewardedIngredientResponse
 import com.zerost.api.mission.presentation.dto.MissionSummaryResponse
 import com.zerost.api.mission.presentation.dto.MissionTodayStatus
+import com.zerost.api.mission.presentation.dto.DeleteMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationResponse
+import com.zerost.api.mission.presentation.dto.UpdateMissionVerificationResponse
 import com.zerost.api.support.createAuthTokenProvider
 import com.zerost.api.support.createSubmitMissionVerificationRequestBody
 import org.junit.jupiter.api.BeforeEach
@@ -19,7 +21,9 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -136,6 +140,58 @@ class MissionControllerTest {
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
+    }
+
+    @Test
+    fun `올바른 요청이면 미션 인증 수정 결과를 반환한다`() {
+        `when`(
+            missionVerificationService.updateVerification(
+                1L,
+                55L,
+                "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+            ),
+        ).thenReturn(
+            UpdateMissionVerificationResponse(
+                completionId = 55L,
+                missionId = 1L,
+                status = "PENDING",
+                photoKey = "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+            ),
+        )
+
+        mockMvc.perform(
+            patch("/api/v1/missions/completions/55")
+                .header("Authorization", "Bearer access-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createSubmitMissionVerificationRequestBody()),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.completionId").value(55))
+            .andExpect(jsonPath("$.data.status").value("PENDING"))
+
+        verify(missionVerificationService).updateVerification(
+            1L,
+            55L,
+            "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+        )
+    }
+
+    @Test
+    fun `인증된 사용자는 미션 인증을 삭제할 수 있다`() {
+        `when`(missionVerificationService.deleteVerification(1L, 55L)).thenReturn(
+            DeleteMissionVerificationResponse(
+                completionId = 55L,
+            ),
+        )
+
+        mockMvc.perform(
+            delete("/api/v1/missions/completions/55")
+                .header("Authorization", "Bearer access-token"),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.completionId").value(55))
+
+        verify(missionVerificationService).deleteVerification(1L, 55L)
     }
 
     @Test
