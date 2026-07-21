@@ -109,6 +109,12 @@ fun createOnboardingCommand(
 
 fun createRegisterUserRequestBody(): String = "{}"
 
+fun createUpdateNicknameRequestBody(
+    nickname: String = "펭귄탐험가",
+): String = """
+    {"nickname":"$nickname"}
+""".trimIndent()
+
 fun createOnboardingRequestBody(
     nickname: String = "펭귄탐험가",
     phoneNumber: String = "010-1234-5678",

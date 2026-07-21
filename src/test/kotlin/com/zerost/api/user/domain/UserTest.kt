@@ -34,4 +34,13 @@ class UserTest {
 
         assertFalse(user.onboardingCompleted)
     }
+
+    @Test
+    fun `닉네임을 변경할 수 있다`() {
+        val user = createUser(nickname = "기존닉네임")
+
+        user.changeNickname("새닉네임")
+
+        assertEquals("새닉네임", user.nickname)
+    }
 }
