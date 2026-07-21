@@ -107,8 +107,8 @@ class CommunityMissionController(
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "완료 처리 성공"),
-            SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 공동 미션을 찾을 수 없음"),
-            SwaggerApiResponse(responseCode = "409", description = "온보딩 미완료, 미해금 공동 미션, 이미 완료한 공동 미션"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저, 공동 미션 또는 인증 단계 정보를 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "온보딩 미완료, 미해금 공동 미션, 이미 완료한 공동 미션, 필수 인증 단계 미제출"),
         ],
     )
     @PostMapping("/{communityMissionId}/complete")
