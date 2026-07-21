@@ -31,7 +31,7 @@ class AdminCommunityMissionReviewController(
 
     @Operation(
         summary = "검수 대기 공동 미션 인증 목록 조회",
-        description = "관리자가 검수해야 하는 PENDING 상태의 공동 미션 인증 목록을 제출 시각 오름차순으로 페이지 조회합니다.",
+        description = "관리자가 검수해야 하는 PENDING 상태의 공동 미션 인증 목록을 제출 시각 오름차순, ID 오름차순 기준으로 페이지 조회합니다.",
     )
     @ApiResponses(
         value = [

@@ -28,7 +28,7 @@ interface CommunityMissionProofRepository : JpaRepository<CommunityMissionProof,
     @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user", "images"])
     fun findAllByStatusOrderBySubmittedAtAsc(status: CommunityMissionProofStatus): List<CommunityMissionProof>
 
-    @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user", "images"])
+    @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user"])
     fun findAllByStatus(status: CommunityMissionProofStatus, pageable: Pageable): Page<CommunityMissionProof>
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
