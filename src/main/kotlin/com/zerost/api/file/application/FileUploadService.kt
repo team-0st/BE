@@ -98,7 +98,14 @@ class FileUploadService(
     }
 
     fun validateMissionImageKey(userId: Long, missionId: Long, fileKey: String) {
-        val expectedPrefix = "missions/$userId/$missionId/"
+        validateScopedImageKey("missions/$userId/$missionId/", fileKey)
+    }
+
+    fun validateCommunityMissionImageKey(userId: Long, communityMissionId: Long, fileKey: String) {
+        validateScopedImageKey("community-missions/$userId/$communityMissionId/", fileKey)
+    }
+
+    private fun validateScopedImageKey(expectedPrefix: String, fileKey: String) {
         if (!fileKey.startsWith(expectedPrefix)) {
             throw BusinessException(ErrorCode.INVALID_FILE_KEY)
         }
