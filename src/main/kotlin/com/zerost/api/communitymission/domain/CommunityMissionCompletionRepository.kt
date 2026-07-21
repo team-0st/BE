@@ -1,5 +1,7 @@
 package com.zerost.api.communitymission.domain
 
+import jakarta.persistence.LockModeType
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.Query
@@ -23,6 +25,7 @@ interface CommunityMissionCompletionRepository : JpaRepository<CommunityMissionC
     fun findAllByCommunityMissionIdAndRewardedAtIsNullOrderByIdAsc(communityMissionId: Long): List<CommunityMissionCompletion>
 
     @EntityGraph(attributePaths = ["user"])
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     fun findTop100ByCommunityMissionIdAndRewardedAtIsNullOrderByIdAsc(communityMissionId: Long): List<CommunityMissionCompletion>
 
     @Query(
