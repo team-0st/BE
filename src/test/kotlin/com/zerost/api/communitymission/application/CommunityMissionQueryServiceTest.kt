@@ -61,10 +61,12 @@ class CommunityMissionQueryServiceTest {
         assertEquals("40.00", response[0].achievementRatio.toPlainString())
         assertTrue(response[0].succeeded)
         assertTrue(response[0].unlocked)
+        assertTrue(response[0].completed)
         assertEquals(2L, response[1].id)
         assertEquals("20.00", response[1].achievementRatio.toPlainString())
         assertFalse(response[1].succeeded)
         assertTrue(response[1].unlocked)
+        assertFalse(response[1].completed)
     }
 
     @Test
@@ -82,6 +84,7 @@ class CommunityMissionQueryServiceTest {
 
         assertEquals("0.00", response[0].achievementRatio.toPlainString())
         assertFalse(response[0].succeeded)
+        assertFalse(response[0].completed)
     }
 
     @Test
@@ -103,6 +106,7 @@ class CommunityMissionQueryServiceTest {
 
         assertEquals("16.67", response[0].achievementRatio.toPlainString())
         assertFalse(response[0].succeeded)
+        assertFalse(response[0].completed)
     }
 
     @Test
@@ -129,6 +133,8 @@ class CommunityMissionQueryServiceTest {
 
         assertTrue(response[0].unlocked)
         assertFalse(response[1].unlocked)
+        assertFalse(response[0].completed)
+        assertFalse(response[1].completed)
     }
 
     private fun countProjection(
