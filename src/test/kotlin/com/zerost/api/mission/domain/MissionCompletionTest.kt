@@ -49,4 +49,45 @@ class MissionCompletionTest {
 
         assertEquals(ErrorCode.INVALID_MISSION_REVIEW_STATUS, exception.errorCode)
     }
+
+    @Test
+    fun `검수 대기 상태면 인증 이미지를 수정할 수 있다`() {
+        val completion = createMissionCompletion(
+            photoKey = "missions/1/1/2026/07/18/old.jpg",
+            status = MissionCompletionStatus.PENDING,
+        )
+
+        completion.updatePhotoKey("missions/1/1/2026/07/18/new.jpg")
+
+        assertEquals("missions/1/1/2026/07/18/new.jpg", completion.photoKey)
+    }
+
+    @Test
+    fun `반려된 미션 인증을 같은 이미지로 수정해도 재검수 상태로 돌아간다`() {
+        val completion = createMissionCompletion(
+            photoKey = "missions/1/1/2026/07/18/same.jpg",
+            status = MissionCompletionStatus.REJECTED,
+            reviewedAt = java.time.LocalDateTime.of(2026, 7, 19, 14, 30, 0),
+        )
+
+        val updated = completion.updatePhotoKey("missions/1/1/2026/07/18/same.jpg")
+
+        assertEquals(false, updated)
+        assertEquals(MissionCompletionStatus.PENDING, completion.status)
+        assertEquals(null, completion.reviewedAt)
+        assertEquals("missions/1/1/2026/07/18/same.jpg", completion.photoKey)
+    }
+
+    @Test
+    fun `승인된 미션 인증은 수정할 수 없다`() {
+        val completion = createMissionCompletion(
+            status = MissionCompletionStatus.APPROVED,
+        )
+
+        val exception = assertFailsWith<BusinessException> {
+            completion.updatePhotoKey("missions/1/1/2026/07/18/new.jpg")
+        }
+
+        assertEquals(ErrorCode.MISSION_COMPLETION_MODIFICATION_NOT_ALLOWED, exception.errorCode)
+    }
 }

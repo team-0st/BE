@@ -4,11 +4,13 @@ import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.MissionQueryService
 import com.zerost.api.mission.domain.MissionVerificationService
+import com.zerost.api.mission.presentation.dto.DeleteMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
 import com.zerost.api.mission.presentation.dto.MissionSummaryResponse
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationRequest
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationResponse
+import com.zerost.api.mission.presentation.dto.UpdateMissionVerificationResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -17,10 +19,12 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.DeleteMapping
 
 @Tag(name = "Mission", description = "미션 조회 및 제출 API")
 @RestController
@@ -92,6 +96,57 @@ class MissionController(
             userId = userId,
             missionId = missionId,
             photoKey = request.photoKey,
+        )
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "미션 인증 수정",
+        description = "검수 대기 또는 반려 상태의 미션 인증 이미지를 수정합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "수정 성공"),
+            SwaggerApiResponse(responseCode = "400", description = "잘못된 요청"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 미션 인증을 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "승인된 미션 인증은 수정할 수 없습니다."),
+        ],
+    )
+    @PatchMapping("/completions/{completionId}")
+    fun updateVerification(
+        @PathVariable completionId: Long,
+        @Valid @RequestBody request: SubmitMissionVerificationRequest,
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<UpdateMissionVerificationResponse> {
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = missionVerificationService.updateVerification(
+            userId = userId,
+            completionId = completionId,
+            photoKey = request.photoKey,
+        )
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "미션 인증 삭제",
+        description = "검수 대기 또는 반려 상태의 미션 인증을 삭제합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "삭제 성공"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 미션 인증을 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "승인된 미션 인증은 삭제할 수 없습니다."),
+        ],
+    )
+    @DeleteMapping("/completions/{completionId}")
+    fun deleteVerification(
+        @PathVariable completionId: Long,
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<DeleteMissionVerificationResponse> {
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = missionVerificationService.deleteVerification(
+            userId = userId,
+            completionId = completionId,
         )
         return ApiResponse.success(response)
     }
