@@ -5,6 +5,7 @@ enum class EcoJamHistorySourceType {
     SOUP_REROLL,
     GACHA,
     MISSION,
+    COMMUNITY_MISSION,
     CHECKIN,
     RECIPE_UNLOCK,
 }

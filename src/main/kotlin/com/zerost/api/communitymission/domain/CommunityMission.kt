@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "community_missions")
@@ -40,4 +41,15 @@ class CommunityMission(
 
     @Column(name = "is_active", nullable = false)
     var active: Boolean = true,
+
+    @Column(name = "succeeded_at")
+    var succeededAt: LocalDateTime? = null,
 ) : BaseEntity()
+
+{
+    fun hasSucceeded(): Boolean = succeededAt != null
+
+    fun markSucceeded(succeededAt: LocalDateTime) {
+        this.succeededAt = succeededAt
+    }
+}

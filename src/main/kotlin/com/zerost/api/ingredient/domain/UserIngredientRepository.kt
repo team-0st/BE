@@ -6,6 +6,7 @@ import java.util.Optional
 
 interface UserIngredientRepository : JpaRepository<UserIngredient, Long> {
     fun findByUserAndIngredient(user: User, ingredient: Ingredient): Optional<UserIngredient>
+    fun findByUserIdAndIngredientId(userId: Long, ingredientId: Long): UserIngredient?
     fun findAllByUserIdOrderByIdAsc(userId: Long): List<UserIngredient>
     fun findAllByUserIdAndIngredientIdIn(userId: Long, ingredientIds: Collection<Long>): List<UserIngredient>
 }

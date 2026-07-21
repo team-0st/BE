@@ -11,6 +11,8 @@ import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.communitymission.domain.CommunityMission
 import com.zerost.api.communitymission.domain.CommunityMissionCompletion
 import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
+import com.zerost.api.communitymission.domain.CommunityMissionReward
+import com.zerost.api.communitymission.domain.CommunityMissionRewardType
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionStatus
@@ -196,6 +198,7 @@ fun createCommunityMission(
     targetRatio: BigDecimal = BigDecimal("30.00"),
     imageUrl: String? = "https://example.com/images/community-mission-1.png",
     active: Boolean = true,
+    succeededAt: LocalDateTime? = null,
 ): CommunityMission = CommunityMission(
     id = id,
     title = title,
@@ -205,6 +208,7 @@ fun createCommunityMission(
     targetRatio = targetRatio,
     imageUrl = imageUrl,
     active = active,
+    succeededAt = succeededAt,
 )
 
 fun createCommunityMissionCompletion(
@@ -212,11 +216,31 @@ fun createCommunityMissionCompletion(
     communityMission: CommunityMission = createCommunityMission(),
     user: User = createUser(),
     completedAt: LocalDateTime = LocalDateTime.of(2026, 7, 21, 10, 0, 0),
+    rewardedAt: LocalDateTime? = null,
 ): CommunityMissionCompletion = CommunityMissionCompletion(
     id = id,
     communityMission = communityMission,
     user = user,
     completedAt = completedAt,
+    rewardedAt = rewardedAt,
+)
+
+fun createCommunityMissionReward(
+    id: Long = 1L,
+    communityMission: CommunityMission = createCommunityMission(),
+    rewardType: CommunityMissionRewardType = CommunityMissionRewardType.ECO_JAM,
+    ingredientType: IngredientType? = null,
+    quantity: Int = 0,
+    ecoJamAmount: Int = 50,
+    rewardOrder: Int = 1,
+): CommunityMissionReward = CommunityMissionReward(
+    id = id,
+    communityMission = communityMission,
+    rewardType = rewardType,
+    ingredientType = ingredientType,
+    quantity = quantity,
+    ecoJamAmount = ecoJamAmount,
+    rewardOrder = rewardOrder,
 )
 
 fun createRecipe(

@@ -62,7 +62,7 @@ class CommunityMissionQueryService(
                 achievementRatio = achievementRatio,
                 participantCount = participantCount,
                 totalUserCount = totalUserCount,
-                succeeded = isSucceeded(exactAchievementRatio, communityMission.targetRatio),
+                succeeded = communityMission.hasSucceeded() || isSucceeded(exactAchievementRatio, communityMission.targetRatio),
                 unlocked = CommunityMissionUnlockPolicy.isUnlocked(communityMissions, communityMission, completedMissionIds),
                 completed = missionId in completedMissionIds,
             )

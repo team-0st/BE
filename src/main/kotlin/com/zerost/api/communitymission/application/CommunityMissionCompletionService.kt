@@ -7,8 +7,11 @@ import com.zerost.api.communitymission.domain.CommunityMissionCompletionReposito
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
 import com.zerost.api.user.domain.UserRepository
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 
 @Service
@@ -16,6 +19,8 @@ class CommunityMissionCompletionService(
     private val userRepository: UserRepository,
     private val communityMissionRepository: CommunityMissionRepository,
     private val communityMissionCompletionRepository: CommunityMissionCompletionRepository,
+    private val communityMissionRewardSettlementService: CommunityMissionRewardSettlementService,
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
 
     @Transactional
@@ -28,7 +33,7 @@ class CommunityMissionCompletionService(
         }
 
         val communityMissions = CommunityMissionUnlockPolicy.sort(communityMissionRepository.findAllByActiveTrue())
-        val communityMission = communityMissions.firstOrNull { it.id == communityMissionId }
+        val communityMission = communityMissionRepository.findByIdAndActiveTrueForUpdate(communityMissionId)
             ?: throw BusinessException(ErrorCode.COMMUNITY_MISSION_NOT_FOUND)
         val resolvedUserId = requireNotNull(user.id)
         val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(resolvedUserId).toSet()
@@ -50,10 +55,55 @@ class CommunityMissionCompletionService(
             ),
         )
 
+        val participantCount = communityMissionCompletionRepository.countByCommunityMissionId(communityMissionId)
+        val totalUserCount = userRepository.countByOnboardingCompletedTrue()
+        val exactAchievementRatio = calculateAchievementRatio(participantCount, totalUserCount, 10)
+        val succeededNow = communityMission.hasSucceeded() || exactAchievementRatio >= communityMission.targetRatio
+
+        val currentCompletionReward = if (succeededNow) {
+            val rewardResult = communityMissionRewardSettlementService.rewardCurrentCompletion(
+                completion = completion,
+                user = user,
+                rewardedAt = completedAt,
+            )
+
+            if (!communityMission.hasSucceeded()) {
+                communityMission.markSucceeded(completedAt)
+                applicationEventPublisher.publishEvent(
+                    CommunityMissionSucceededEvent(
+                        communityMissionId = communityMissionId,
+                        rewardedAt = completedAt,
+                    ),
+                )
+            }
+
+            rewardResult
+        } else {
+            null
+        }
+
         return CompleteCommunityMissionResponse(
             completionId = requireNotNull(completion.id),
             communityMissionId = requireNotNull(communityMission.id),
+            succeeded = succeededNow,
+            rewardGranted = currentCompletionReward != null,
+            rewardedEcoJam = currentCompletionReward?.rewardedEcoJam ?: 0,
+            rewardedIngredients = currentCompletionReward?.rewardedIngredients ?: emptyList(),
             completedAt = completedAt.toString(),
         )
+    }
+
+    private fun calculateAchievementRatio(
+        participantCount: Long,
+        totalUserCount: Long,
+        scale: Int,
+    ): BigDecimal {
+        if (totalUserCount == 0L) {
+            return BigDecimal.ZERO.setScale(scale)
+        }
+
+        return BigDecimal.valueOf(participantCount)
+            .multiply(BigDecimal("100"))
+            .divide(BigDecimal.valueOf(totalUserCount), scale, RoundingMode.HALF_UP)
     }
 }
