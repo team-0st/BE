@@ -1,5 +1,6 @@
 package com.zerost.api.shop.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.shop.application.ShopQueryService
@@ -24,7 +25,7 @@ class ShopControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(ShopController(shopQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

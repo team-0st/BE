@@ -1,5 +1,6 @@
 package com.zerost.api.home.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.home.application.HomeQueryService
@@ -25,7 +26,7 @@ class HomeControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(HomeController(homeQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

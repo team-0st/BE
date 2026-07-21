@@ -1,9 +1,12 @@
 package com.zerost.api.auth.presentation
 
 import com.zerost.api.auth.application.AuthLoginService
+import com.zerost.api.auth.application.AuthTokenService
 import com.zerost.api.auth.presentation.dto.LoginResponse
+import com.zerost.api.auth.presentation.dto.RefreshTokenResponse
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.support.createLoginRequestBody
+import com.zerost.api.support.createRefreshTokenRequestBody
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -20,12 +23,13 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 class AuthControllerTest {
 
     private val authLoginService = mock(AuthLoginService::class.java)
+    private val authTokenService = mock(AuthTokenService::class.java)
     private lateinit var mockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
         val validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() }
-        mockMvc = MockMvcBuilders.standaloneSetup(AuthController(authLoginService))
+        mockMvc = MockMvcBuilders.standaloneSetup(AuthController(authLoginService, authTokenService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
             .build()
@@ -36,10 +40,14 @@ class AuthControllerTest {
         `when`(authLoginService.login("010-1234-5678", "zerost1234")).thenReturn(
             LoginResponse(
                 userId = 1L,
-                deviceId = "device-1",
                 nickname = "펭귄탐험가",
                 phoneNumber = "010-1234-5678",
                 onboardingCompleted = true,
+                accessToken = "access-token",
+                refreshToken = "refresh-token",
+                tokenType = "Bearer",
+                accessTokenExpiresIn = 3600,
+                refreshTokenExpiresIn = 1209600,
             ),
         )
 
@@ -51,7 +59,8 @@ class AuthControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.userId").value(1))
-            .andExpect(jsonPath("$.data.deviceId").value("device-1"))
+            .andExpect(jsonPath("$.data.accessToken").value("access-token"))
+            .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
 
         verify(authLoginService).login("010-1234-5678", "zerost1234")
     }
@@ -66,5 +75,42 @@ class AuthControllerTest {
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
+    }
+
+    @Test
+    fun `유효한 refresh token이면 토큰을 재발급한다`() {
+        `when`(authTokenService.refresh("refresh-token")).thenReturn(
+            RefreshTokenResponse(
+                accessToken = "new-access-token",
+                refreshToken = "new-refresh-token",
+                tokenType = "Bearer",
+                accessTokenExpiresIn = 3600,
+                refreshTokenExpiresIn = 1209600,
+            ),
+        )
+
+        mockMvc.perform(
+            post("/api/v1/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRefreshTokenRequestBody()),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.accessToken").value("new-access-token"))
+            .andExpect(jsonPath("$.data.refreshToken").value("new-refresh-token"))
+
+        verify(authTokenService).refresh("refresh-token")
+    }
+
+    @Test
+    fun `유효한 refresh token이면 로그아웃할 수 있다`() {
+        mockMvc.perform(
+            post("/api/v1/auth/logout")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createRefreshTokenRequestBody()),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+
+        verify(authTokenService).logout("refresh-token")
     }
 }

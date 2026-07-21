@@ -1,5 +1,6 @@
 package com.zerost.api.history.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.history.application.HistoryQueryService
@@ -24,7 +25,7 @@ class HistoryControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(HistoryController(historyQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

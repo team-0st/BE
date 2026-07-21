@@ -1,5 +1,6 @@
 package com.zerost.api.soup.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.soup.application.SoupBrewingService
@@ -31,7 +32,7 @@ class SoupControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(SoupController(soupBrewingService, soupRerollService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

@@ -1,5 +1,6 @@
 package com.zerost.api.recipe.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.recipe.application.RecipeQueryService
@@ -30,7 +31,7 @@ class RecipeControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(RecipeController(recipeQueryService, recipeUnlockService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

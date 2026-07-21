@@ -1,5 +1,6 @@
 package com.zerost.api.communitymission.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.communitymission.application.CommunityMissionCompletionService
@@ -31,7 +32,7 @@ class CommunityMissionControllerTest {
             CommunityMissionController(communityMissionQueryService, communityMissionCompletionService),
         )
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

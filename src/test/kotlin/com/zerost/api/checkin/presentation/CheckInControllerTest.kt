@@ -1,5 +1,6 @@
 package com.zerost.api.checkin.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.checkin.application.CheckInService
 import com.zerost.api.checkin.presentation.dto.CheckInResponse
 import com.zerost.api.checkin.presentation.dto.CheckInStatusResponse
@@ -27,7 +28,7 @@ class CheckInControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(CheckInController(checkInService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

@@ -132,6 +132,12 @@ fun createLoginRequestBody(
     {"phoneNumber":"$phoneNumber","password":"$password"}
 """.trimIndent()
 
+fun createRefreshTokenRequestBody(
+    refreshToken: String = "refresh-token",
+): String = """
+    {"refreshToken":"$refreshToken"}
+""".trimIndent()
+
 fun createMission(
     id: Long = 1L,
     title: String = "텀블러 사용하기",

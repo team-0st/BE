@@ -1,5 +1,6 @@
 package com.zerost.api.gacha.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.gacha.application.GachaExecutionService
@@ -28,7 +29,7 @@ class GachaControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(GachaController(gachaExecutionService, gachaQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

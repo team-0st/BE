@@ -1,5 +1,6 @@
 package com.zerost.api.file.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.config.S3Properties
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
@@ -45,7 +46,7 @@ class FileControllerTest {
 
         mockMvc = MockMvcBuilders.standaloneSetup(FileController(fileUploadService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 

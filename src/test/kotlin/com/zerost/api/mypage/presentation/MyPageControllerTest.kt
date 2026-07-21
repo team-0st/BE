@@ -1,5 +1,6 @@
 package com.zerost.api.mypage.presentation
 
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mypage.application.MyPageQueryService
@@ -25,7 +26,7 @@ class MyPageControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(MyPageController(myPageQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
             .build()
     }
 
