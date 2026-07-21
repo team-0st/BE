@@ -22,6 +22,9 @@ interface CommunityMissionCompletionRepository : JpaRepository<CommunityMissionC
     @EntityGraph(attributePaths = ["user"])
     fun findAllByCommunityMissionIdAndRewardedAtIsNullOrderByIdAsc(communityMissionId: Long): List<CommunityMissionCompletion>
 
+    @EntityGraph(attributePaths = ["user"])
+    fun findTop100ByCommunityMissionIdAndRewardedAtIsNullOrderByIdAsc(communityMissionId: Long): List<CommunityMissionCompletion>
+
     @Query(
         """
         select
