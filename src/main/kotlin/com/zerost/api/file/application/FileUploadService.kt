@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
 import software.amazon.awssdk.services.s3.model.S3Exception
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest
 import java.time.Duration
@@ -112,6 +113,22 @@ class FileUploadService(
         } catch (ex: S3Exception) {
             if (ex.statusCode() == 404) {
                 throw BusinessException(ErrorCode.UPLOADED_FILE_NOT_FOUND)
+            }
+            throw ex
+        }
+    }
+
+    fun delete(fileKey: String) {
+        try {
+            s3Client.deleteObject(
+                DeleteObjectRequest.builder()
+                    .bucket(s3Properties.bucket)
+                    .key(fileKey)
+                    .build(),
+            )
+        } catch (ex: S3Exception) {
+            if (ex.statusCode() == 404) {
+                return
             }
             throw ex
         }

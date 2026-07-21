@@ -84,9 +84,26 @@ class MissionCompletion(
         this.rewardedIngredient = ingredient
     }
 
+    fun updatePhotoKey(photoKey: String) {
+        validateEditableStatus()
+        this.photoKey = photoKey
+    }
+
+    fun validateDeletable() {
+        validateEditableStatus()
+    }
+
+    fun belongsTo(userId: Long): Boolean = requireNotNull(user.id) == userId
+
     private fun validatePendingStatus() {
         if (this.status != MissionCompletionStatus.PENDING) {
             throw BusinessException(ErrorCode.INVALID_MISSION_REVIEW_STATUS)
+        }
+    }
+
+    private fun validateEditableStatus() {
+        if (this.status == MissionCompletionStatus.APPROVED) {
+            throw BusinessException(ErrorCode.MISSION_COMPLETION_MODIFICATION_NOT_ALLOWED)
         }
     }
 }

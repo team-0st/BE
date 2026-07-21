@@ -7,7 +7,9 @@ import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mission.domain.MissionRepository
+import com.zerost.api.mission.presentation.dto.DeleteMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationResponse
+import com.zerost.api.mission.presentation.dto.UpdateMissionVerificationResponse
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -63,6 +65,65 @@ class MissionVerificationService(
         return SubmitMissionVerificationResponse(
             completionId = requireNotNull(completion.id),
             status = completion.status.name,
+        )
+    }
+
+    @Transactional
+    fun updateVerification(
+        userId: Long,
+        completionId: Long,
+        photoKey: String,
+    ): UpdateMissionVerificationResponse {
+        val user = userRepository.findByIdForUpdate(userId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val completion = missionCompletionRepository.findByIdForUpdate(completionId)
+            .orElseThrow { BusinessException(ErrorCode.MISSION_COMPLETION_NOT_FOUND) }
+
+        if (!completion.belongsTo(requireNotNull(user.id))) {
+            throw BusinessException(ErrorCode.MISSION_COMPLETION_NOT_FOUND)
+        }
+
+        fileUploadService.validateMissionImageKey(
+            userId = requireNotNull(user.id),
+            missionId = requireNotNull(completion.mission.id),
+            fileKey = photoKey,
+        )
+
+        val previousPhotoKey = completion.photoKey
+        completion.updatePhotoKey(photoKey)
+
+        if (previousPhotoKey != photoKey) {
+            fileUploadService.delete(previousPhotoKey)
+        }
+
+        return UpdateMissionVerificationResponse(
+            completionId = requireNotNull(completion.id),
+            missionId = requireNotNull(completion.mission.id),
+            status = completion.status.name,
+            photoKey = completion.photoKey,
+        )
+    }
+
+    @Transactional
+    fun deleteVerification(
+        userId: Long,
+        completionId: Long,
+    ): DeleteMissionVerificationResponse {
+        val user = userRepository.findByIdForUpdate(userId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+        val completion = missionCompletionRepository.findByIdForUpdate(completionId)
+            .orElseThrow { BusinessException(ErrorCode.MISSION_COMPLETION_NOT_FOUND) }
+
+        if (!completion.belongsTo(requireNotNull(user.id))) {
+            throw BusinessException(ErrorCode.MISSION_COMPLETION_NOT_FOUND)
+        }
+
+        completion.validateDeletable()
+        missionCompletionRepository.delete(completion)
+        fileUploadService.delete(completion.photoKey)
+
+        return DeleteMissionVerificationResponse(
+            completionId = completionId,
         )
     }
 
