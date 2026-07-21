@@ -56,7 +56,7 @@ class SoupBrewingService(
     }
 
     private fun validateSlotCount(ingredientIds: List<Long>) {
-        if (ingredientIds.size !in 3..5) {
+        if (ingredientIds.size !in 2..5) {
             throw BusinessException(ErrorCode.INVALID_SOUP_SLOT_COUNT)
         }
     }

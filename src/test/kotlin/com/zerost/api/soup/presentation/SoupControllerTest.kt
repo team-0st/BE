@@ -66,6 +66,34 @@ class SoupControllerTest {
     }
 
     @Test
+    fun `2개 재료로도 입문 스프 제작 요청을 보낼 수 있다`() {
+        `when`(soupBrewingService.brew(1L, listOf(1L, 2L))).thenReturn(
+            BrewSoupResponse(
+                soupId = 11L,
+                recipeId = 2L,
+                recipeName = "따뜻한 입문 스프",
+                recipeType = "COMMON",
+                rewardGrade = "CONSOLATION",
+                rewardEcoJam = 30,
+                rewardPoint = 0,
+                rewardedIngredients = emptyList(),
+            ),
+        )
+
+        mockMvc.perform(
+            post("/api/v1/soups/brew")
+                .header("Authorization", "Bearer access-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"ingredientIds":[1,2]}"""),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.recipeName").value("따뜻한 입문 스프"))
+
+        verify(soupBrewingService).brew(1L, listOf(1L, 2L))
+    }
+
+    @Test
     fun `디바이스 아이디가 있으면 스프 보상을 리롤할 수 있다`() {
         `when`(soupRerollService.reroll(1L, 10L)).thenReturn(
             RerollSoupResponse(
@@ -93,12 +121,12 @@ class SoupControllerTest {
     }
 
     @Test
-    fun `재료 수가 부족하면 제작 요청에 실패한다`() {
+    fun `재료 수가 2개 미만이면 제작 요청에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/soups/brew")
                 .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"ingredientIds":[1,2]}"""),
+                .content("""{"ingredientIds":[1]}"""),
         )
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.success").value(false))
