@@ -8,6 +8,7 @@ import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createShop
 import com.zerost.api.support.createUser
 import com.zerost.api.support.createUserIngredient
+import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -33,6 +34,7 @@ class MyPageQueryServiceTest {
         val shop = createShop(name = "알맹상점")
         val user = createUser(
             nickname = "펭귄탐험가",
+            profileCharacterCode = ProfileCharacterCode.BASIC_2,
             shop = shop,
             ecoJam = 410,
             point = 2200,
@@ -54,6 +56,7 @@ class MyPageQueryServiceTest {
         val response = myPageQueryService.getMyPage(1L)
 
         assertEquals("펭귄탐험가", response.nickname)
+        assertEquals("BASIC_2", response.profileCharacterCode)
         assertEquals("알맹상점", response.shopName)
         assertEquals(410, response.ecoJam)
         assertEquals(2200, response.point)
