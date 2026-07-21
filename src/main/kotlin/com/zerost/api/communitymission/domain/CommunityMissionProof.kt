@@ -4,6 +4,7 @@ import com.zerost.api.common.entity.BaseEntity
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.user.domain.User
+import org.hibernate.annotations.BatchSize
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -49,6 +50,7 @@ class CommunityMissionProof(
     @Column(name = "reviewed_at")
     var reviewedAt: LocalDateTime? = null,
 
+    @BatchSize(size = 100)
     @OneToMany(mappedBy = "proof", cascade = [CascadeType.ALL], orphanRemoval = true)
     val images: MutableList<CommunityMissionProofImage> = mutableListOf(),
 ) : BaseEntity() {

@@ -4,9 +4,11 @@ import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewQueryService
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewService
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewItemResponse
+import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewPageResponse
 import com.zerost.api.communitymission.presentation.dto.ReviewCommunityMissionProofRequest
 import com.zerost.api.communitymission.presentation.dto.ReviewCommunityMissionProofResponse
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "Admin Community Mission", description = "관리자 공동 미션 검수 API")
@@ -28,16 +31,24 @@ class AdminCommunityMissionReviewController(
 
     @Operation(
         summary = "검수 대기 공동 미션 인증 목록 조회",
-        description = "관리자가 검수해야 하는 PENDING 상태의 공동 미션 인증 목록을 제출 시각 오름차순으로 조회합니다.",
+        description = "관리자가 검수해야 하는 PENDING 상태의 공동 미션 인증 목록을 제출 시각 오름차순, ID 오름차순 기준으로 페이지 조회합니다.",
     )
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+            SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 page 또는 size 값"),
         ],
     )
     @GetMapping("/proofs/pending")
-    fun getPendingProofs(): ApiResponse<List<AdminCommunityMissionProofReviewItemResponse>> {
-        return ApiResponse.success(adminCommunityMissionReviewQueryService.getPendingProofs())
+    fun getPendingProofs(
+        @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+        @RequestParam(defaultValue = "0")
+        page: Int,
+        @Parameter(description = "페이지 크기(최대 100)", example = "20")
+        @RequestParam(defaultValue = "20")
+        size: Int,
+    ): ApiResponse<AdminCommunityMissionProofReviewPageResponse> {
+        return ApiResponse.success(adminCommunityMissionReviewQueryService.getPendingProofs(page, size))
     }
 
     @Operation(
