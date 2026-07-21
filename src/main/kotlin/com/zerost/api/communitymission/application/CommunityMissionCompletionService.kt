@@ -4,6 +4,8 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.domain.CommunityMissionCompletion
 import com.zerost.api.communitymission.domain.CommunityMissionCompletionRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
 import com.zerost.api.user.domain.UserRepository
@@ -19,6 +21,8 @@ class CommunityMissionCompletionService(
     private val userRepository: UserRepository,
     private val communityMissionRepository: CommunityMissionRepository,
     private val communityMissionCompletionRepository: CommunityMissionCompletionRepository,
+    private val communityMissionProofRequirementRepository: CommunityMissionProofRequirementRepository,
+    private val communityMissionProofRepository: CommunityMissionProofRepository,
     private val communityMissionRewardSettlementService: CommunityMissionRewardSettlementService,
     private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
@@ -44,6 +48,16 @@ class CommunityMissionCompletionService(
 
         if (communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(communityMissionId, resolvedUserId)) {
             throw BusinessException(ErrorCode.COMMUNITY_MISSION_ALREADY_COMPLETED)
+        }
+
+        val requiredProofCount = communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(communityMissionId).size
+        if (requiredProofCount == 0) {
+            throw BusinessException(ErrorCode.COMMUNITY_MISSION_PROOF_REQUIREMENT_NOT_FOUND)
+        }
+
+        val submittedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserId(communityMissionId, resolvedUserId)
+        if (submittedProofCount != requiredProofCount.toLong()) {
+            throw BusinessException(ErrorCode.COMMUNITY_MISSION_PROOFS_INCOMPLETE)
         }
 
         val completedAt = LocalDateTime.now()

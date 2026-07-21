@@ -5,9 +5,12 @@ import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.domain.CommunityMissionCompletion
 import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
 import com.zerost.api.communitymission.domain.CommunityMissionCompletionRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
 import com.zerost.api.support.createCommunityMissionCompletion
 import com.zerost.api.support.createCommunityMission
+import com.zerost.api.support.createCommunityMissionProofRequirement
 import com.zerost.api.support.createUser
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.context.ApplicationEventPublisher
@@ -33,12 +36,16 @@ class CommunityMissionCompletionServiceTest {
     private val userRepository = mock(UserRepository::class.java)
     private val communityMissionRepository = mock(CommunityMissionRepository::class.java)
     private val communityMissionCompletionRepository = mock(CommunityMissionCompletionRepository::class.java)
+    private val communityMissionProofRequirementRepository = mock(CommunityMissionProofRequirementRepository::class.java)
+    private val communityMissionProofRepository = mock(CommunityMissionProofRepository::class.java)
     private val communityMissionRewardSettlementService = mock(CommunityMissionRewardSettlementService::class.java)
     private val applicationEventPublisher = mock(ApplicationEventPublisher::class.java)
     private val communityMissionCompletionService = CommunityMissionCompletionService(
         userRepository = userRepository,
         communityMissionRepository = communityMissionRepository,
         communityMissionCompletionRepository = communityMissionCompletionRepository,
+        communityMissionProofRequirementRepository = communityMissionProofRequirementRepository,
+        communityMissionProofRepository = communityMissionProofRepository,
         communityMissionRewardSettlementService = communityMissionRewardSettlementService,
         applicationEventPublisher = applicationEventPublisher,
     )
@@ -63,6 +70,10 @@ class CommunityMissionCompletionServiceTest {
         `when`(communityMissionRepository.findByIdAndActiveTrueForUpdate(2L)).thenReturn(mission2)
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(listOf(1L))
         `when`(communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(2L, 1L)).thenReturn(false)
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(2L)).thenReturn(
+            listOf(createCommunityMissionProofRequirement(id = 21L, communityMission = mission2)),
+        )
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserId(2L, 1L)).thenReturn(1L)
         `when`(communityMissionCompletionRepository.save(any(CommunityMissionCompletion::class.java))).thenReturn(
             createCommunityMissionCompletion(id = 10L, communityMission = mission2, user = user),
         )
@@ -157,6 +168,10 @@ class CommunityMissionCompletionServiceTest {
         `when`(communityMissionRepository.findByIdAndActiveTrueForUpdate(1L)).thenReturn(mission)
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(false)
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(
+            listOf(createCommunityMissionProofRequirement(id = 11L, communityMission = mission)),
+        )
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(1L)
         `when`(communityMissionCompletionRepository.save(any(CommunityMissionCompletion::class.java))).thenReturn(currentCompletion)
         `when`(communityMissionCompletionRepository.countByCommunityMissionId(1L)).thenReturn(5L)
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(10L)
@@ -178,5 +193,30 @@ class CommunityMissionCompletionServiceTest {
         assertEquals(50, response.rewardedEcoJam)
         assertEquals(true, mission.hasSucceeded())
         assertEquals(true, currentCompletion.isRewarded())
+    }
+
+    @Test
+    fun `필수 인증 단계를 모두 제출하지 않으면 완료할 수 없다`() {
+        val user = createUser(id = 1L, onboardingCompleted = true)
+        val mission = createCommunityMission(id = 1L)
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
+        `when`(communityMissionRepository.findByIdAndActiveTrueForUpdate(1L)).thenReturn(mission)
+        `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
+        `when`(communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(false)
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(
+            listOf(
+                createCommunityMissionProofRequirement(id = 11L, communityMission = mission, proofOrder = 1),
+                createCommunityMissionProofRequirement(id = 12L, communityMission = mission, proofOrder = 2),
+            ),
+        )
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(1L)
+
+        val exception = assertFailsWith<BusinessException> {
+            communityMissionCompletionService.complete(1L, 1L)
+        }
+
+        assertEquals(ErrorCode.COMMUNITY_MISSION_PROOFS_INCOMPLETE, exception.errorCode)
     }
 }

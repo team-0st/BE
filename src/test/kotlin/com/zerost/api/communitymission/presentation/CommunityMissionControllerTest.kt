@@ -3,11 +3,16 @@ package com.zerost.api.communitymission.presentation
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.communitymission.application.CommunityMissionCompletionService
+import com.zerost.api.communitymission.application.CommunityMissionProofService
 import com.zerost.api.communitymission.application.CommunityMissionQueryService
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
+import com.zerost.api.communitymission.presentation.dto.CommunityMissionDetailResponse
+import com.zerost.api.communitymission.presentation.dto.CommunityMissionProofRequirementResponse
 import com.zerost.api.communitymission.presentation.dto.CommunityMissionRewardedIngredientResponse
 import com.zerost.api.communitymission.presentation.dto.CommunityMissionProgressResponse
 import com.zerost.api.support.createAuthTokenProvider
+import com.zerost.api.support.createSubmitCommunityMissionProofRequestBody
+import com.zerost.api.communitymission.presentation.dto.SubmitCommunityMissionProofResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -16,6 +21,7 @@ import org.mockito.Mockito.`when`
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
@@ -24,13 +30,14 @@ import java.math.BigDecimal
 class CommunityMissionControllerTest {
 
     private val communityMissionQueryService = mock(CommunityMissionQueryService::class.java)
+    private val communityMissionProofService = mock(CommunityMissionProofService::class.java)
     private val communityMissionCompletionService = mock(CommunityMissionCompletionService::class.java)
     private lateinit var mockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-            CommunityMissionController(communityMissionQueryService, communityMissionCompletionService),
+            CommunityMissionController(communityMissionQueryService, communityMissionProofService, communityMissionCompletionService),
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
@@ -55,6 +62,9 @@ class CommunityMissionControllerTest {
                     succeeded = true,
                     unlocked = true,
                     completed = true,
+                    requiredProofCount = 1,
+                    submittedProofCount = 1,
+                    readyToComplete = false,
                 ),
             ),
         )
@@ -72,6 +82,79 @@ class CommunityMissionControllerTest {
             .andExpect(jsonPath("$.data[0].completed").value(true))
 
         verify(communityMissionQueryService).getCommunityMissions(1L)
+    }
+
+    @Test
+    fun `인증 토큰이 있으면 공동 미션 상세를 조회할 수 있다`() {
+        `when`(communityMissionQueryService.getCommunityMission(1L, 3L)).thenReturn(
+            CommunityMissionDetailResponse(
+                id = 3L,
+                title = "오늘의 친환경 약속",
+                description = "설명",
+                imageUrl = "image-1",
+                difficulty = "ONE_STAR",
+                stage = 1,
+                targetRatio = BigDecimal("30.00"),
+                succeeded = false,
+                unlocked = true,
+                completed = false,
+                requiredProofCount = 1,
+                submittedProofCount = 0,
+                readyToComplete = false,
+                proofRequirements = listOf(
+                    CommunityMissionProofRequirementResponse(
+                        requirementId = 11L,
+                        proofOrder = 1,
+                        title = "1일차 인증",
+                        description = "사진 제출",
+                        requiredImageCount = 1,
+                        requiredDayOffset = null,
+                        submitted = false,
+                        submittedProofId = null,
+                        submittedAt = null,
+                        submittedImageKeys = emptyList(),
+                    ),
+                ),
+            ),
+        )
+
+        mockMvc.perform(
+            get("/api/v1/community-missions/3")
+                .header("Authorization", "Bearer access-token"),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.id").value(3))
+            .andExpect(jsonPath("$.data.proofRequirements[0].requirementId").value(11))
+            .andExpect(jsonPath("$.data.requiredProofCount").value(1))
+
+        verify(communityMissionQueryService).getCommunityMission(1L, 3L)
+    }
+
+    @Test
+    fun `인증 토큰이 있으면 공동 미션 인증 단계를 제출할 수 있다`() {
+        `when`(communityMissionProofService.submitProof(1L, 3L, 11L, listOf("community-missions/1/1/2026/07/21/proof-1.jpg"))).thenReturn(
+            SubmitCommunityMissionProofResponse(
+                proofId = 101L,
+                communityMissionId = 3L,
+                requirementId = 11L,
+                proofOrder = 1,
+                submittedAt = "2026-07-21T15:30:00",
+                readyToComplete = true,
+            ),
+        )
+
+        mockMvc.perform(
+            post("/api/v1/community-missions/3/proofs/11")
+                .header("Authorization", "Bearer access-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createSubmitCommunityMissionProofRequestBody()),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.proofId").value(101))
+            .andExpect(jsonPath("$.data.requirementId").value(11))
+            .andExpect(jsonPath("$.data.readyToComplete").value(true))
+
+        verify(communityMissionProofService).submitProof(1L, 3L, 11L, listOf("community-missions/1/1/2026/07/21/proof-1.jpg"))
     }
 
     @Test

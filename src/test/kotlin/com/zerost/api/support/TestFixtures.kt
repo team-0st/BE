@@ -11,6 +11,8 @@ import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.communitymission.domain.CommunityMission
 import com.zerost.api.communitymission.domain.CommunityMissionCompletion
 import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
+import com.zerost.api.communitymission.domain.CommunityMissionProof
+import com.zerost.api.communitymission.domain.CommunityMissionProofRequirement
 import com.zerost.api.communitymission.domain.CommunityMissionReward
 import com.zerost.api.communitymission.domain.CommunityMissionRewardType
 import com.zerost.api.mission.domain.Mission
@@ -149,6 +151,12 @@ fun createRefreshTokenRequestBody(
     {"refreshToken":"$refreshToken"}
 """.trimIndent()
 
+fun createSubmitCommunityMissionProofRequestBody(
+    photoKeys: List<String> = listOf("community-missions/1/1/2026/07/21/proof-1.jpg"),
+): String = """
+    {"photoKeys":[${photoKeys.joinToString(",") { "\"$it\"" }}]}
+""".trimIndent()
+
 fun createAuthTokenProvider(
     userId: Long = 1L,
 ): AuthTokenProvider {
@@ -230,6 +238,45 @@ fun createCommunityMissionCompletion(
     completedAt = completedAt,
     rewardedAt = rewardedAt,
 )
+
+fun createCommunityMissionProofRequirement(
+    id: Long? = 1L,
+    communityMission: CommunityMission = createCommunityMission(),
+    proofOrder: Int = 1,
+    title: String? = "1일차 인증",
+    description: String? = "사진 제출",
+    requiredImageCount: Int = 1,
+    requiredDayOffset: Int? = null,
+): CommunityMissionProofRequirement = CommunityMissionProofRequirement(
+    id = id,
+    communityMission = communityMission,
+    proofOrder = proofOrder,
+    title = title,
+    description = description,
+    requiredImageCount = requiredImageCount,
+    requiredDayOffset = requiredDayOffset,
+)
+
+fun createCommunityMissionProof(
+    id: Long? = 1L,
+    communityMission: CommunityMission = createCommunityMission(),
+    proofRequirement: CommunityMissionProofRequirement = createCommunityMissionProofRequirement(communityMission = communityMission),
+    user: User = createUser(),
+    submittedAt: LocalDateTime = LocalDateTime.of(2026, 7, 21, 10, 0, 0),
+    imageKeys: List<String> = listOf("community-missions/1/1/2026/07/21/proof-1.jpg"),
+): CommunityMissionProof {
+    val proof = CommunityMissionProof(
+        id = id,
+        communityMission = communityMission,
+        proofRequirement = proofRequirement,
+        user = user,
+        submittedAt = submittedAt,
+    )
+    imageKeys.forEachIndexed { index, imageKey ->
+        proof.addImage(imageKey, index + 1)
+    }
+    return proof
+}
 
 fun createCommunityMissionReward(
     id: Long = 1L,
