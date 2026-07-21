@@ -124,9 +124,59 @@ class SoupBrewingServiceTest {
     }
 
     @Test
-    fun `재료 수가 3개 미만이면 제작할 수 없다`() {
+    fun `2슬롯 입문 스프도 제작할 수 있다`() {
+        val user = createUser()
+        val ingredient1 = createIngredient(id = 1L, name = "토마토")
+        val ingredient2 = createIngredient(id = 2L, name = "양파")
+        val recipe = Recipe(
+            id = 10L,
+            name = "따뜻한 입문 스프",
+            type = RecipeType.COMMON,
+            slotCount = 2,
+            hidden = false,
+        )
+        val userIngredients = listOf(
+            createUserIngredient(user = user, ingredient = ingredient1, quantity = 1),
+            createUserIngredient(user = user, ingredient = ingredient2, quantity = 1),
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(2)).thenReturn(listOf(recipe))
+        `when`(randomProvider.nextInt(100)).thenReturn(99)
+        `when`(
+            recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(10L)),
+        ).thenReturn(
+            listOf(
+                RecipeIngredient(id = 11L, recipe = recipe, ingredient = ingredient1, slotOrder = 1),
+                RecipeIngredient(id = 12L, recipe = recipe, ingredient = ingredient2, slotOrder = 2),
+            ),
+        )
+        `when`(userIngredientRepository.findAllByUserIdAndIngredientIdIn(1L, listOf(1L, 2L))).thenReturn(userIngredients)
+        `when`(soupRepository.save(any(Soup::class.java))).thenAnswer { invocation ->
+            val soup = invocation.arguments[0] as Soup
+            Soup(
+                id = 20L,
+                user = soup.user,
+                recipe = soup.recipe,
+                rewardGrade = soup.rewardGrade,
+                rewardEcoJam = soup.rewardEcoJam,
+                rewardPoint = soup.rewardPoint,
+            )
+        }
+
+        val response = soupBrewingService.brew(1L, listOf(1L, 2L))
+
+        assertEquals(20L, response.soupId)
+        assertEquals(10L, response.recipeId)
+        assertEquals("따뜻한 입문 스프", response.recipeName)
+        assertEquals(0, userIngredients[0].quantity)
+        assertEquals(0, userIngredients[1].quantity)
+    }
+
+    @Test
+    fun `재료 수가 2개 미만이면 제작할 수 없다`() {
         val exception = assertThrows<BusinessException> {
-            soupBrewingService.brew(1L, listOf(1L, 2L))
+            soupBrewingService.brew(1L, listOf(1L))
         }
 
         assertEquals(ErrorCode.INVALID_SOUP_SLOT_COUNT, exception.errorCode)
