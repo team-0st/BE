@@ -21,10 +21,12 @@ object CommunityMissionUnlockPolicy {
             return true
         }
 
-        return communityMissions
+        val previousMissionId = communityMissions
             .firstOrNull {
                 it.difficulty == communityMission.difficulty && it.stage == communityMission.stage - 1
             }
-            ?.id in completedMissionIds
+            ?.id ?: return false
+
+        return previousMissionId in completedMissionIds
     }
 }
