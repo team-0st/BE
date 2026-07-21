@@ -4,6 +4,8 @@ import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
@@ -25,6 +27,9 @@ interface CommunityMissionProofRepository : JpaRepository<CommunityMissionProof,
 
     @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user", "images"])
     fun findAllByStatusOrderBySubmittedAtAsc(status: CommunityMissionProofStatus): List<CommunityMissionProof>
+
+    @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user", "images"])
+    fun findAllByStatus(status: CommunityMissionProofStatus, pageable: Pageable): Page<CommunityMissionProof>
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select cmp from CommunityMissionProof cmp where cmp.id = :proofId")
