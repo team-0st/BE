@@ -154,7 +154,7 @@ class MissionVerificationServiceTest {
     }
 
     @Test
-    fun `같은 photoKey로 수정 요청하면 기존 파일을 삭제하지 않는다`() {
+    fun `같은 photoKey로 수정 요청해도 반려 상태면 재검수 상태로 돌아가고 기존 파일은 삭제하지 않는다`() {
         val user = createUser(id = 1L)
         val mission = createMission(id = 3L)
         val completion = createMissionCompletion(
@@ -175,8 +175,9 @@ class MissionVerificationServiceTest {
             photoKey = "missions/1/3/2026/07/18/same.jpg",
         )
 
-        assertEquals("REJECTED", response.status)
-        assertEquals(LocalDateTime.of(2026, 7, 18, 12, 0, 0), completion.reviewedAt)
+        assertEquals("PENDING", response.status)
+        assertEquals(MissionCompletionStatus.PENDING, completion.status)
+        assertEquals(null, completion.reviewedAt)
         verify(fileUploadService).validateMissionImageKey(1L, 3L, "missions/1/3/2026/07/18/same.jpg")
         verify(fileUploadService, never()).delete("missions/1/3/2026/07/18/same.jpg")
     }

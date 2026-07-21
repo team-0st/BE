@@ -63,6 +63,22 @@ class MissionCompletionTest {
     }
 
     @Test
+    fun `반려된 미션 인증을 같은 이미지로 수정해도 재검수 상태로 돌아간다`() {
+        val completion = createMissionCompletion(
+            photoKey = "missions/1/1/2026/07/18/same.jpg",
+            status = MissionCompletionStatus.REJECTED,
+            reviewedAt = java.time.LocalDateTime.of(2026, 7, 19, 14, 30, 0),
+        )
+
+        val updated = completion.updatePhotoKey("missions/1/1/2026/07/18/same.jpg")
+
+        assertEquals(false, updated)
+        assertEquals(MissionCompletionStatus.PENDING, completion.status)
+        assertEquals(null, completion.reviewedAt)
+        assertEquals("missions/1/1/2026/07/18/same.jpg", completion.photoKey)
+    }
+
+    @Test
     fun `승인된 미션 인증은 수정할 수 없다`() {
         val completion = createMissionCompletion(
             status = MissionCompletionStatus.APPROVED,

@@ -91,16 +91,16 @@ class MissionCompletion(
     fun updatePhotoKey(photoKey: String): Boolean {
         validateEditableStatus()
 
+        if (this.status == MissionCompletionStatus.REJECTED) {
+            this.status = MissionCompletionStatus.PENDING
+            this.reviewedAt = null
+        }
+
         if (this.photoKey == photoKey) {
             return false
         }
 
         this.photoKey = photoKey
-
-        if (this.status == MissionCompletionStatus.REJECTED) {
-            this.status = MissionCompletionStatus.PENDING
-            this.reviewedAt = null
-        }
 
         return true
     }
