@@ -52,7 +52,11 @@ class AuthTokenRefreshConcurrencyTest(
             futures.map { it.get(5, TimeUnit.SECONDS) }
         } finally {
             executor.shutdown()
-            executor.awaitTermination(5, TimeUnit.SECONDS)
+            val terminated = executor.awaitTermination(5, TimeUnit.SECONDS)
+            if (!terminated) {
+                executor.shutdownNow()
+                assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS))
+            }
         }
 
         val successCount = results.count { it.isSuccess }
