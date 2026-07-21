@@ -41,7 +41,7 @@ class MyPageQueryServiceTest {
         val cabbage = createIngredient(id = 1L, name = "양배추", imageUrl = "image-1")
         val tomato = createIngredient(id = 2L, name = "토마토", imageUrl = "image-2")
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(userIngredientRepository.findAllByUserIdOrderByIdAsc(1L)).thenReturn(
             listOf(
                 createUserIngredient(id = 1L, user = user, ingredient = cabbage, quantity = 2),
@@ -51,7 +51,7 @@ class MyPageQueryServiceTest {
         `when`(soupRepository.countByUserId(1L)).thenReturn(4L)
         `when`(missionCompletionRepository.countByUserIdAndStatus(1L, MissionCompletionStatus.APPROVED)).thenReturn(3L)
 
-        val response = myPageQueryService.getMyPage("device-1")
+        val response = myPageQueryService.getMyPage(1L)
 
         assertEquals("펭귄탐험가", response.nickname)
         assertEquals("알맹상점", response.shopName)

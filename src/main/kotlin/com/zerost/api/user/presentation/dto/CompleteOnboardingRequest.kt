@@ -23,6 +23,11 @@ data class CompleteOnboardingRequest(
     @Schema(description = "전화번호", example = "010-1234-5678")
     val phoneNumber: String,
 
+    @field:NotBlank(message = "비밀번호는 필수입니다.")
+    @field:Size(min = 8, max = 64, message = "비밀번호는 8자 이상 64자 이하여야 합니다.")
+    @Schema(description = "로그인 비밀번호", example = "zerost1234")
+    val password: String,
+
     @field:NotNull(message = "상점 ID는 필수입니다.")
     @Schema(description = "선택한 상점 식별자", example = "1")
     val shopId: Long?,

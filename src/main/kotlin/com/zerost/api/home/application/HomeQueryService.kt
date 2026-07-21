@@ -23,14 +23,14 @@ class HomeQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getHome(deviceId: String): HomeResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getHome(userId: Long): HomeResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        val userId = requireNotNull(user.id)
+        val resolvedUserId = requireNotNull(user.id)
         val today = LocalDate.now()
         val todayRange = getTodayRange(today)
         val todayCompletions = missionCompletionRepository.findAllByUserIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThan(
-            userId = userId,
+            userId = resolvedUserId,
             start = todayRange.first,
             end = todayRange.second,
         )
@@ -39,7 +39,7 @@ class HomeQueryService(
             nickname = user.nickname,
             ecoJam = user.ecoJam,
             point = user.point,
-            checkedInToday = checkInRepository.existsByUserIdAndCheckedDate(userId, today),
+            checkedInToday = checkInRepository.existsByUserIdAndCheckedDate(resolvedUserId, today),
             missionProgress = HomeMissionProgressResponse(
                 totalMissionCount = missionRepository.count().toInt(),
                 submittedMissionCount = todayCompletions.size,

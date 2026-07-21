@@ -8,6 +8,7 @@ import com.zerost.api.recipe.presentation.dto.RecipeDetailIngredientResponse
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
 import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
 import com.zerost.api.recipe.presentation.dto.UnlockHiddenRecipeResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -30,13 +31,13 @@ class RecipeControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(RecipeController(recipeQueryService, recipeUnlockService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 레시피 목록을 조회할 수 있다`() {
-        `when`(recipeQueryService.getRecipes("device-1")).thenReturn(
+    fun `인증된 사용자는 레시피 목록을 조회할 수 있다`() {
+        `when`(recipeQueryService.getRecipes(1L)).thenReturn(
             listOf(
                 RecipeSummaryResponse(
                     recipeId = 1L,
@@ -57,7 +58,7 @@ class RecipeControllerTest {
 
         mockMvc.perform(
             get("/api/v1/recipes")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -65,12 +66,12 @@ class RecipeControllerTest {
             .andExpect(jsonPath("$.data[1].name").value("???"))
             .andExpect(jsonPath("$.data[1].recipeVisible").value(false))
 
-        verify(recipeQueryService).getRecipes("device-1")
+        verify(recipeQueryService).getRecipes(1L)
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 레시피 상세를 조회할 수 있다`() {
-        `when`(recipeQueryService.getRecipe("device-1", 1L)).thenReturn(
+    fun `인증된 사용자는 레시피 상세를 조회할 수 있다`() {
+        `when`(recipeQueryService.getRecipe(1L, 1L)).thenReturn(
             RecipeDetailResponse(
                 recipeId = 1L,
                 name = "오리지널 스프",
@@ -91,19 +92,19 @@ class RecipeControllerTest {
 
         mockMvc.perform(
             get("/api/v1/recipes/1")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.recipeId").value(1))
             .andExpect(jsonPath("$.data.ingredients[0].name").value("양배추"))
 
-        verify(recipeQueryService).getRecipe("device-1", 1L)
+        verify(recipeQueryService).getRecipe(1L, 1L)
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 희귀 레시피를 랜덤 해금할 수 있다`() {
-        `when`(recipeUnlockService.unlockRandomHiddenRecipe("device-1")).thenReturn(
+    fun `인증된 사용자는 희귀 레시피를 랜덤 해금할 수 있다`() {
+        `when`(recipeUnlockService.unlockRandomHiddenRecipe(1L)).thenReturn(
             UnlockHiddenRecipeResponse(
                 recipeId = 2L,
                 recipeName = "크리스탈 스프",
@@ -113,7 +114,7 @@ class RecipeControllerTest {
 
         mockMvc.perform(
             post("/api/v1/recipes/unlock/hidden")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -121,6 +122,6 @@ class RecipeControllerTest {
             .andExpect(jsonPath("$.data.recipeName").value("크리스탈 스프"))
             .andExpect(jsonPath("$.data.remainingEcoJam").value(300))
 
-        verify(recipeUnlockService).unlockRandomHiddenRecipe("device-1")
+        verify(recipeUnlockService).unlockRandomHiddenRecipe(1L)
     }
 }

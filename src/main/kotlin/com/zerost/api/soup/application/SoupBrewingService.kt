@@ -25,10 +25,10 @@ class SoupBrewingService(
 ) {
 
     @Transactional
-    fun brew(deviceId: String, ingredientIds: List<Long>): BrewSoupResponse {
+    fun brew(userId: Long, ingredientIds: List<Long>): BrewSoupResponse {
         validateSlotCount(ingredientIds)
 
-        val user = userRepository.findByDeviceIdForUpdate(deviceId)
+        val user = userRepository.findByIdForUpdate(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val recipe = findMatchingRecipe(ingredientIds)

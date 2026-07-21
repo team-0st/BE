@@ -39,8 +39,8 @@ class GachaExecutionService(
 ) {
 
     @Transactional
-    fun execute(deviceId: String): ExecuteGachaResponse {
-        val user = userRepository.findByDeviceIdForUpdate(deviceId)
+    fun execute(userId: Long): ExecuteGachaResponse {
+        val user = userRepository.findByIdForUpdate(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val costEcoJam = GACHA_COST_ECO_JAM

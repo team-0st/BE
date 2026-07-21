@@ -4,6 +4,7 @@ import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.history.application.HistoryQueryService
 import com.zerost.api.history.presentation.dto.AssetHistoryResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -24,13 +25,13 @@ class HistoryControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(HistoryController(historyQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
     fun `에코잼 적립 내역을 조회할 수 있다`() {
-        `when`(historyQueryService.getEcoJamHistories("device-1")).thenReturn(
+        `when`(historyQueryService.getEcoJamHistories(1L)).thenReturn(
             listOf(
                 AssetHistoryResponse(
                     historyId = 1L,
@@ -44,19 +45,19 @@ class HistoryControllerTest {
 
         mockMvc.perform(
             get("/api/v1/histories/eco-jams")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].amount").value(300))
             .andExpect(jsonPath("$.data[0].sourceType").value("SOUP"))
 
-        verify(historyQueryService).getEcoJamHistories("device-1")
+        verify(historyQueryService).getEcoJamHistories(1L)
     }
 
     @Test
     fun `포인트 적립 내역을 조회할 수 있다`() {
-        `when`(historyQueryService.getPointHistories("device-1")).thenReturn(
+        `when`(historyQueryService.getPointHistories(1L)).thenReturn(
             listOf(
                 AssetHistoryResponse(
                     historyId = 2L,
@@ -70,13 +71,13 @@ class HistoryControllerTest {
 
         mockMvc.perform(
             get("/api/v1/histories/points")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].amount").value(2000))
             .andExpect(jsonPath("$.data[0].sourceId").value(20))
 
-        verify(historyQueryService).getPointHistories("device-1")
+        verify(historyQueryService).getPointHistories(1L)
     }
 }

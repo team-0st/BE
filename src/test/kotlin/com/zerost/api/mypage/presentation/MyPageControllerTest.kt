@@ -5,6 +5,7 @@ import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mypage.application.MyPageQueryService
 import com.zerost.api.mypage.presentation.dto.MyPageIngredientResponse
 import com.zerost.api.mypage.presentation.dto.MyPageResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -25,13 +26,13 @@ class MyPageControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(MyPageController(myPageQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 마이페이지 통합 조회를 할 수 있다`() {
-        `when`(myPageQueryService.getMyPage("device-1")).thenReturn(
+    fun `인증된 사용자는 마이페이지 통합 조회를 할 수 있다`() {
+        `when`(myPageQueryService.getMyPage(1L)).thenReturn(
             MyPageResponse(
                 nickname = "펭귄탐험가",
                 shopName = "알맹상점",
@@ -54,7 +55,7 @@ class MyPageControllerTest {
 
         mockMvc.perform(
             get("/api/v1/my-page")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -62,6 +63,6 @@ class MyPageControllerTest {
             .andExpect(jsonPath("$.data.brewedSoupCount").value(4))
             .andExpect(jsonPath("$.data.ingredients[0].name").value("양배추"))
 
-        verify(myPageQueryService).getMyPage("device-1")
+        verify(myPageQueryService).getMyPage(1L)
     }
 }

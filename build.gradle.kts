@@ -49,6 +49,11 @@ dependencies {
 	// S3
 	implementation(platform("software.amazon.awssdk:bom:2.32.6"))
 	implementation("software.amazon.awssdk:s3")
+
+	// JWT
+	implementation("io.jsonwebtoken:jjwt-api:0.12.7")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.7")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.7")
 }
 
 kotlin {

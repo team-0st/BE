@@ -42,7 +42,7 @@ class CommunityMissionQueryServiceTest {
             targetRatio = java.math.BigDecimal("50.00"),
         )
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(20L)
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission2, mission1))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L, 2L)))
@@ -54,7 +54,7 @@ class CommunityMissionQueryServiceTest {
             )
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(listOf(1L))
 
-        val response = communityMissionQueryService.getCommunityMissions("device-1")
+        val response = communityMissionQueryService.getCommunityMissions(1L)
 
         assertEquals(2, response.size)
         assertEquals(1L, response[0].id)
@@ -74,13 +74,13 @@ class CommunityMissionQueryServiceTest {
         val user = createUser()
         val mission = createCommunityMission(id = 1L)
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(0L)
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
-        val response = communityMissionQueryService.getCommunityMissions("device-1")
+        val response = communityMissionQueryService.getCommunityMissions(1L)
 
         assertEquals("0.00", response[0].achievementRatio.toPlainString())
         assertFalse(response[0].succeeded)
@@ -95,14 +95,14 @@ class CommunityMissionQueryServiceTest {
             targetRatio = java.math.BigDecimal("16.67"),
         )
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(6L)
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L)))
             .thenReturn(listOf(countProjection(1L, 1L)))
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
-        val response = communityMissionQueryService.getCommunityMissions("device-1")
+        val response = communityMissionQueryService.getCommunityMissions(1L)
 
         assertEquals("16.67", response[0].achievementRatio.toPlainString())
         assertFalse(response[0].succeeded)
@@ -123,13 +123,13 @@ class CommunityMissionQueryServiceTest {
             stage = 2,
         )
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(10L)
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission1, mission2))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L, 2L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
-        val response = communityMissionQueryService.getCommunityMissions("device-1")
+        val response = communityMissionQueryService.getCommunityMissions(1L)
 
         assertTrue(response[0].unlocked)
         assertFalse(response[1].unlocked)

@@ -45,7 +45,7 @@ class CommunityMissionCompletionServiceTest {
             stage = 2,
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission2, mission1))
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(listOf(1L))
         `when`(communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(2L, 1L)).thenReturn(false)
@@ -59,7 +59,7 @@ class CommunityMissionCompletionServiceTest {
             )
         }
 
-        val response = communityMissionCompletionService.complete("device-1", 2L)
+        val response = communityMissionCompletionService.complete(1L, 2L)
 
         assertEquals(10L, response.completionId)
         assertEquals(2L, response.communityMissionId)
@@ -73,10 +73,10 @@ class CommunityMissionCompletionServiceTest {
     fun `온보딩을 완료하지 않으면 공동 미션을 완료할 수 없다`() {
         val user = createUser(onboardingCompleted = false)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
 
         val exception = assertFailsWith<BusinessException> {
-            communityMissionCompletionService.complete("device-1", 1L)
+            communityMissionCompletionService.complete(1L, 1L)
         }
 
         assertEquals(ErrorCode.COMMUNITY_MISSION_ONBOARDING_REQUIRED, exception.errorCode)
@@ -97,12 +97,12 @@ class CommunityMissionCompletionServiceTest {
             stage = 2,
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission1, mission2))
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val exception = assertFailsWith<BusinessException> {
-            communityMissionCompletionService.complete("device-1", 2L)
+            communityMissionCompletionService.complete(1L, 2L)
         }
 
         assertEquals(ErrorCode.COMMUNITY_MISSION_NOT_UNLOCKED, exception.errorCode)
@@ -113,13 +113,13 @@ class CommunityMissionCompletionServiceTest {
         val user = createUser(onboardingCompleted = true)
         val mission = createCommunityMission(id = 1L)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(listOf(1L))
         `when`(communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(true)
 
         val exception = assertFailsWith<BusinessException> {
-            communityMissionCompletionService.complete("device-1", 1L)
+            communityMissionCompletionService.complete(1L, 1L)
         }
 
         assertEquals(ErrorCode.COMMUNITY_MISSION_ALREADY_COMPLETED, exception.errorCode)

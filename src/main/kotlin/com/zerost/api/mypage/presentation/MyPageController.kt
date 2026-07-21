@@ -1,6 +1,6 @@
 package com.zerost.api.mypage.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mypage.application.MyPageQueryService
 import com.zerost.api.mypage.presentation.dto.MyPageResponse
@@ -34,8 +34,8 @@ class MyPageController(
     fun getMyPage(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<MyPageResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = myPageQueryService.getMyPage(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = myPageQueryService.getMyPage(userId)
         return ApiResponse.success(response)
     }
 }

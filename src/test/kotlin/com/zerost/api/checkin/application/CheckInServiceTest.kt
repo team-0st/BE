@@ -46,7 +46,7 @@ class CheckInServiceTest {
         val user = createUser()
         val ingredient1 = createIngredient(id = 3L, name = "양배추", imageUrl = "image-3")
         val ingredient2 = createIngredient(id = 4L, name = "토마토", imageUrl = "image-4")
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(false)
         `when`(ingredientRepository.findAllByType(IngredientType.COMMON)).thenReturn(listOf(ingredient1, ingredient2))
         `when`(checkInRandomProvider.nextInt(2)).thenReturn(1)
@@ -62,7 +62,7 @@ class CheckInServiceTest {
             )
         }
 
-        val response = checkInService.checkIn("device-1")
+        val response = checkInService.checkIn(1L)
 
         assertEquals(4L, response.rewardedIngredient.id)
         assertEquals("토마토", response.rewardedIngredient.name)
@@ -76,11 +76,11 @@ class CheckInServiceTest {
     @Test
     fun `이미 출석한 유저면 예외가 발생한다`() {
         val user = createUser()
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(true)
 
         val exception = assertThrows<BusinessException> {
-            checkInService.checkIn("device-1")
+            checkInService.checkIn(1L)
         }
 
         assertEquals(ErrorCode.ALREADY_CHECKED_IN, exception.errorCode)
@@ -90,10 +90,10 @@ class CheckInServiceTest {
     @Test
     fun `오늘 출석 여부를 조회할 수 있다`() {
         val user = createUser()
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(true)
 
-        val response = checkInService.getTodayStatus("device-1")
+        val response = checkInService.getTodayStatus(1L)
 
         assertTrue(response.checkedIn)
     }
@@ -101,12 +101,12 @@ class CheckInServiceTest {
     @Test
     fun `일반 재료가 없으면 출석할 수 없다`() {
         val user = createUser()
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(false)
         `when`(ingredientRepository.findAllByType(IngredientType.COMMON)).thenReturn(emptyList())
 
         val exception = assertThrows<BusinessException> {
-            checkInService.checkIn("device-1")
+            checkInService.checkIn(1L)
         }
 
         assertEquals(ErrorCode.INGREDIENT_NOT_FOUND, exception.errorCode)

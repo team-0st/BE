@@ -26,8 +26,8 @@ class MissionQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getMissions(deviceId: String): List<MissionSummaryResponse> {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getMissions(userId: Long): List<MissionSummaryResponse> {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val todayRange = getTodayRange()
@@ -53,8 +53,8 @@ class MissionQueryService(
     }
 
     @Transactional(readOnly = true)
-    fun getMission(deviceId: String, missionId: Long): MissionDetailResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getMission(userId: Long, missionId: Long): MissionDetailResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val mission = missionRepository.findById(missionId)
@@ -79,8 +79,8 @@ class MissionQueryService(
     }
 
     @Transactional(readOnly = true)
-    fun getMissionCompletions(deviceId: String): List<MissionCompletionHistoryResponse> {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getMissionCompletions(userId: Long): List<MissionCompletionHistoryResponse> {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         return missionCompletionRepository.findAllByUserIdOrderBySubmittedAtDesc(requireNotNull(user.id))

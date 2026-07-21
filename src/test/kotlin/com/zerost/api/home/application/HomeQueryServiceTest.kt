@@ -62,7 +62,7 @@ class HomeQueryServiceTest {
             ),
         )
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(true)
         `when`(missionRepository.count()).thenReturn(7L)
         `when`(
@@ -73,7 +73,7 @@ class HomeQueryServiceTest {
             ),
         ).thenReturn(todayCompletions)
 
-        val response = homeQueryService.getHome("device-1")
+        val response = homeQueryService.getHome(1L)
 
         assertEquals("펭귄탐험가", response.nickname)
         assertEquals(320, response.ecoJam)
@@ -92,7 +92,7 @@ class HomeQueryServiceTest {
         val todayStart = LocalDate.now().atStartOfDay()
         val tomorrowStart = LocalDate.now().plusDays(1).atStartOfDay()
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(checkInRepository.existsByUserIdAndCheckedDate(1L, LocalDate.now())).thenReturn(false)
         `when`(missionRepository.count()).thenReturn(7L)
         `when`(
@@ -103,7 +103,7 @@ class HomeQueryServiceTest {
             ),
         ).thenReturn(emptyList())
 
-        val response = homeQueryService.getHome("device-1")
+        val response = homeQueryService.getHome(1L)
 
         assertEquals(0, response.missionProgress.submittedMissionCount)
     }

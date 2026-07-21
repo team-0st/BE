@@ -10,8 +10,8 @@ import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
-import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
+import com.zerost.api.support.createUser
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -37,7 +37,7 @@ class AdminMissionReviewConcurrencyTest(
 
     @Test
     fun `같은 미션 인증을 동시에 승인해도 한 번만 보상이 지급된다`() {
-        val user = userRepository.save(User(deviceId = "review-user-${System.nanoTime()}"))
+        val user = userRepository.save(createUser(id = null))
         val ingredient = ingredientRepository.save(
             Ingredient(
                 name = "버려진 천",
@@ -57,7 +57,7 @@ class AdminMissionReviewConcurrencyTest(
             MissionCompletion.submit(
                 user = user,
                 mission = mission,
-                photoKey = "missions/${user.deviceId}/${requireNotNull(mission.id)}/2026/07/19/review.jpg",
+                photoKey = "missions/${requireNotNull(user.id)}/${requireNotNull(mission.id)}/2026/07/19/review.jpg",
                 submittedAt = LocalDateTime.of(2026, 7, 19, 12, 0, 0),
             ),
         )

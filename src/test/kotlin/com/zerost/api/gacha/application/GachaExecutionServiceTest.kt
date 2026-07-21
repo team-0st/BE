@@ -60,7 +60,7 @@ class GachaExecutionServiceTest {
             pointAmount = 300,
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(pointPolicy))
         `when`(gachaRandomProvider.nextInt(500)).thenReturn(0)
         `when`(gachaRepository.save(any(Gacha::class.java))).thenAnswer { invocation ->
@@ -78,7 +78,7 @@ class GachaExecutionServiceTest {
             )
         }
 
-        val response = gachaExecutionService.execute("device-1")
+        val response = gachaExecutionService.execute(1L)
 
         assertEquals(10L, response.gachaId)
         assertEquals(100, response.costEcoJam)
@@ -107,7 +107,7 @@ class GachaExecutionServiceTest {
             ingredientQuantity = 1,
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(ingredientPolicy))
         `when`(gachaRandomProvider.nextInt(1000)).thenReturn(0)
         `when`(userIngredientRepository.findByUserAndIngredient(user, ingredient)).thenReturn(Optional.empty())
@@ -126,7 +126,7 @@ class GachaExecutionServiceTest {
             )
         }
 
-        val response = gachaExecutionService.execute("device-1")
+        val response = gachaExecutionService.execute(1L)
 
         assertEquals("INGREDIENT", response.resultType)
         assertEquals(5L, response.resultIngredientId)
@@ -149,7 +149,7 @@ class GachaExecutionServiceTest {
             ecoJamAmount = 30,
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(ecoJamPolicy))
         `when`(gachaRandomProvider.nextInt(1500)).thenReturn(0)
         `when`(gachaRepository.save(any(Gacha::class.java))).thenAnswer { invocation ->
@@ -167,7 +167,7 @@ class GachaExecutionServiceTest {
             )
         }
 
-        val response = gachaExecutionService.execute("device-1")
+        val response = gachaExecutionService.execute(1L)
 
         assertEquals("ECO_JAM", response.resultType)
         assertEquals(30, response.resultEcoJam)
@@ -193,7 +193,7 @@ class GachaExecutionServiceTest {
             pointAmount = 100,
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(skippedPolicy, validPolicy))
         `when`(gachaRandomProvider.nextInt(100)).thenReturn(0)
         `when`(gachaRepository.save(any(Gacha::class.java))).thenAnswer { invocation ->
@@ -211,7 +211,7 @@ class GachaExecutionServiceTest {
             )
         }
 
-        val response = gachaExecutionService.execute("device-1")
+        val response = gachaExecutionService.execute(1L)
 
         assertEquals(13L, response.gachaId)
         assertEquals("POINT", response.resultType)
@@ -222,10 +222,10 @@ class GachaExecutionServiceTest {
     fun `에코잼이 부족하면 가챠를 실행할 수 없다`() {
         val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 50)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
 
         val exception = assertThrows<BusinessException> {
-            gachaExecutionService.execute("device-1")
+            gachaExecutionService.execute(1L)
         }
 
         assertEquals(ErrorCode.INSUFFICIENT_ECO_JAM, exception.errorCode)
@@ -235,11 +235,11 @@ class GachaExecutionServiceTest {
     fun `활성화된 가챠 정책이 없으면 가챠를 실행할 수 없다`() {
         val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 300)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(emptyList())
 
         val exception = assertThrows<BusinessException> {
-            gachaExecutionService.execute("device-1")
+            gachaExecutionService.execute(1L)
         }
 
         assertEquals(ErrorCode.GACHA_REWARD_POLICY_NOT_FOUND, exception.errorCode)
@@ -255,11 +255,11 @@ class GachaExecutionServiceTest {
             probability = BigDecimal("0.00"),
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(zeroWeightPolicy))
 
         val exception = assertThrows<BusinessException> {
-            gachaExecutionService.execute("device-1")
+            gachaExecutionService.execute(1L)
         }
 
         assertEquals(ErrorCode.INVALID_GACHA_REWARD_POLICY, exception.errorCode)

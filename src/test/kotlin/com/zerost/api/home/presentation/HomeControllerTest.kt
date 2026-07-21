@@ -5,6 +5,7 @@ import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.home.application.HomeQueryService
 import com.zerost.api.home.presentation.dto.HomeMissionProgressResponse
 import com.zerost.api.home.presentation.dto.HomeResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -25,13 +26,13 @@ class HomeControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(HomeController(homeQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 홈 화면 통합 조회를 할 수 있다`() {
-        `when`(homeQueryService.getHome("device-1")).thenReturn(
+    fun `인증된 사용자는 홈 화면 통합 조회를 할 수 있다`() {
+        `when`(homeQueryService.getHome(1L)).thenReturn(
             HomeResponse(
                 nickname = "펭귄탐험가",
                 ecoJam = 320,
@@ -49,7 +50,7 @@ class HomeControllerTest {
 
         mockMvc.perform(
             get("/api/v1/home")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -57,6 +58,6 @@ class HomeControllerTest {
             .andExpect(jsonPath("$.data.checkedInToday").value(true))
             .andExpect(jsonPath("$.data.missionProgress.totalMissionCount").value(7))
 
-        verify(homeQueryService).getHome("device-1")
+        verify(homeQueryService).getHome(1L)
     }
 }

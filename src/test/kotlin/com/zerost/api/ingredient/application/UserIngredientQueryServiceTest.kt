@@ -27,10 +27,10 @@ class UserIngredientQueryServiceTest {
             ingredient = ingredient,
             quantity = 3,
         )
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(userIngredientRepository.findAllByUserIdOrderByIdAsc(1L)).thenReturn(listOf(userIngredient))
 
-        val response = userIngredientQueryService.getUserIngredients("device-1")
+        val response = userIngredientQueryService.getUserIngredients(1L)
 
         assertEquals(1, response.size)
         assertEquals(7L, response[0].ingredientId)

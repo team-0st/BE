@@ -36,6 +36,6 @@ class AdminMissionReviewQueryServiceTest {
         assertEquals("펭귄탐험가", response[0].userNickname)
         assertEquals(1L, response[0].missionId)
         assertEquals("텀블러 사용하기", response[0].missionTitle)
-        assertEquals("missions/device-1/1/2026/07/18/mission-1.jpg", response[0].photoKey)
+        assertEquals("missions/1/1/2026/07/18/mission-1.jpg", response[0].photoKey)
     }
 }

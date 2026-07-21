@@ -39,11 +39,11 @@ class HistoryQueryServiceTest {
             createdAt = latestHistory.createdAt!!.minusDays(1),
         )
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(ecoJamHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(1L))
             .thenReturn(listOf(latestHistory, olderHistory))
 
-        val response = historyQueryService.getEcoJamHistories("device-1")
+        val response = historyQueryService.getEcoJamHistories(1L)
 
         assertEquals(2, response.size)
         assertEquals(2L, response[0].historyId)
@@ -57,11 +57,11 @@ class HistoryQueryServiceTest {
         val user = createUser(id = 1L, deviceId = "device-1")
         val pointHistory = createPointHistory(id = 3L, user = user, amount = 2_000, sourceId = 30L)
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(pointHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(1L))
             .thenReturn(listOf(pointHistory))
 
-        val response = historyQueryService.getPointHistories("device-1")
+        val response = historyQueryService.getPointHistories(1L)
 
         assertEquals(1, response.size)
         assertEquals(3L, response[0].historyId)
@@ -71,10 +71,10 @@ class HistoryQueryServiceTest {
 
     @Test
     fun `등록되지 않은 디바이스면 적립 내역 조회에 실패한다`() {
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.empty())
+        `when`(userRepository.findById(1L)).thenReturn(Optional.empty())
 
         val exception = assertThrows<BusinessException> {
-            historyQueryService.getEcoJamHistories("device-1")
+            historyQueryService.getEcoJamHistories(1L)
         }
 
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.errorCode)

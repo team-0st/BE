@@ -1,6 +1,6 @@
 package com.zerost.api.common.config
 
-import com.zerost.api.common.device.DeviceIdInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
@@ -8,14 +8,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class WebMvcConfig(
-    private val deviceIdInterceptor: DeviceIdInterceptor,
+    private val authenticationInterceptor: AuthenticationInterceptor,
     private val corsProperties: CorsProperties,
 ) : WebMvcConfigurer {
 
     override fun addInterceptors(registry: InterceptorRegistry) {
-        registry.addInterceptor(deviceIdInterceptor)
+        registry.addInterceptor(authenticationInterceptor)
             .addPathPatterns("/api/v1/**")
-            .excludePathPatterns("/api/v1/users/register")
+            .excludePathPatterns("/api/v1/users/register", "/api/v1/auth/**")
     }
 
     override fun addCorsMappings(registry: CorsRegistry) {
@@ -26,7 +26,7 @@ class WebMvcConfig(
         registry.addMapping("/api/v1/**")
             .allowedOrigins(*corsProperties.allowedOrigins.toTypedArray())
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            .allowedHeaders("Content-Type", "Authorization", "X-Device-Id")
+            .allowedHeaders("Content-Type", "Authorization")
             .allowCredentials(true)
             .maxAge(3600)
     }

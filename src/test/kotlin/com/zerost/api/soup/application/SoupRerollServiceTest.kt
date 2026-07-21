@@ -76,7 +76,7 @@ class SoupRerollServiceTest {
         `when`(soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(10L)).thenReturn(emptyList())
         `when`(randomProvider.nextInt(100)).thenReturn(65)
 
-        val response = soupRerollService.reroll("device-1", 10L)
+        val response = soupRerollService.reroll(1L, 10L)
 
         assertEquals(10L, response.soupId)
         assertEquals(30, response.rerollCostEcoJam)
@@ -121,7 +121,7 @@ class SoupRerollServiceTest {
         `when`(userIngredientRepository.findByUserAndIngredient(user, newIngredient)).thenReturn(Optional.empty())
         `when`(randomProvider.nextInt(100)).thenReturn(0, 0)
 
-        val response = soupRerollService.reroll("device-1", 10L)
+        val response = soupRerollService.reroll(1L, 10L)
 
         assertEquals("INGREDIENT", response.rewardGrade)
         assertEquals(50, response.rewardEcoJam)
@@ -149,7 +149,7 @@ class SoupRerollServiceTest {
         `when`(soupRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(soup))
 
         val exception = assertThrows<BusinessException> {
-            soupRerollService.reroll("device-1", 10L)
+            soupRerollService.reroll(1L, 10L)
         }
 
         assertEquals(ErrorCode.SOUP_REROLL_ALREADY_COMPLETED, exception.errorCode)
@@ -174,7 +174,7 @@ class SoupRerollServiceTest {
         `when`(soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(10L)).thenReturn(emptyList())
 
         val exception = assertThrows<BusinessException> {
-            soupRerollService.reroll("device-1", 10L)
+            soupRerollService.reroll(1L, 10L)
         }
 
         assertEquals(ErrorCode.SOUP_REROLL_REWARD_RECOVERY_NOT_AVAILABLE, exception.errorCode)

@@ -21,6 +21,11 @@ spring:
     enabled: true
 
 app:
+  auth:
+    token:
+      secret: test-secret-key-test-secret-key-1234
+      access-token-expiration-seconds: 3600
+      refresh-token-expiration-seconds: 1209600
   cors:
     allowed-origins:
       - http://localhost:3000

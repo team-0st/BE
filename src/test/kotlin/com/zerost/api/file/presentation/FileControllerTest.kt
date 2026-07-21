@@ -4,6 +4,7 @@ import com.zerost.api.common.config.S3Properties
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.file.application.FileUploadService
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
@@ -45,7 +46,7 @@ class FileControllerTest {
 
         mockMvc = MockMvcBuilders.standaloneSetup(FileController(fileUploadService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -66,12 +67,12 @@ class FileControllerTest {
             multipart("/api/v1/files/upload")
                 .file(file)
                 .param("missionId", "1")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.fileUrl").value("https://signed.example.com/mission.jpg"))
-            .andExpect(jsonPath("$.data.fileKey").value(org.hamcrest.Matchers.matchesPattern("missions/device-1/1/\\d{4}/\\d{2}/\\d{2}/.+\\.jpg")))
+            .andExpect(jsonPath("$.data.fileKey").value(org.hamcrest.Matchers .matchesPattern("missions/1/1/\\d{4}/\\d{2}/\\d{2}/.+\\.jpg")))
     }
 
     @Test
@@ -88,8 +89,8 @@ class FileControllerTest {
                 .file(file)
                 .param("missionId", "1"),
         )
-            .andExpect(status().isBadRequest)
+            .andExpect(status().isUnauthorized)
             .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.error.code").value("DEVICE_ID_HEADER_MISSING"))
+            .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_REQUIRED"))
     }
 }

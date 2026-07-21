@@ -43,7 +43,7 @@ class AdminMissionReviewControllerTest {
                     userNickname = "펭귄탐험가",
                     missionId = 1L,
                     missionTitle = "텀블러 사용하기",
-                    photoKey = "missions/device-1/1/2026/07/18/file.jpg",
+                    photoKey = "missions/1/1/2026/07/18/file.jpg",
                     submittedAt = "2026-07-18T10:00:00",
                 ),
             ),

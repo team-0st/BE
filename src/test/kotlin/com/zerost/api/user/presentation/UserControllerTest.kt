@@ -31,9 +31,19 @@ class UserControllerTest {
     }
 
     @Test
-    fun `디바이스 등록에 성공하면 유저 정보를 반환한다`() {
-        `when`(userRegistrationService.register("device-1"))
-            .thenReturn(RegisterUserResponse(userId = 1L, onboardingCompleted = false))
+    fun `임시 유저 등록에 성공하면 유저 정보와 토큰을 반환한다`() {
+        `when`(userRegistrationService.register())
+            .thenReturn(
+                RegisterUserResponse(
+                    userId = 1L,
+                    onboardingCompleted = false,
+                    accessToken = "access-token",
+                    refreshToken = "refresh-token",
+                    tokenType = "Bearer",
+                    accessTokenExpiresIn = 3600,
+                    refreshTokenExpiresIn = 1209600,
+                ),
+            )
 
         mockMvc.perform(
                 post("/api/v1/users/register")
@@ -44,19 +54,9 @@ class UserControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.userId").value(1))
             .andExpect(jsonPath("$.data.onboardingCompleted").value(false))
+            .andExpect(jsonPath("$.data.accessToken").value("access-token"))
+            .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
 
-        verify(userRegistrationService).register("device-1")
-    }
-
-    @Test
-    fun `디바이스 아이디가 비어 있으면 등록에 실패한다`() {
-        mockMvc.perform(
-                post("/api/v1/users/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(createRegisterUserRequestBody(deviceId = "")),
-        )
-            .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
+        verify(userRegistrationService).register()
     }
 }

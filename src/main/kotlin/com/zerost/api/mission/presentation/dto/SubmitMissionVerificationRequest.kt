@@ -11,7 +11,7 @@ data class SubmitMissionVerificationRequest(
     @field:Size(max = 255, message = "photoKey는 255자 이하여야 합니다.")
     @field:Schema(
         description = "파일 업로드 API 응답으로 받은 미션 인증 이미지 파일 키",
-        example = "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+        example = "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
     )
     val photoKey: String,
 )

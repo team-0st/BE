@@ -1,6 +1,6 @@
 package com.zerost.api.gacha.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.gacha.application.GachaExecutionService
 import com.zerost.api.gacha.application.GachaQueryService
@@ -39,8 +39,8 @@ class GachaController(
     fun execute(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<ExecuteGachaResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = gachaExecutionService.execute(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = gachaExecutionService.execute(userId)
         return ApiResponse.success(response)
     }
 
@@ -58,8 +58,8 @@ class GachaController(
     fun getGachaHistories(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<GachaHistoryResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = gachaQueryService.getGachaHistories(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = gachaQueryService.getGachaHistories(userId)
         return ApiResponse.success(response)
     }
 }

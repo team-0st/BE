@@ -39,12 +39,12 @@ class RecipeUnlockServiceTest {
         val recipe1 = createRecipe(id = 1L, name = "크리스탈 스프", type = RecipeType.HIDDEN, hidden = true)
         val recipe2 = createRecipe(id = 2L, name = "포레스트 스프", type = RecipeType.HIDDEN, hidden = true)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllByTypeOrderByIdAsc(RecipeType.HIDDEN)).thenReturn(listOf(recipe1, recipe2))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(listOf(1L))
         `when`(recipeUnlockRandomProvider.nextInt(1)).thenReturn(0)
 
-        val response = recipeUnlockService.unlockRandomHiddenRecipe("device-1")
+        val response = recipeUnlockService.unlockRandomHiddenRecipe(1L)
 
         assertEquals(2L, response.recipeId)
         assertEquals("포레스트 스프", response.recipeName)
@@ -59,12 +59,12 @@ class RecipeUnlockServiceTest {
         val recipe1 = createRecipe(id = 1L, name = "크리스탈 스프", type = RecipeType.HIDDEN, hidden = true)
         val recipe2 = createRecipe(id = 2L, name = "포레스트 스프", type = RecipeType.HIDDEN, hidden = true)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllByTypeOrderByIdAsc(RecipeType.HIDDEN)).thenReturn(listOf(recipe1, recipe2))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(listOf(1L, 2L))
 
         val exception = assertThrows<BusinessException> {
-            recipeUnlockService.unlockRandomHiddenRecipe("device-1")
+            recipeUnlockService.unlockRandomHiddenRecipe(1L)
         }
 
         assertEquals(ErrorCode.ALL_HIDDEN_RECIPES_ALREADY_UNLOCKED, exception.errorCode)

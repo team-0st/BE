@@ -4,6 +4,7 @@ import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.shop.application.ShopQueryService
 import com.zerost.api.shop.presentation.dto.ShopResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -24,7 +25,7 @@ class ShopControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(ShopController(shopQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -43,7 +44,7 @@ class ShopControllerTest {
 
         mockMvc.perform(
             get("/api/v1/shops")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -56,8 +57,8 @@ class ShopControllerTest {
     @Test
     fun `디바이스 아이디가 없으면 상점 목록 조회에 실패한다`() {
         mockMvc.perform(get("/api/v1/shops"))
-            .andExpect(status().isBadRequest)
+            .andExpect(status().isUnauthorized)
             .andExpect(jsonPath("$.success").value(false))
-            .andExpect(jsonPath("$.error.code").value("DEVICE_ID_HEADER_MISSING"))
+            .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_REQUIRED"))
     }
 }

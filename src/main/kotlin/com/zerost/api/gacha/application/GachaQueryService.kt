@@ -15,8 +15,8 @@ class GachaQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getGachaHistories(deviceId: String): List<GachaHistoryResponse> {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getGachaHistories(userId: Long): List<GachaHistoryResponse> {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         return gachaRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(requireNotNull(user.id))

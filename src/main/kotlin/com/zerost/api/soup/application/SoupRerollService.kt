@@ -22,10 +22,10 @@ class SoupRerollService(
 ) {
 
     @Transactional
-    fun reroll(deviceId: String, soupId: Long): RerollSoupResponse {
+    fun reroll(userId: Long, soupId: Long): RerollSoupResponse {
         val previewSoup = soupRepository.findById(soupId)
             .orElseThrow { BusinessException(ErrorCode.SOUP_NOT_FOUND) }
-        if (previewSoup.user.deviceId != deviceId) {
+        if (requireNotNull(previewSoup.user.id) != userId) {
             throw BusinessException(ErrorCode.SOUP_NOT_FOUND)
         }
 

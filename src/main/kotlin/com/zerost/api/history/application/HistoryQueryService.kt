@@ -17,8 +17,10 @@ class HistoryQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getEcoJamHistories(deviceId: String): List<AssetHistoryResponse> {
-        val userId = getUserId(deviceId)
+    fun getEcoJamHistories(userId: Long): List<AssetHistoryResponse> {
+        userRepository.findById(userId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+
         return ecoJamHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(userId)
             .map { history ->
                 AssetHistoryResponse(
@@ -32,8 +34,10 @@ class HistoryQueryService(
     }
 
     @Transactional(readOnly = true)
-    fun getPointHistories(deviceId: String): List<AssetHistoryResponse> {
-        val userId = getUserId(deviceId)
+    fun getPointHistories(userId: Long): List<AssetHistoryResponse> {
+        userRepository.findById(userId)
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+
         return pointHistoryRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(userId)
             .map { history ->
                 AssetHistoryResponse(
@@ -46,9 +50,4 @@ class HistoryQueryService(
             }
     }
 
-    private fun getUserId(deviceId: String): Long {
-        val user = userRepository.findByDeviceId(deviceId)
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        return requireNotNull(user.id)
-    }
 }

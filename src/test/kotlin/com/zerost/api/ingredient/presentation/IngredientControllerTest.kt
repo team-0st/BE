@@ -4,6 +4,7 @@ import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.ingredient.application.UserIngredientQueryService
 import com.zerost.api.ingredient.presentation.dto.UserIngredientResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -24,13 +25,13 @@ class IngredientControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(IngredientController(userIngredientQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor())
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
     fun `디바이스 아이디가 있으면 보유 재료 목록을 조회할 수 있다`() {
-        `when`(userIngredientQueryService.getUserIngredients("device-1")).thenReturn(
+        `when`(userIngredientQueryService.getUserIngredients(1L)).thenReturn(
             listOf(
                 UserIngredientResponse(
                     ingredientId = 7L,
@@ -44,13 +45,13 @@ class IngredientControllerTest {
 
         mockMvc.perform(
             get("/api/v1/ingredients")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].ingredientId").value(7))
             .andExpect(jsonPath("$.data[0].quantity").value(3))
 
-        verify(userIngredientQueryService).getUserIngredients("device-1")
+        verify(userIngredientQueryService).getUserIngredients(1L)
     }
 }

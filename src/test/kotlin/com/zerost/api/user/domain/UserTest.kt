@@ -17,11 +17,13 @@ class UserTest {
         user.completeOnboarding(
             nickname = "펭귄탐험가",
             phoneNumber = "010-1234-5678",
+            passwordHash = "encoded-password",
             shop = shop,
         )
 
         assertEquals("펭귄탐험가", user.nickname)
         assertEquals("010-1234-5678", user.phoneNumber)
+        assertEquals("encoded-password", user.passwordHash)
         assertEquals(shop, user.shop)
         assertTrue(user.onboardingCompleted)
     }

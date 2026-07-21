@@ -21,8 +21,8 @@ class MyPageQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getMyPage(deviceId: String): MyPageResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getMyPage(userId: Long): MyPageResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         val userId = requireNotNull(user.id)
         val ingredients = userIngredientRepository.findAllByUserIdOrderByIdAsc(userId)

@@ -41,7 +41,7 @@ class MissionVerificationServiceTest {
         val user = createUser()
         val mission = createMission()
         val (start, end) = todayRange()
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -65,9 +65,9 @@ class MissionVerificationServiceTest {
         }
 
         val response = missionVerificationService.submitVerification(
-            deviceId = "device-1",
+            userId = 1L,
             missionId = 1L,
-            photoKey = "missions/device-1/1/2026/07/18/mission-1.jpg",
+            photoKey = "missions/1/1/2026/07/18/mission-1.jpg",
         )
 
         assertEquals(55L, response.completionId)
@@ -80,7 +80,7 @@ class MissionVerificationServiceTest {
         val mission = createMission()
         val completion = createMissionCompletion(status = MissionCompletionStatus.PENDING)
         val (start, end) = todayRange()
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -92,7 +92,7 @@ class MissionVerificationServiceTest {
         ).thenReturn(completion)
 
         val exception = assertThrows<BusinessException> {
-            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/1/2026/07/18/mission-1.jpg")
+            missionVerificationService.submitVerification(1L, 1L, "missions/1/1/2026/07/18/mission-1.jpg")
         }
 
         assertEquals(ErrorCode.MISSION_UNDER_REVIEW, exception.errorCode)
@@ -105,7 +105,7 @@ class MissionVerificationServiceTest {
         val mission = createMission()
         val completion = createMissionCompletion(status = MissionCompletionStatus.APPROVED)
         val (start, end) = todayRange()
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -117,7 +117,7 @@ class MissionVerificationServiceTest {
         ).thenReturn(completion)
 
         val exception = assertThrows<BusinessException> {
-            missionVerificationService.submitVerification("device-1", 1L, "missions/device-1/1/2026/07/18/mission-1.jpg")
+            missionVerificationService.submitVerification(1L, 1L, "missions/1/1/2026/07/18/mission-1.jpg")
         }
 
         assertEquals(ErrorCode.MISSION_ALREADY_COMPLETED, exception.errorCode)

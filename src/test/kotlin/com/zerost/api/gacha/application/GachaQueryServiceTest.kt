@@ -62,11 +62,11 @@ class GachaQueryServiceTest {
             createdAt = LocalDateTime.of(2026, 7, 19, 10, 0, 0)
         }
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(gachaRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(1L))
             .thenReturn(listOf(latestGacha, olderGacha))
 
-        val response = gachaQueryService.getGachaHistories("device-1")
+        val response = gachaQueryService.getGachaHistories(1L)
 
         assertEquals(2, response.size)
         assertEquals(2L, response[0].gachaId)
@@ -80,10 +80,10 @@ class GachaQueryServiceTest {
 
     @Test
     fun `등록되지 않은 디바이스면 가챠 실행 내역 조회에 실패한다`() {
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.empty())
+        `when`(userRepository.findById(1L)).thenReturn(Optional.empty())
 
         val exception = assertThrows<BusinessException> {
-            gachaQueryService.getGachaHistories("device-1")
+            gachaQueryService.getGachaHistories(1L)
         }
 
         assertEquals(ErrorCode.USER_NOT_FOUND, exception.errorCode)

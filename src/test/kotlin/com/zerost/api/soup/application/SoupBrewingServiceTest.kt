@@ -79,7 +79,7 @@ class SoupBrewingServiceTest {
             createUserIngredient(user = user, ingredient = ingredient3, quantity = 1),
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(3)).thenReturn(listOf(recipe))
         `when`(randomProvider.nextInt(100)).thenReturn(0)
         `when`(
@@ -104,7 +104,7 @@ class SoupBrewingServiceTest {
             )
         }
 
-        val response = soupBrewingService.brew("device-1", listOf(1L, 2L, 3L))
+        val response = soupBrewingService.brew(1L, listOf(1L, 2L, 3L))
 
         assertEquals(10L, response.soupId)
         assertEquals(1L, response.recipeId)
@@ -126,7 +126,7 @@ class SoupBrewingServiceTest {
     @Test
     fun `재료 수가 3개 미만이면 제작할 수 없다`() {
         val exception = assertThrows<BusinessException> {
-            soupBrewingService.brew("device-1", listOf(1L, 2L))
+            soupBrewingService.brew(1L, listOf(1L, 2L))
         }
 
         assertEquals(ErrorCode.INVALID_SOUP_SLOT_COUNT, exception.errorCode)
@@ -146,7 +146,7 @@ class SoupBrewingServiceTest {
         val ingredient2 = createIngredient(id = 2L)
         val ingredient3 = createIngredient(id = 3L)
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(3)).thenReturn(listOf(recipe))
         `when`(
             recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(1L)),
@@ -159,7 +159,7 @@ class SoupBrewingServiceTest {
         )
 
         val exception = assertThrows<BusinessException> {
-            soupBrewingService.brew("device-1", listOf(1L, 3L, 2L))
+            soupBrewingService.brew(1L, listOf(1L, 3L, 2L))
         }
 
         assertEquals(ErrorCode.SOUP_RECIPE_NOT_FOUND, exception.errorCode)
@@ -184,7 +184,7 @@ class SoupBrewingServiceTest {
             createUserIngredient(user = user, ingredient = ingredient3, quantity = 1),
         )
 
-        `when`(userRepository.findByDeviceIdForUpdate("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(3)).thenReturn(listOf(recipe))
         `when`(
             recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(1L)),
@@ -198,7 +198,7 @@ class SoupBrewingServiceTest {
         `when`(userIngredientRepository.findAllByUserIdAndIngredientIdIn(1L, listOf(1L, 2L, 3L))).thenReturn(userIngredients)
 
         val exception = assertThrows<BusinessException> {
-            soupBrewingService.brew("device-1", listOf(1L, 2L, 3L))
+            soupBrewingService.brew(1L, listOf(1L, 2L, 3L))
         }
 
         assertEquals(ErrorCode.INSUFFICIENT_INGREDIENT_QUANTITY, exception.errorCode)

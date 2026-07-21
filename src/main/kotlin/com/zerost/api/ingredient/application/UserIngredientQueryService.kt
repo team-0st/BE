@@ -15,8 +15,8 @@ class UserIngredientQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getUserIngredients(deviceId: String): List<UserIngredientResponse> {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getUserIngredients(userId: Long): List<UserIngredientResponse> {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         return userIngredientRepository.findAllByUserIdOrderByIdAsc(requireNotNull(user.id))

@@ -37,7 +37,7 @@ class RecipeQueryServiceTest {
 
     @Test
     fun `레시피 목록 조회 시 비공개 레시피 이름은 마스킹된다`() {
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(createUser()))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(emptyList())
         `when`(recipeRepository.findAllByOrderByIdAsc()).thenReturn(
             listOf(
@@ -46,7 +46,7 @@ class RecipeQueryServiceTest {
             ),
         )
 
-        val response = recipeQueryService.getRecipes("device-1")
+        val response = recipeQueryService.getRecipes(1L)
 
         assertEquals(2, response.size)
         assertEquals("오리지널 스프", response[0].name)
@@ -62,7 +62,7 @@ class RecipeQueryServiceTest {
         val ingredient1 = createIngredient(id = 1L, name = "양배추", type = IngredientType.COMMON)
         val ingredient2 = createIngredient(id = 2L, name = "토마토", type = IngredientType.COMMON)
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(createUser()))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(emptyList())
         `when`(recipeRepository.findById(1L)).thenReturn(Optional.of(recipe))
         `when`(recipeIngredientRepository.findAllByRecipeIdOrderBySlotOrderAsc(1L)).thenReturn(
@@ -72,7 +72,7 @@ class RecipeQueryServiceTest {
             ),
         )
 
-        val response = recipeQueryService.getRecipe("device-1", 1L)
+        val response = recipeQueryService.getRecipe(1L, 1L)
 
         assertEquals("오리지널 스프", response.name)
         assertTrue(response.recipeVisible)
@@ -84,11 +84,11 @@ class RecipeQueryServiceTest {
     fun `비공개 레시피 상세 조회 시 재료 목록은 반환하지 않는다`() {
         val recipe = createRecipe(id = 2L, name = "스타라이트 스프", type = RecipeType.LEGENDARY, hidden = true)
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(createUser()))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(emptyList())
         `when`(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe))
 
-        val response = recipeQueryService.getRecipe("device-1", 2L)
+        val response = recipeQueryService.getRecipe(1L, 2L)
 
         assertEquals("???", response.name)
         assertEquals(false, response.recipeVisible)
@@ -98,12 +98,12 @@ class RecipeQueryServiceTest {
 
     @Test
     fun `없는 레시피를 조회하면 예외가 발생한다`() {
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(createUser()))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(emptyList())
         `when`(recipeRepository.findById(999L)).thenReturn(Optional.empty())
 
         val exception = assertThrows<BusinessException> {
-            recipeQueryService.getRecipe("device-1", 999L)
+            recipeQueryService.getRecipe(1L, 999L)
         }
 
         assertEquals(ErrorCode.RECIPE_NOT_FOUND, exception.errorCode)
@@ -114,7 +114,7 @@ class RecipeQueryServiceTest {
         val recipe = createRecipe(id = 2L, name = "크리스탈 스프", type = RecipeType.HIDDEN, hidden = true)
         val ingredient = createIngredient(id = 1L, name = "양배추", type = IngredientType.COMMON)
 
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(createUser()))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(listOf(2L))
         `when`(recipeRepository.findAllByOrderByIdAsc()).thenReturn(listOf(recipe))
         `when`(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe))
@@ -122,8 +122,8 @@ class RecipeQueryServiceTest {
             listOf(createRecipeIngredient(id = 1L, recipe = recipe, ingredient = ingredient, slotOrder = 1)),
         )
 
-        val listResponse = recipeQueryService.getRecipes("device-1")
-        val detailResponse = recipeQueryService.getRecipe("device-1", 2L)
+        val listResponse = recipeQueryService.getRecipes(1L)
+        val detailResponse = recipeQueryService.getRecipe(1L, 2L)
 
         assertEquals("크리스탈 스프", listResponse[0].name)
         assertTrue(listResponse[0].recipeVisible)

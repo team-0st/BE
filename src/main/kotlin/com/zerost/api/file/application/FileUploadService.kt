@@ -32,12 +32,12 @@ class FileUploadService(
     )
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
-    fun upload(file: MultipartFile, directory: String, deviceId: String, missionId: Long): FileUploadResponse {
+    fun upload(file: MultipartFile, directory: String, userId: Long, missionId: Long): FileUploadResponse {
         validate(file)
 
         val fileKey = buildFileKey(
             directory = directory,
-            deviceId = deviceId,
+            userId = userId,
             missionId = missionId,
             originalFilename = file.originalFilename,
         )
@@ -75,15 +75,15 @@ class FileUploadService(
 
     private fun buildFileKey(
         directory: String,
-        deviceId: String,
+        userId: Long,
         missionId: Long,
         originalFilename: String?,
     ): String {
         val datePath = LocalDate.now().format(dateFormatter)
         val extension = extractExtension(originalFilename)
-        val normalizedDeviceId = normalizePathSegment(deviceId)
+        val normalizedUserId = userId.toString()
 
-        return "$directory/$normalizedDeviceId/$missionId/$datePath/${UUID.randomUUID()}$extension"
+        return "$directory/$normalizedUserId/$missionId/$datePath/${UUID.randomUUID()}$extension"
     }
 
     private fun extractExtension(originalFilename: String?): String {
@@ -96,8 +96,8 @@ class FileUploadService(
         return ".$extension"
     }
 
-    fun validateMissionImageKey(deviceId: String, missionId: Long, fileKey: String) {
-        val expectedPrefix = "missions/${normalizePathSegment(deviceId)}/$missionId/"
+    fun validateMissionImageKey(userId: Long, missionId: Long, fileKey: String) {
+        val expectedPrefix = "missions/$userId/$missionId/"
         if (!fileKey.startsWith(expectedPrefix)) {
             throw BusinessException(ErrorCode.INVALID_FILE_KEY)
         }
@@ -129,9 +129,5 @@ class FileUploadService(
             .build()
 
         return s3Presigner.presignGetObject(presignRequest).url().toString()
-    }
-
-    private fun normalizePathSegment(value: String): String {
-        return value.replace(Regex("[^A-Za-z0-9._-]"), "_")
     }
 }

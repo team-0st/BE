@@ -47,9 +47,9 @@ class FileUploadServiceTest {
         `when`(s3Presigner.presignGetObject(any(GetObjectPresignRequest::class.java))).thenReturn(presignedRequest)
         `when`(presignedRequest.url()).thenReturn(java.net.URI.create("https://signed.example.com/mission.jpg").toURL())
 
-        val response = fileUploadService.upload(file, "missions", "device-1", 1L)
+        val response = fileUploadService.upload(file, "missions", 1L, 1L)
 
-        assertTrue(response.fileKey.startsWith("missions/device-1/1/"))
+        assertTrue(response.fileKey.startsWith("missions/1/1/"))
         assertTrue(response.fileKey.endsWith(".jpg"))
         assertTrue(response.fileUrl.startsWith("https://signed.example.com/"))
         verify(s3Client).putObject(any(PutObjectRequest::class.java), any(RequestBody::class.java))
@@ -65,7 +65,7 @@ class FileUploadServiceTest {
         )
 
         val exception = assertThrows<BusinessException> {
-            fileUploadService.upload(file, "missions", "device-1", 1L)
+            fileUploadService.upload(file, "missions", 1L, 1L)
         }
 
         kotlin.test.assertEquals(ErrorCode.EMPTY_FILE, exception.errorCode)
@@ -81,7 +81,7 @@ class FileUploadServiceTest {
         )
 
         val exception = assertThrows<BusinessException> {
-            fileUploadService.upload(file, "missions", "device-1", 1L)
+            fileUploadService.upload(file, "missions", 1L, 1L)
         }
 
         kotlin.test.assertEquals(ErrorCode.INVALID_FILE_TYPE, exception.errorCode)
@@ -97,7 +97,7 @@ class FileUploadServiceTest {
         )
 
         val exception = assertThrows<BusinessException> {
-            fileUploadService.upload(file, "missions", "device-1", 1L)
+            fileUploadService.upload(file, "missions", 1L, 1L)
         }
 
         kotlin.test.assertEquals(ErrorCode.FILE_SIZE_EXCEEDED, exception.errorCode)
