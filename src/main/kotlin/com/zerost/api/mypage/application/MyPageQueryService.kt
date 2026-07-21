@@ -38,6 +38,7 @@ class MyPageQueryService(
 
         return MyPageResponse(
             nickname = user.nickname,
+            profileCharacterCode = user.profileCharacterCode?.name,
             shopName = user.shop?.name,
             ecoJam = user.ecoJam,
             point = user.point,
