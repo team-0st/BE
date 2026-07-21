@@ -31,6 +31,9 @@ class User(
     @Column(name = "phone_number", length = 20)
     var phoneNumber: String? = null,
 
+    @Column(name = "password_hash", length = 255)
+    var passwordHash: String? = null,
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id")
     var shop: Shop? = null,
@@ -48,10 +51,12 @@ class User(
     fun completeOnboarding(
         nickname: String,
         phoneNumber: String,
+        passwordHash: String,
         shop: Shop
     ) {
         this.nickname = nickname
         this.phoneNumber = phoneNumber
+        this.passwordHash = passwordHash
         this.shop = shop
         this.onboardingCompleted = true
     }

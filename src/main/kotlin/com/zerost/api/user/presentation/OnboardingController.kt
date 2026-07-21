@@ -33,6 +33,7 @@ class OnboardingController(
             SwaggerApiResponse(responseCode = "200", description = "온보딩 완료 성공"),
             SwaggerApiResponse(responseCode = "400", description = "잘못된 요청"),
             SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 샵을 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "중복된 휴대전화 번호 또는 닉네임"),
         ],
     )
     @PostMapping("/complete")
@@ -46,6 +47,7 @@ class OnboardingController(
             deviceId = deviceId,
             nickname = request.nickname,
             phoneNumber = request.phoneNumber,
+            password = request.password,
             shopId = requireNotNull(request.shopId),
         )
 

@@ -4,5 +4,6 @@ data class CompleteOnboardingCommand(
     val deviceId: String,
     val nickname: String,
     val phoneNumber: String,
+    val password: String,
     val shopId: Long,
 )
