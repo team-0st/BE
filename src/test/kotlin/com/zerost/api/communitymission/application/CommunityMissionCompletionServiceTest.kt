@@ -5,6 +5,7 @@ import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.domain.CommunityMissionCompletion
 import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
 import com.zerost.api.communitymission.domain.CommunityMissionCompletionRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
 import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
@@ -74,6 +75,7 @@ class CommunityMissionCompletionServiceTest {
             listOf(createCommunityMissionProofRequirement(id = 21L, communityMission = mission2)),
         )
         `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserId(2L, 1L)).thenReturn(1L)
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(2L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(1L)
         `when`(communityMissionCompletionRepository.save(any(CommunityMissionCompletion::class.java))).thenReturn(
             createCommunityMissionCompletion(id = 10L, communityMission = mission2, user = user),
         )
@@ -172,6 +174,7 @@ class CommunityMissionCompletionServiceTest {
             listOf(createCommunityMissionProofRequirement(id = 11L, communityMission = mission)),
         )
         `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(1L)
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(1L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(1L)
         `when`(communityMissionCompletionRepository.save(any(CommunityMissionCompletion::class.java))).thenReturn(currentCompletion)
         `when`(communityMissionCompletionRepository.countByCommunityMissionId(1L)).thenReturn(5L)
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(10L)
@@ -218,5 +221,28 @@ class CommunityMissionCompletionServiceTest {
         }
 
         assertEquals(ErrorCode.COMMUNITY_MISSION_PROOFS_INCOMPLETE, exception.errorCode)
+    }
+
+    @Test
+    fun `필수 인증 단계가 모두 승인되지 않으면 완료할 수 없다`() {
+        val user = createUser(id = 1L, onboardingCompleted = true)
+        val mission = createCommunityMission(id = 1L)
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
+        `when`(communityMissionRepository.findByIdAndActiveTrueForUpdate(1L)).thenReturn(mission)
+        `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
+        `when`(communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(false)
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(
+            listOf(createCommunityMissionProofRequirement(id = 11L, communityMission = mission)),
+        )
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserId(1L, 1L)).thenReturn(1L)
+        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(1L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(0L)
+
+        val exception = assertFailsWith<BusinessException> {
+            communityMissionCompletionService.complete(1L, 1L)
+        }
+
+        assertEquals(ErrorCode.COMMUNITY_MISSION_PROOFS_NOT_APPROVED, exception.errorCode)
     }
 }
