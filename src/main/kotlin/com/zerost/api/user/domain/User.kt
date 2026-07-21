@@ -68,6 +68,10 @@ class User(
         this.profileCharacterCode = profileCharacterCode
     }
 
+    fun changeNickname(nickname: String) {
+        this.nickname = nickname
+    }
+
     fun increaseEcoJam(amount: Int) {
         this.ecoJam += amount
     }
