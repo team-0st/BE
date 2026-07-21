@@ -5,6 +5,7 @@ import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.communitymission.application.CommunityMissionCompletionService
 import com.zerost.api.communitymission.application.CommunityMissionQueryService
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
+import com.zerost.api.communitymission.presentation.dto.CommunityMissionRewardedIngredientResponse
 import com.zerost.api.communitymission.presentation.dto.CommunityMissionProgressResponse
 import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
@@ -37,7 +38,7 @@ class CommunityMissionControllerTest {
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 공동 미션 진행률을 조회할 수 있다`() {
+    fun `인증 토큰이 있으면 공동 미션 진행률을 조회할 수 있다`() {
         `when`(communityMissionQueryService.getCommunityMissions(1L)).thenReturn(
             listOf(
                 CommunityMissionProgressResponse(
@@ -74,11 +75,20 @@ class CommunityMissionControllerTest {
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 공동 미션 완료 처리를 할 수 있다`() {
+    fun `인증 토큰이 있으면 공동 미션 완료 처리와 보상 결과를 조회할 수 있다`() {
         `when`(communityMissionCompletionService.complete(1L, 3L)).thenReturn(
             CompleteCommunityMissionResponse(
                 completionId = 11L,
                 communityMissionId = 3L,
+                rewardedEcoJam = 50,
+                rewardedIngredients = listOf(
+                    CommunityMissionRewardedIngredientResponse(
+                        ingredientId = 1L,
+                        ingredientName = "토마토",
+                        ingredientType = "COMMON",
+                        quantity = 1,
+                    ),
+                ),
                 completedAt = "2026-07-21T15:30:00",
             ),
         )
@@ -91,6 +101,8 @@ class CommunityMissionControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.completionId").value(11))
             .andExpect(jsonPath("$.data.communityMissionId").value(3))
+            .andExpect(jsonPath("$.data.rewardedEcoJam").value(50))
+            .andExpect(jsonPath("$.data.rewardedIngredients[0].ingredientName").value("토마토"))
             .andExpect(jsonPath("$.data.completedAt").value("2026-07-21T15:30:00"))
 
         verify(communityMissionCompletionService).complete(1L, 3L)

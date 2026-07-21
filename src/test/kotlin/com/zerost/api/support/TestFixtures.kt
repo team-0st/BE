@@ -11,6 +11,8 @@ import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.communitymission.domain.CommunityMission
 import com.zerost.api.communitymission.domain.CommunityMissionCompletion
 import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
+import com.zerost.api.communitymission.domain.CommunityMissionReward
+import com.zerost.api.communitymission.domain.CommunityMissionRewardType
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionStatus
@@ -217,6 +219,24 @@ fun createCommunityMissionCompletion(
     communityMission = communityMission,
     user = user,
     completedAt = completedAt,
+)
+
+fun createCommunityMissionReward(
+    id: Long = 1L,
+    communityMission: CommunityMission = createCommunityMission(),
+    rewardType: CommunityMissionRewardType = CommunityMissionRewardType.ECO_JAM,
+    ingredientType: IngredientType? = null,
+    quantity: Int = 0,
+    ecoJamAmount: Int = 50,
+    rewardOrder: Int = 1,
+): CommunityMissionReward = CommunityMissionReward(
+    id = id,
+    communityMission = communityMission,
+    rewardType = rewardType,
+    ingredientType = ingredientType,
+    quantity = quantity,
+    ecoJamAmount = ecoJamAmount,
+    rewardOrder = rewardOrder,
 )
 
 fun createRecipe(
