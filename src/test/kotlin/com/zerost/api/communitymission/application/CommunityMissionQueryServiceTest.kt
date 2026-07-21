@@ -2,9 +2,13 @@ package com.zerost.api.communitymission.application
 
 import com.zerost.api.communitymission.domain.CommunityMissionCompletionCountProjection
 import com.zerost.api.communitymission.domain.CommunityMissionCompletionRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofCountProjection
+import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
 import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
 import com.zerost.api.support.createCommunityMission
+import com.zerost.api.support.createCommunityMissionProofRequirement
 import com.zerost.api.support.createUser
 import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
@@ -20,10 +24,14 @@ class CommunityMissionQueryServiceTest {
     private val userRepository = mock(UserRepository::class.java)
     private val communityMissionRepository = mock(CommunityMissionRepository::class.java)
     private val communityMissionCompletionRepository = mock(CommunityMissionCompletionRepository::class.java)
+    private val communityMissionProofRequirementRepository = mock(CommunityMissionProofRequirementRepository::class.java)
+    private val communityMissionProofRepository = mock(CommunityMissionProofRepository::class.java)
     private val communityMissionQueryService = CommunityMissionQueryService(
         userRepository = userRepository,
         communityMissionRepository = communityMissionRepository,
         communityMissionCompletionRepository = communityMissionCompletionRepository,
+        communityMissionProofRequirementRepository = communityMissionProofRequirementRepository,
+        communityMissionProofRepository = communityMissionProofRepository,
     )
 
     @Test
@@ -52,6 +60,21 @@ class CommunityMissionQueryServiceTest {
                     countProjection(2L, 4L),
                 ),
             )
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(
+            listOf(createCommunityMissionProofRequirement(id = 11L, communityMission = mission1)),
+        )
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(2L)).thenReturn(
+            listOf(
+                createCommunityMissionProofRequirement(id = 21L, communityMission = mission2, proofOrder = 1),
+                createCommunityMissionProofRequirement(id = 22L, communityMission = mission2, proofOrder = 2),
+            ),
+        )
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L, 2L))).thenReturn(
+            listOf(
+                proofCountProjection(1L, 1L),
+                proofCountProjection(2L, 2L),
+            ),
+        )
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(listOf(1L))
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -62,11 +85,16 @@ class CommunityMissionQueryServiceTest {
         assertTrue(response[0].succeeded)
         assertTrue(response[0].unlocked)
         assertTrue(response[0].completed)
+        assertEquals(1, response[0].requiredProofCount)
+        assertEquals(1, response[0].submittedProofCount)
         assertEquals(2L, response[1].id)
         assertEquals("20.00", response[1].achievementRatio.toPlainString())
         assertFalse(response[1].succeeded)
         assertTrue(response[1].unlocked)
         assertFalse(response[1].completed)
+        assertEquals(2, response[1].requiredProofCount)
+        assertEquals(2, response[1].submittedProofCount)
+        assertTrue(response[1].readyToComplete)
     }
 
     @Test
@@ -78,6 +106,8 @@ class CommunityMissionQueryServiceTest {
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(0L)
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L))).thenReturn(emptyList())
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(emptyList())
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -100,6 +130,8 @@ class CommunityMissionQueryServiceTest {
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L)))
             .thenReturn(listOf(countProjection(1L, 1L)))
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(emptyList())
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -127,6 +159,9 @@ class CommunityMissionQueryServiceTest {
         `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(10L)
         `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission1, mission2))
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L, 2L))).thenReturn(emptyList())
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(emptyList())
+        `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(2L)).thenReturn(emptyList())
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L, 2L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -144,6 +179,16 @@ class CommunityMissionQueryServiceTest {
         return object : CommunityMissionCompletionCountProjection {
             override val communityMissionId: Long = communityMissionId
             override val completionCount: Long = completionCount
+        }
+    }
+
+    private fun proofCountProjection(
+        communityMissionId: Long,
+        proofCount: Long,
+    ): CommunityMissionProofCountProjection {
+        return object : CommunityMissionProofCountProjection {
+            override val communityMissionId: Long = communityMissionId
+            override val proofCount: Long = proofCount
         }
     }
 }
