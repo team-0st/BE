@@ -5,5 +5,6 @@ enum class IngredientHistorySourceType {
     SOUP_REROLL,
     GACHA,
     MISSION,
+    COMMUNITY_MISSION,
     CHECKIN,
 }

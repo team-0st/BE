@@ -46,7 +46,7 @@ class CommunityMissionController(
 
     @Operation(
         summary = "공동 미션 완료 처리",
-        description = "현재 유저가 해금한 공동 미션을 완료 처리하고 진행률 집계 대상에 반영합니다.",
+        description = "현재 유저가 해금한 공동 미션을 완료 처리하고 진행률 집계 대상에 반영한 뒤, 설정된 공동 미션 보상을 지급합니다.",
     )
     @ApiResponses(
         value = [
