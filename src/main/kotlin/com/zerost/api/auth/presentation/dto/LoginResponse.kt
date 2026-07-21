@@ -8,9 +8,6 @@ data class LoginResponse(
     @Schema(description = "유저 식별자", example = "1")
     val userId: Long,
 
-    @Schema(description = "현재 서비스에서 사용하는 디바이스 식별자", example = "550e8400-e29b-41d4-a716-446655440000")
-    val deviceId: String,
-
     @Schema(description = "유저 닉네임", example = "펭귄탐험가")
     val nickname: String,
 
@@ -19,4 +16,19 @@ data class LoginResponse(
 
     @Schema(description = "온보딩 완료 여부", example = "true")
     val onboardingCompleted: Boolean,
+
+    @Schema(description = "access token", example = "eyJhbGciOiJIUzI1NiJ9...")
+    val accessToken: String,
+
+    @Schema(description = "refresh token", example = "550e8400-e29b-41d4-a716-446655440000")
+    val refreshToken: String,
+
+    @Schema(description = "토큰 타입", example = "Bearer")
+    val tokenType: String,
+
+    @Schema(description = "access token 만료까지 남은 초", example = "3600")
+    val accessTokenExpiresIn: Long,
+
+    @Schema(description = "refresh token 만료까지 남은 초", example = "1209600")
+    val refreshTokenExpiresIn: Long,
 )
