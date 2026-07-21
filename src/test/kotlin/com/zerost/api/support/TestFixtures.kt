@@ -6,6 +6,9 @@ import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
+import com.zerost.api.communitymission.domain.CommunityMission
+import com.zerost.api.communitymission.domain.CommunityMissionCompletion
+import com.zerost.api.communitymission.domain.CommunityMissionDifficulty
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionStatus
@@ -20,6 +23,7 @@ import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 fun createUser(
@@ -147,6 +151,38 @@ fun createMissionCompletion(
     rewardedIngredient = rewardedIngredient,
     submittedAt = submittedAt,
     reviewedAt = reviewedAt,
+)
+
+fun createCommunityMission(
+    id: Long = 1L,
+    title: String = "오늘의 친환경 약속",
+    description: String? = "친구 또는 가족과 함께 오늘 실천할 친환경 행동 1가지를 정하고 함께 실천합니다.",
+    difficulty: CommunityMissionDifficulty = CommunityMissionDifficulty.ONE_STAR,
+    stage: Int = 1,
+    targetRatio: BigDecimal = BigDecimal("30.00"),
+    imageUrl: String? = "https://example.com/images/community-mission-1.png",
+    active: Boolean = true,
+): CommunityMission = CommunityMission(
+    id = id,
+    title = title,
+    description = description,
+    difficulty = difficulty,
+    stage = stage,
+    targetRatio = targetRatio,
+    imageUrl = imageUrl,
+    active = active,
+)
+
+fun createCommunityMissionCompletion(
+    id: Long = 1L,
+    communityMission: CommunityMission = createCommunityMission(),
+    user: User = createUser(),
+    completedAt: LocalDateTime = LocalDateTime.of(2026, 7, 21, 10, 0, 0),
+): CommunityMissionCompletion = CommunityMissionCompletion(
+    id = id,
+    communityMission = communityMission,
+    user = user,
+    completedAt = completedAt,
 )
 
 fun createRecipe(
