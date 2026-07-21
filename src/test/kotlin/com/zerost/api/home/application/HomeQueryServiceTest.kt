@@ -7,6 +7,7 @@ import com.zerost.api.mission.domain.MissionRepository
 import com.zerost.api.support.createMission
 import com.zerost.api.support.createMissionCompletion
 import com.zerost.api.support.createUser
+import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -32,7 +33,12 @@ class HomeQueryServiceTest {
 
     @Test
     fun `홈 화면 조회 시 자산과 오늘 미션 진행 현황을 함께 반환한다`() {
-        val user = createUser(nickname = "펭귄탐험가", ecoJam = 320, point = 1500)
+        val user = createUser(
+            nickname = "펭귄탐험가",
+            profileCharacterCode = ProfileCharacterCode.BASIC_1,
+            ecoJam = 320,
+            point = 1500,
+        )
         val todayStart = LocalDate.now().atStartOfDay()
         val tomorrowStart = LocalDate.now().plusDays(1).atStartOfDay()
         val mission1 = createMission(id = 1L, title = "텀블러 사용")
@@ -76,6 +82,7 @@ class HomeQueryServiceTest {
         val response = homeQueryService.getHome(1L)
 
         assertEquals("펭귄탐험가", response.nickname)
+        assertEquals("BASIC_1", response.profileCharacterCode)
         assertEquals(320, response.ecoJam)
         assertEquals(1500, response.point)
         assertTrue(response.checkedInToday)

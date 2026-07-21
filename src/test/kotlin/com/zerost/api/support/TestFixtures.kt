@@ -24,6 +24,7 @@ import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
+import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.User
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -37,6 +38,7 @@ fun createUser(
     nickname: String? = null,
     phoneNumber: String? = null,
     passwordHash: String? = null,
+    profileCharacterCode: ProfileCharacterCode? = null,
     shop: Shop? = null,
     ecoJam: Int = 0,
     point: Int = 0,
@@ -46,6 +48,7 @@ fun createUser(
     nickname = nickname,
     phoneNumber = phoneNumber,
     passwordHash = passwordHash,
+    profileCharacterCode = profileCharacterCode,
     shop = shop,
     ecoJam = ecoJam,
     point = point,

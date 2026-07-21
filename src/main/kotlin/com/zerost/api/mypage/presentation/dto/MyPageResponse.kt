@@ -8,6 +8,9 @@ data class MyPageResponse(
     @Schema(description = "유저 닉네임", example = "펭귄탐험가", nullable = true)
     val nickname: String?,
 
+    @Schema(description = "선택한 프로필 캐릭터 코드", example = "BASIC_1", nullable = true)
+    val profileCharacterCode: String?,
+
     @Schema(description = "선택한 상점명", example = "알맹상점", nullable = true)
     val shopName: String?,
 

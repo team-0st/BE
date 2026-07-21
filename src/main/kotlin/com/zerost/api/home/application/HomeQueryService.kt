@@ -37,6 +37,7 @@ class HomeQueryService(
 
         return HomeResponse(
             nickname = user.nickname,
+            profileCharacterCode = user.profileCharacterCode?.name,
             ecoJam = user.ecoJam,
             point = user.point,
             checkedInToday = checkInRepository.existsByUserIdAndCheckedDate(resolvedUserId, today),

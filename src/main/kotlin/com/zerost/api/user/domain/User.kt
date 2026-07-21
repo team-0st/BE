@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
 
 @Entity
@@ -30,6 +32,10 @@ class User(
 
     @Column(name = "password_hash", length = 255)
     var passwordHash: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_character_code", length = 50)
+    var profileCharacterCode: ProfileCharacterCode? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id")
@@ -56,6 +62,10 @@ class User(
         this.passwordHash = passwordHash
         this.shop = shop
         this.onboardingCompleted = true
+    }
+
+    fun changeProfileCharacter(profileCharacterCode: ProfileCharacterCode) {
+        this.profileCharacterCode = profileCharacterCode
     }
 
     fun increaseEcoJam(amount: Int) {
