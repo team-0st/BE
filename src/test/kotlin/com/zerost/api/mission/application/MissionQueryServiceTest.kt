@@ -41,7 +41,7 @@ class MissionQueryServiceTest {
             mission = mission1,
             status = MissionCompletionStatus.PENDING,
         )
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findAll()).thenReturn(listOf(mission1, mission2))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -60,7 +60,7 @@ class MissionQueryServiceTest {
             ),
         ).thenReturn(null)
 
-        val response = missionQueryService.getMissions("device-1")
+        val response = missionQueryService.getMissions(1L)
 
         assertEquals(2, response.size)
         assertEquals("텀블러 사용하기", response[0].title)
@@ -77,7 +77,7 @@ class MissionQueryServiceTest {
             mission = mission,
             status = MissionCompletionStatus.APPROVED,
         )
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
@@ -88,7 +88,7 @@ class MissionQueryServiceTest {
             ),
         ).thenReturn(completion)
 
-        val response = missionQueryService.getMission("device-1", 1L)
+        val response = missionQueryService.getMission(1L, 1L)
 
         assertEquals(1L, response.id)
         assertEquals("APPROVED", response.todayStatus?.name)
@@ -106,10 +106,10 @@ class MissionQueryServiceTest {
             rewardedIngredient = ingredient,
             reviewedAt = LocalDateTime.of(2026, 7, 17, 14, 0, 0),
         )
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(missionCompletionRepository.findAllByUserIdOrderBySubmittedAtDesc(1L)).thenReturn(listOf(completion))
 
-        val response = missionQueryService.getMissionCompletions("device-1")
+        val response = missionQueryService.getMissionCompletions(1L)
 
         assertEquals(1, response.size)
         assertEquals(55L, response[0].completionId)
@@ -119,11 +119,11 @@ class MissionQueryServiceTest {
 
     @Test
     fun `없는 미션 상세 조회 시 예외가 발생한다`() {
-        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(createUser()))
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(missionRepository.findById(999L)).thenReturn(Optional.empty())
 
         val exception = assertThrows<BusinessException> {
-            missionQueryService.getMission("device-1", 999L)
+            missionQueryService.getMission(1L, 999L)
         }
 
         assertEquals(ErrorCode.MISSION_NOT_FOUND, exception.errorCode)

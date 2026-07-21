@@ -1,6 +1,6 @@
 package com.zerost.api.communitymission.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.communitymission.application.CommunityMissionCompletionService
 import com.zerost.api.communitymission.application.CommunityMissionQueryService
@@ -39,8 +39,8 @@ class CommunityMissionController(
     fun getCommunityMissions(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<CommunityMissionProgressResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = communityMissionQueryService.getCommunityMissions(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = communityMissionQueryService.getCommunityMissions(userId)
         return ApiResponse.success(response)
     }
 
@@ -60,8 +60,8 @@ class CommunityMissionController(
         @PathVariable communityMissionId: Long,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<CompleteCommunityMissionResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = communityMissionCompletionService.complete(deviceId, communityMissionId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = communityMissionCompletionService.complete(userId, communityMissionId)
         return ApiResponse.success(response)
     }
 }

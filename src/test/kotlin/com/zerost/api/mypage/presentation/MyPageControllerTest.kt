@@ -31,8 +31,8 @@ class MyPageControllerTest {
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 마이페이지 통합 조회를 할 수 있다`() {
-        `when`(myPageQueryService.getMyPage("device-1")).thenReturn(
+    fun `인증된 사용자는 마이페이지 통합 조회를 할 수 있다`() {
+        `when`(myPageQueryService.getMyPage(1L)).thenReturn(
             MyPageResponse(
                 nickname = "펭귄탐험가",
                 shopName = "알맹상점",
@@ -63,6 +63,6 @@ class MyPageControllerTest {
             .andExpect(jsonPath("$.data.brewedSoupCount").value(4))
             .andExpect(jsonPath("$.data.ingredients[0].name").value("양배추"))
 
-        verify(myPageQueryService).getMyPage("device-1")
+        verify(myPageQueryService).getMyPage(1L)
     }
 }

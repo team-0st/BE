@@ -31,7 +31,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
 fun createUser(
-    id: Long = 1L,
+    id: Long? = 1L,
+    @Suppress("UNUSED_PARAMETER")
     deviceId: String = "device-1",
     nickname: String? = null,
     phoneNumber: String? = null,
@@ -42,7 +43,6 @@ fun createUser(
     onboardingCompleted: Boolean = false,
 ): User = User(
     id = id,
-    deviceId = deviceId,
     nickname = nickname,
     phoneNumber = phoneNumber,
     passwordHash = passwordHash,
@@ -89,24 +89,20 @@ fun createUserIngredient(
 )
 
 fun createOnboardingCommand(
-    deviceId: String = "device-1",
+    userId: Long = 1L,
     nickname: String = "펭귄탐험가",
     phoneNumber: String = "010-1234-5678",
     password: String = "zerost1234",
     shopId: Long = 1L,
 ): CompleteOnboardingCommand = CompleteOnboardingCommand(
-    deviceId = deviceId,
+    userId = userId,
     nickname = nickname,
     phoneNumber = phoneNumber,
     password = password,
     shopId = shopId,
 )
 
-fun createRegisterUserRequestBody(
-    deviceId: String = "device-1",
-): String = """
-    {"deviceId":"$deviceId"}
-""".trimIndent()
+fun createRegisterUserRequestBody(): String = "{}"
 
 fun createOnboardingRequestBody(
     nickname: String = "펭귄탐험가",
@@ -144,13 +140,11 @@ fun createRefreshTokenRequestBody(
 
 fun createAuthTokenProvider(
     userId: Long = 1L,
-    deviceId: String = "device-1",
 ): AuthTokenProvider {
     val authTokenProvider = mock(AuthTokenProvider::class.java)
     `when`(authTokenProvider.parseAccessToken("access-token")).thenReturn(
         AccessTokenClaims(
             userId = userId,
-            deviceId = deviceId,
         ),
     )
     return authTokenProvider
@@ -174,7 +168,7 @@ fun createMissionCompletion(
     id: Long = 1L,
     user: User = createUser(),
     mission: Mission = createMission(),
-    photoKey: String = "missions/device-1/1/2026/07/18/mission-1.jpg",
+    photoKey: String = "missions/1/1/2026/07/18/mission-1.jpg",
     status: MissionCompletionStatus = MissionCompletionStatus.PENDING,
     rewardedIngredient: Ingredient? = null,
     submittedAt: LocalDateTime = LocalDateTime.of(2026, 7, 17, 10, 0, 0),
@@ -289,7 +283,7 @@ fun createSoupRewardIngredient(
 )
 
 fun createSubmitMissionVerificationRequestBody(
-    photoKey: String = "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+    photoKey: String = "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
 ): String = """
     {"photoKey":"$photoKey"}
 """.trimIndent()

@@ -72,7 +72,7 @@ class FileControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.fileUrl").value("https://signed.example.com/mission.jpg"))
-            .andExpect(jsonPath("$.data.fileKey").value(org.hamcrest.Matchers.matchesPattern("missions/device-1/1/\\d{4}/\\d{2}/\\d{2}/.+\\.jpg")))
+            .andExpect(jsonPath("$.data.fileKey").value(org.hamcrest.Matchers .matchesPattern("missions/1/1/\\d{4}/\\d{2}/\\d{2}/.+\\.jpg")))
     }
 
     @Test

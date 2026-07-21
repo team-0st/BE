@@ -27,7 +27,6 @@ class AuthTokenProvider(
 
         return Jwts.builder()
             .subject(requireNotNull(user.id).toString())
-            .claim("deviceId", user.deviceId)
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiresAt))
             .signWith(signingKey)
@@ -47,7 +46,6 @@ class AuthTokenProvider(
 
         return AccessTokenClaims(
             userId = claims.extractUserId(),
-            deviceId = claims.extractDeviceId(),
         )
     }
 
@@ -55,15 +53,8 @@ class AuthTokenProvider(
         return subject?.toLongOrNull()
             ?: throw BusinessException(ErrorCode.INVALID_ACCESS_TOKEN)
     }
-
-    private fun Claims.extractDeviceId(): String {
-        return get("deviceId", String::class.java)
-            ?.takeIf { it.isNotBlank() }
-            ?: throw BusinessException(ErrorCode.INVALID_ACCESS_TOKEN)
-    }
 }
 
 data class AccessTokenClaims(
     val userId: Long,
-    val deviceId: String,
 )

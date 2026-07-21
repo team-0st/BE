@@ -1,8 +1,6 @@
-package com.zerost.api.common.device
+package com.zerost.api.common.auth
 
 import com.zerost.api.auth.application.AuthTokenProvider
-import com.zerost.api.common.device.DeviceConstants.DEVICE_ID_ATTRIBUTE
-import com.zerost.api.common.device.DeviceConstants.USER_ID_ATTRIBUTE
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import jakarta.servlet.http.HttpServletRequest
@@ -11,7 +9,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.servlet.HandlerInterceptor
 
 @Component
-class DeviceIdInterceptor(
+class AuthenticationInterceptor(
     private val authTokenProvider: AuthTokenProvider,
 ) : HandlerInterceptor {
 
@@ -19,24 +17,12 @@ class DeviceIdInterceptor(
         request: HttpServletRequest,
         response: HttpServletResponse,
         handler: Any,
-    ) : Boolean {
-        if (request.requestURI == "/api/v1/onboarding/complete") {
-            val deviceId = request.getHeader(DeviceConstants.DEVICE_ID_HEADER)?.trim()
-
-            if (deviceId.isNullOrEmpty()) {
-                throw BusinessException(ErrorCode.DEVICE_ID_HEADER_MISSING)
-            }
-
-            request.setAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE, deviceId)
-            return true
-        }
-
+    ): Boolean {
         val authorization = request.getHeader("Authorization")?.trim()
         if (!authorization.isNullOrEmpty() && authorization.startsWith("Bearer ")) {
             val accessToken = authorization.removePrefix("Bearer ").trim()
             val claims = authTokenProvider.parseAccessToken(accessToken)
-            request.setAttribute(DEVICE_ID_ATTRIBUTE, claims.deviceId)
-            request.setAttribute(USER_ID_ATTRIBUTE, claims.userId)
+            request.setAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE, claims.userId)
             return true
         }
 

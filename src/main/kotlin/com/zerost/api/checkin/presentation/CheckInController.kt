@@ -3,7 +3,7 @@ package com.zerost.api.checkin.presentation
 import com.zerost.api.checkin.application.CheckInService
 import com.zerost.api.checkin.presentation.dto.CheckInResponse
 import com.zerost.api.checkin.presentation.dto.CheckInStatusResponse
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
@@ -37,8 +37,8 @@ class CheckInController(
     fun checkIn(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<CheckInResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = checkInService.checkIn(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = checkInService.checkIn(userId)
         return ApiResponse.success(response)
     }
 
@@ -56,8 +56,8 @@ class CheckInController(
     fun getTodayStatus(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<CheckInStatusResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = checkInService.getTodayStatus(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = checkInService.getTodayStatus(userId)
         return ApiResponse.success(response)
     }
 }

@@ -1,6 +1,6 @@
 package com.zerost.api.user.presentation
 
-import com.zerost.api.common.device.DeviceIdInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.support.createOnboardingCommand
 import com.zerost.api.support.createAuthTokenProvider
@@ -32,7 +32,7 @@ class OnboardingControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(OnboardingController(onboardingService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
-            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
+            .addInterceptors(AuthenticationInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -49,7 +49,7 @@ class OnboardingControllerTest {
 
         mockMvc.perform(
                 post("/api/v1/onboarding/complete")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createOnboardingRequestBody()),
         )
@@ -65,7 +65,7 @@ class OnboardingControllerTest {
     fun `전화번호 형식이 올바르지 않으면 온보딩 완료에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/onboarding/complete")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createOnboardingRequestBody(phoneNumber = "01012345678")),
         )
@@ -78,7 +78,7 @@ class OnboardingControllerTest {
     fun `비밀번호가 너무 짧으면 온보딩 완료에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/onboarding/complete")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createOnboardingRequestBody(password = "short")),
         )
@@ -91,7 +91,7 @@ class OnboardingControllerTest {
     fun `상점 아이디가 없으면 온보딩 완료에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/onboarding/complete")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createOnboardingRequestBody(shopId = null)),
         )

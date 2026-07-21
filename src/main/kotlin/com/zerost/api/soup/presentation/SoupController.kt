@@ -1,6 +1,6 @@
 package com.zerost.api.soup.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.soup.application.SoupBrewingService
 import com.zerost.api.soup.application.SoupRerollService
@@ -44,8 +44,8 @@ class SoupController(
         @Valid @RequestBody request: BrewSoupRequest,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<BrewSoupResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = soupBrewingService.brew(deviceId, request.ingredientIds)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = soupBrewingService.brew(userId, request.ingredientIds)
         return ApiResponse.success(response)
     }
 
@@ -65,8 +65,8 @@ class SoupController(
         @PathVariable soupId: Long,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<RerollSoupResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = soupRerollService.reroll(deviceId, soupId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = soupRerollService.reroll(userId, soupId)
         return ApiResponse.success(response)
     }
 }

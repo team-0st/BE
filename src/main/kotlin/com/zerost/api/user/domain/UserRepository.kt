@@ -8,7 +8,6 @@ import org.springframework.data.repository.query.Param
 import java.util.Optional
 
 interface UserRepository : JpaRepository<User, Long> {
-    fun findByDeviceId(deviceId: String): Optional<User>
     fun findByPhoneNumber(phoneNumber: String): Optional<User>
     fun findByNickname(nickname: String): Optional<User>
     fun countByOnboardingCompletedTrue(): Long
@@ -16,8 +15,4 @@ interface UserRepository : JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :userId")
     fun findByIdForUpdate(@Param("userId") userId: Long): Optional<User>
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select u from User u where u.deviceId = :deviceId")
-    fun findByDeviceIdForUpdate(@Param("deviceId") deviceId: String): Optional<User>
 }

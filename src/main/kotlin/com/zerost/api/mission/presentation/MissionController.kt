@@ -1,6 +1,6 @@
 package com.zerost.api.mission.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.MissionQueryService
 import com.zerost.api.mission.domain.MissionVerificationService
@@ -44,8 +44,8 @@ class MissionController(
     fun getMissions(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<MissionSummaryResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = missionQueryService.getMissions(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = missionQueryService.getMissions(userId)
         return ApiResponse.success(response)
     }
 
@@ -64,8 +64,8 @@ class MissionController(
         @PathVariable missionId: Long,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<MissionDetailResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = missionQueryService.getMission(deviceId, missionId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = missionQueryService.getMission(userId, missionId)
         return ApiResponse.success(response)
     }
 
@@ -87,9 +87,9 @@ class MissionController(
         @Valid @RequestBody request: SubmitMissionVerificationRequest,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<SubmitMissionVerificationResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
         val response = missionVerificationService.submitVerification(
-            deviceId = deviceId,
+            userId = userId,
             missionId = missionId,
             photoKey = request.photoKey,
         )
@@ -110,8 +110,8 @@ class MissionController(
     fun getMissionCompletions(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<MissionCompletionHistoryResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = missionQueryService.getMissionCompletions(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = missionQueryService.getMissionCompletions(userId)
         return ApiResponse.success(response)
     }
 }

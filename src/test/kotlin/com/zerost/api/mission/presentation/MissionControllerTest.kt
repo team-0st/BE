@@ -1,6 +1,6 @@
 package com.zerost.api.mission.presentation
 
-import com.zerost.api.common.device.DeviceIdInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mission.application.MissionQueryService
 import com.zerost.api.mission.domain.MissionVerificationService
@@ -40,13 +40,13 @@ class MissionControllerTest {
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
-            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
+            .addInterceptors(AuthenticationInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 미션 목록을 조회할 수 있다`() {
-        `when`(missionQueryService.getMissions("device-1")).thenReturn(
+    fun `인증된 사용자는 미션 목록을 조회할 수 있다`() {
+        `when`(missionQueryService.getMissions(1L)).thenReturn(
             listOf(
                 MissionSummaryResponse(
                     id = 1L,
@@ -67,12 +67,12 @@ class MissionControllerTest {
             .andExpect(jsonPath("$.data[0].id").value(1))
             .andExpect(jsonPath("$.data[0].todayStatus").value("PENDING"))
 
-        verify(missionQueryService).getMissions("device-1")
+        verify(missionQueryService).getMissions(1L)
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 미션 상세를 조회할 수 있다`() {
-        `when`(missionQueryService.getMission("device-1", 1L)).thenReturn(
+    fun `인증된 사용자는 미션 상세를 조회할 수 있다`() {
+        `when`(missionQueryService.getMission(1L, 1L)).thenReturn(
             MissionDetailResponse(
                 id = 1L,
                 title = "텀블러 사용하기",
@@ -90,16 +90,16 @@ class MissionControllerTest {
             .andExpect(jsonPath("$.data.id").value(1))
             .andExpect(jsonPath("$.data.todayStatus").value("APPROVED"))
 
-        verify(missionQueryService).getMission("device-1", 1L)
+        verify(missionQueryService).getMission(1L, 1L)
     }
 
     @Test
     fun `올바른 요청이면 미션 인증 제출 결과를 반환한다`() {
         `when`(
             missionVerificationService.submitVerification(
-                "device-1",
                 1L,
-                "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+                1L,
+                "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
             ),
         ).thenReturn(
             SubmitMissionVerificationResponse(
@@ -119,9 +119,9 @@ class MissionControllerTest {
             .andExpect(jsonPath("$.data.status").value("PENDING"))
 
         verify(missionVerificationService).submitVerification(
-            "device-1",
             1L,
-            "missions/device-1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
+            1L,
+            "missions/1/1/2026/07/18/550e8400-e29b-41d4-a716-446655440000.jpg",
         )
     }
 
@@ -139,8 +139,8 @@ class MissionControllerTest {
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 내 미션 제출 내역을 조회할 수 있다`() {
-        `when`(missionQueryService.getMissionCompletions("device-1")).thenReturn(
+    fun `인증된 사용자는 내 미션 제출 내역을 조회할 수 있다`() {
+        `when`(missionQueryService.getMissionCompletions(1L)).thenReturn(
             listOf(
                 MissionCompletionHistoryResponse(
                     completionId = 55L,
@@ -166,6 +166,6 @@ class MissionControllerTest {
             .andExpect(jsonPath("$.data[0].completionId").value(55))
             .andExpect(jsonPath("$.data[0].rewardedIngredient.id").value(5))
 
-        verify(missionQueryService).getMissionCompletions("device-1")
+        verify(missionQueryService).getMissionCompletions(1L)
     }
 }

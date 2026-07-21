@@ -31,7 +31,7 @@ class HistoryControllerTest {
 
     @Test
     fun `에코잼 적립 내역을 조회할 수 있다`() {
-        `when`(historyQueryService.getEcoJamHistories("device-1")).thenReturn(
+        `when`(historyQueryService.getEcoJamHistories(1L)).thenReturn(
             listOf(
                 AssetHistoryResponse(
                     historyId = 1L,
@@ -52,12 +52,12 @@ class HistoryControllerTest {
             .andExpect(jsonPath("$.data[0].amount").value(300))
             .andExpect(jsonPath("$.data[0].sourceType").value("SOUP"))
 
-        verify(historyQueryService).getEcoJamHistories("device-1")
+        verify(historyQueryService).getEcoJamHistories(1L)
     }
 
     @Test
     fun `포인트 적립 내역을 조회할 수 있다`() {
-        `when`(historyQueryService.getPointHistories("device-1")).thenReturn(
+        `when`(historyQueryService.getPointHistories(1L)).thenReturn(
             listOf(
                 AssetHistoryResponse(
                     historyId = 2L,
@@ -78,6 +78,6 @@ class HistoryControllerTest {
             .andExpect(jsonPath("$.data[0].amount").value(2000))
             .andExpect(jsonPath("$.data[0].sourceId").value(20))
 
-        verify(historyQueryService).getPointHistories("device-1")
+        verify(historyQueryService).getPointHistories(1L)
     }
 }

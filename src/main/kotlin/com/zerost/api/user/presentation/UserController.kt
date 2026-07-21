@@ -6,9 +6,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -20,20 +18,17 @@ class UserController(
 ) {
 
     @Operation(
-        summary = "디바이스 등록",
-        description = "앱 첫 실행 시 디바이스 식별자로 유저를 등록합니다. 이미 등록된 디바이스라면 기존 유저 정보를 반환합니다."
+        summary = "임시 유저 등록",
+        description = "앱 첫 실행 시 임시 유저를 생성하고 온보딩 전용 access token과 refresh token을 발급합니다."
     )
     @ApiResponses(
         value = [
-            SwaggerApiResponse(responseCode = "200", description = "디바이스 등록 성공"),
-            SwaggerApiResponse(responseCode = "400", description = "잘못된 요청")
+            SwaggerApiResponse(responseCode = "200", description = "임시 유저 등록 성공"),
         ]
     )
     @PostMapping("/register")
-    fun register(
-        @Valid @RequestBody request: RegisterUserRequest
-    ): ApiResponse<RegisterUserResponse> {
-        val response = userRegistrationService.register(request.deviceId)
+    fun register(): ApiResponse<RegisterUserResponse> {
+        val response = userRegistrationService.register()
         return ApiResponse.success(response)
     }
 }

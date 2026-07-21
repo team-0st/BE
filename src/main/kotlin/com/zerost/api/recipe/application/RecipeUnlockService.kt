@@ -24,8 +24,8 @@ class RecipeUnlockService(
 ) {
 
     @Transactional
-    fun unlockRandomHiddenRecipe(deviceId: String): UnlockHiddenRecipeResponse {
-        val user = userRepository.findByDeviceIdForUpdate(deviceId)
+    fun unlockRandomHiddenRecipe(userId: Long): UnlockHiddenRecipeResponse {
+        val user = userRepository.findByIdForUpdate(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val hiddenRecipes = recipeRepository.findAllByTypeOrderByIdAsc(RecipeType.HIDDEN)

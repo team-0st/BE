@@ -22,9 +22,6 @@ class User(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @Column(name = "device_id", nullable = false, unique = true, length = 64)
-    val deviceId: String,
-
     @Column(length = 50)
     var nickname: String? = null,
 

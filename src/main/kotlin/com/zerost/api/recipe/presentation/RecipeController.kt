@@ -1,6 +1,6 @@
 package com.zerost.api.recipe.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.recipe.application.RecipeQueryService
 import com.zerost.api.recipe.application.RecipeUnlockService
@@ -40,8 +40,8 @@ class RecipeController(
     fun getRecipes(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<RecipeSummaryResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = recipeQueryService.getRecipes(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = recipeQueryService.getRecipes(userId)
         return ApiResponse.success(response)
     }
 
@@ -60,8 +60,8 @@ class RecipeController(
         @PathVariable recipeId: Long,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<RecipeDetailResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = recipeQueryService.getRecipe(deviceId, recipeId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = recipeQueryService.getRecipe(userId, recipeId)
         return ApiResponse.success(response)
     }
 
@@ -80,8 +80,8 @@ class RecipeController(
     fun unlockRandomHiddenRecipe(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<UnlockHiddenRecipeResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = recipeUnlockService.unlockRandomHiddenRecipe(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = recipeUnlockService.unlockRandomHiddenRecipe(userId)
         return ApiResponse.success(response)
     }
 }

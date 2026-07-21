@@ -19,8 +19,8 @@ class CommunityMissionCompletionService(
 ) {
 
     @Transactional
-    fun complete(deviceId: String, communityMissionId: Long): CompleteCommunityMissionResponse {
-        val user = userRepository.findByDeviceIdForUpdate(deviceId)
+    fun complete(userId: Long, communityMissionId: Long): CompleteCommunityMissionResponse {
+        val user = userRepository.findByIdForUpdate(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         if (!user.onboardingCompleted) {

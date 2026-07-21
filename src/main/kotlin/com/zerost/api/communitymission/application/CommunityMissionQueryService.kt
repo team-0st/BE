@@ -20,8 +20,8 @@ class CommunityMissionQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getCommunityMissions(deviceId: String): List<CommunityMissionProgressResponse> {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getCommunityMissions(userId: Long): List<CommunityMissionProgressResponse> {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         val userId = requireNotNull(user.id)
 

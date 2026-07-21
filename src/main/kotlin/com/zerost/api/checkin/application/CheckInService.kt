@@ -30,8 +30,8 @@ class CheckInService(
 ) {
 
     @Transactional
-    fun checkIn(deviceId: String): CheckInResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun checkIn(userId: Long): CheckInResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow{ BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val today = LocalDate.now()
@@ -85,8 +85,8 @@ class CheckInService(
     }
 
     @Transactional(readOnly = true)
-    fun getTodayStatus(deviceId: String): CheckInStatusResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getTodayStatus(userId: Long): CheckInStatusResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val checkedIn = checkInRepository.existsByUserIdAndCheckedDate(requireNotNull(user.id), LocalDate.now())

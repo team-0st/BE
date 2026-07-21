@@ -1,6 +1,6 @@
 package com.zerost.api.history.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.history.application.HistoryQueryService
 import com.zerost.api.history.presentation.dto.AssetHistoryResponse
@@ -34,8 +34,8 @@ class HistoryController(
     fun getEcoJamHistories(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<AssetHistoryResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = historyQueryService.getEcoJamHistories(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = historyQueryService.getEcoJamHistories(userId)
         return ApiResponse.success(response)
     }
 
@@ -53,8 +53,8 @@ class HistoryController(
     fun getPointHistories(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<AssetHistoryResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = historyQueryService.getPointHistories(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = historyQueryService.getPointHistories(userId)
         return ApiResponse.success(response)
     }
 }

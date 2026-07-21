@@ -1,6 +1,6 @@
 package com.zerost.api.ingredient.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.ingredient.application.UserIngredientQueryService
 import com.zerost.api.ingredient.presentation.dto.UserIngredientResponse
@@ -34,8 +34,8 @@ class IngredientController(
     fun getUserIngredients(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<List<UserIngredientResponse>> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = userIngredientQueryService.getUserIngredients(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = userIngredientQueryService.getUserIngredients(userId)
         return ApiResponse.success(response)
     }
 }

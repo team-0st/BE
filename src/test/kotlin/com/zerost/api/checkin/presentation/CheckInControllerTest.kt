@@ -4,7 +4,7 @@ import com.zerost.api.checkin.application.CheckInService
 import com.zerost.api.checkin.presentation.dto.CheckInResponse
 import com.zerost.api.checkin.presentation.dto.CheckInStatusResponse
 import com.zerost.api.checkin.presentation.dto.RewardedIngredientResponse
-import com.zerost.api.common.device.DeviceIdInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
@@ -28,12 +28,12 @@ class CheckInControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(CheckInController(checkInService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
+            .addInterceptors(AuthenticationInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 출석 처리 결과를 반환한다`() {
+    fun `인증된 사용자는 출석 처리 결과를 반환한다`() {
         val response = CheckInResponse(
             rewardedIngredient = RewardedIngredientResponse(
                 id = 1L,
@@ -42,7 +42,7 @@ class CheckInControllerTest {
                 imageUrl = "image-1",
             ),
         )
-        `when`(checkInService.checkIn("device-1")).thenReturn(response)
+        `when`(checkInService.checkIn(1L)).thenReturn(response)
 
         mockMvc.perform(
             post("/api/v1/check-in")
@@ -53,12 +53,12 @@ class CheckInControllerTest {
             .andExpect(jsonPath("$.data.rewardedIngredient.id").value(1))
             .andExpect(jsonPath("$.data.rewardedIngredient.name").value("버려진 천"))
 
-        verify(checkInService).checkIn("device-1")
+        verify(checkInService).checkIn(1L)
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 오늘 출석 여부를 조회할 수 있다`() {
-        `when`(checkInService.getTodayStatus("device-1")).thenReturn(CheckInStatusResponse(checkedIn = true))
+    fun `인증된 사용자는 오늘 출석 여부를 조회할 수 있다`() {
+        `when`(checkInService.getTodayStatus(1L)).thenReturn(CheckInStatusResponse(checkedIn = true))
 
         mockMvc.perform(
             get("/api/v1/check-in/status")
@@ -68,6 +68,6 @@ class CheckInControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.checkedIn").value(true))
 
-        verify(checkInService).getTodayStatus("device-1")
+        verify(checkInService).getTodayStatus(1L)
     }
 }

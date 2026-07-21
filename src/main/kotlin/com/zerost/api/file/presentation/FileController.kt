@@ -1,5 +1,6 @@
 package com.zerost.api.file.presentation
 
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.file.presentation.dto.FileUploadResponse
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestPart
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
-import com.zerost.api.common.device.DeviceConstants
 
 @Tag(name = "File", description = "공통 파일 업로드 API")
 @RestController
@@ -52,8 +52,8 @@ class FileController(
         @RequestParam missionId: Long,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<FileUploadResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = fileUploadService.upload(file, "missions", deviceId, missionId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = fileUploadService.upload(file, "missions", userId, missionId)
         return ApiResponse.success(response)
     }
 }

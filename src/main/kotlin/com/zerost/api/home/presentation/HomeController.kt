@@ -1,6 +1,6 @@
 package com.zerost.api.home.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.home.application.HomeQueryService
 import com.zerost.api.home.presentation.dto.HomeResponse
@@ -34,8 +34,8 @@ class HomeController(
     fun getHome(
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<HomeResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
-        val response = homeQueryService.getHome(deviceId)
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = homeQueryService.getHome(userId)
         return ApiResponse.success(response)
     }
 }

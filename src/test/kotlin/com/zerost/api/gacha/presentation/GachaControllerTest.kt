@@ -1,6 +1,6 @@
 package com.zerost.api.gacha.presentation
 
-import com.zerost.api.common.device.DeviceIdInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.gacha.application.GachaExecutionService
 import com.zerost.api.gacha.application.GachaQueryService
@@ -29,13 +29,13 @@ class GachaControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(GachaController(gachaExecutionService, gachaQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
+            .addInterceptors(AuthenticationInterceptor(createAuthTokenProvider()))
             .build()
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 가챠를 실행할 수 있다`() {
-        `when`(gachaExecutionService.execute("device-1")).thenReturn(
+    fun `인증된 사용자는 가챠를 실행할 수 있다`() {
+        `when`(gachaExecutionService.execute(1L)).thenReturn(
             ExecuteGachaResponse(
                 gachaId = 10L,
                 costEcoJam = 100,
@@ -58,12 +58,12 @@ class GachaControllerTest {
             .andExpect(jsonPath("$.data.remainingEcoJam").value(200))
             .andExpect(jsonPath("$.data.resultType").value("POINT"))
 
-        verify(gachaExecutionService).execute("device-1")
+        verify(gachaExecutionService).execute(1L)
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 가챠 실행 내역을 조회할 수 있다`() {
-        `when`(gachaQueryService.getGachaHistories("device-1")).thenReturn(
+    fun `인증된 사용자는 가챠 실행 내역을 조회할 수 있다`() {
+        `when`(gachaQueryService.getGachaHistories(1L)).thenReturn(
             listOf(
                 GachaHistoryResponse(
                     gachaId = 10L,
@@ -89,6 +89,6 @@ class GachaControllerTest {
             .andExpect(jsonPath("$.data[0].resultType").value("POINT"))
             .andExpect(jsonPath("$.data[0].resultPoint").value(300))
 
-        verify(gachaQueryService).getGachaHistories("device-1")
+        verify(gachaQueryService).getGachaHistories(1L)
     }
 }

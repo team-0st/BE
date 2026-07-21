@@ -18,7 +18,7 @@ class OnboardingService(
 
     @Transactional
     fun complete(command: CompleteOnboardingCommand): CompleteOnboardingResponse {
-        val user = userRepository.findByDeviceId(command.deviceId)
+        val user = userRepository.findById(command.userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val shop = shopRepository.findById(command.shopId)

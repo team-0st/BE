@@ -1,6 +1,6 @@
 package com.zerost.api.user.presentation
 
-import com.zerost.api.common.device.DeviceConstants
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.application.OnboardingService
@@ -41,10 +41,10 @@ class OnboardingController(
         @Valid @RequestBody request: CompleteOnboardingRequest,
         httpServletRequest: HttpServletRequest,
     ): ApiResponse<CompleteOnboardingResponse> {
-        val deviceId = httpServletRequest.getAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE) as String
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
 
         val command = CompleteOnboardingCommand(
-            deviceId = deviceId,
+            userId = userId,
             nickname = request.nickname,
             phoneNumber = request.phoneNumber,
             password = request.password,

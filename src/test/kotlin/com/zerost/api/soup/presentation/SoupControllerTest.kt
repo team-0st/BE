@@ -38,7 +38,7 @@ class SoupControllerTest {
 
     @Test
     fun `올바른 요청이면 스프를 제작할 수 있다`() {
-        `when`(soupBrewingService.brew("device-1", listOf(1L, 2L, 3L))).thenReturn(
+        `when`(soupBrewingService.brew(1L, listOf(1L, 2L, 3L))).thenReturn(
             BrewSoupResponse(
                 soupId = 10L,
                 recipeId = 1L,
@@ -62,12 +62,12 @@ class SoupControllerTest {
             .andExpect(jsonPath("$.data.recipeName").value("오리지널 스프"))
             .andExpect(jsonPath("$.data.rewardGrade").value("JACKPOT"))
 
-        verify(soupBrewingService).brew("device-1", listOf(1L, 2L, 3L))
+        verify(soupBrewingService).brew(1L, listOf(1L, 2L, 3L))
     }
 
     @Test
     fun `디바이스 아이디가 있으면 스프 보상을 리롤할 수 있다`() {
-        `when`(soupRerollService.reroll("device-1", 10L)).thenReturn(
+        `when`(soupRerollService.reroll(1L, 10L)).thenReturn(
             RerollSoupResponse(
                 soupId = 10L,
                 rerollCostEcoJam = 30,
@@ -89,7 +89,7 @@ class SoupControllerTest {
             .andExpect(jsonPath("$.data.rewardGrade").value("SMALL"))
             .andExpect(jsonPath("$.data.remainingEcoJam").value(70))
 
-        verify(soupRerollService).reroll("device-1", 10L)
+        verify(soupRerollService).reroll(1L, 10L)
     }
 
     @Test

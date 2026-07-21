@@ -31,7 +31,7 @@ class IngredientControllerTest {
 
     @Test
     fun `디바이스 아이디가 있으면 보유 재료 목록을 조회할 수 있다`() {
-        `when`(userIngredientQueryService.getUserIngredients("device-1")).thenReturn(
+        `when`(userIngredientQueryService.getUserIngredients(1L)).thenReturn(
             listOf(
                 UserIngredientResponse(
                     ingredientId = 7L,
@@ -52,6 +52,6 @@ class IngredientControllerTest {
             .andExpect(jsonPath("$.data[0].ingredientId").value(7))
             .andExpect(jsonPath("$.data[0].quantity").value(3))
 
-        verify(userIngredientQueryService).getUserIngredients("device-1")
+        verify(userIngredientQueryService).getUserIngredients(1L)
     }
 }

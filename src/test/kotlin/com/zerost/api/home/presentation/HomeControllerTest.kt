@@ -31,8 +31,8 @@ class HomeControllerTest {
     }
 
     @Test
-    fun `디바이스 아이디가 있으면 홈 화면 통합 조회를 할 수 있다`() {
-        `when`(homeQueryService.getHome("device-1")).thenReturn(
+    fun `인증된 사용자는 홈 화면 통합 조회를 할 수 있다`() {
+        `when`(homeQueryService.getHome(1L)).thenReturn(
             HomeResponse(
                 nickname = "펭귄탐험가",
                 ecoJam = 320,
@@ -58,6 +58,6 @@ class HomeControllerTest {
             .andExpect(jsonPath("$.data.checkedInToday").value(true))
             .andExpect(jsonPath("$.data.missionProgress.totalMissionCount").value(7))
 
-        verify(homeQueryService).getHome("device-1")
+        verify(homeQueryService).getHome(1L)
     }
 }

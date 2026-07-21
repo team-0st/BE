@@ -24,11 +24,11 @@ class MissionVerificationService(
 
     @Transactional
     fun submitVerification(
-        deviceId: String,
+        userId: Long,
         missionId: Long,
         photoKey: String,
     ): SubmitMissionVerificationResponse {
-        val user = userRepository.findByDeviceIdForUpdate(deviceId)
+        val user = userRepository.findByIdForUpdate(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val mission = missionRepository.findById(missionId)
@@ -49,7 +49,7 @@ class MissionVerificationService(
             MissionCompletionStatus.REJECTED, null -> Unit
         }
 
-        fileUploadService.validateMissionImageKey(deviceId, missionId, photoKey)
+        fileUploadService.validateMissionImageKey(userId, missionId, photoKey)
 
         val completion = missionCompletionRepository.save(
             MissionCompletion.submit(

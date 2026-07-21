@@ -23,8 +23,8 @@ class RecipeQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getRecipes(deviceId: String): List<RecipeSummaryResponse> {
-        val user = getUser(deviceId)
+    fun getRecipes(userId: Long): List<RecipeSummaryResponse> {
+        val user = getUser(userId)
         val unlockedRecipeIds = userUnlockedRecipeRepository.findRecipeIdsByUserId(requireNotNull(user.id)).toSet()
 
         return recipeRepository.findAllByOrderByIdAsc()
@@ -40,8 +40,8 @@ class RecipeQueryService(
     }
 
     @Transactional(readOnly = true)
-    fun getRecipe(deviceId: String, recipeId: Long): RecipeDetailResponse {
-        val user = getUser(deviceId)
+    fun getRecipe(userId: Long, recipeId: Long): RecipeDetailResponse {
+        val user = getUser(userId)
         val unlockedRecipeIds = userUnlockedRecipeRepository.findRecipeIdsByUserId(requireNotNull(user.id)).toSet()
 
         val recipe = recipeRepository.findById(recipeId)
@@ -71,8 +71,8 @@ class RecipeQueryService(
         )
     }
 
-    private fun getUser(deviceId: String) =
-        userRepository.findByDeviceId(deviceId)
+    private fun getUser(userId: Long) =
+        userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
     private fun Recipe.getDisplayName(unlockedRecipeIds: Set<Long>): String =

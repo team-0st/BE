@@ -23,8 +23,8 @@ class HomeQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getHome(deviceId: String): HomeResponse {
-        val user = userRepository.findByDeviceId(deviceId)
+    fun getHome(userId: Long): HomeResponse {
+        val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
         val userId = requireNotNull(user.id)
         val today = LocalDate.now()

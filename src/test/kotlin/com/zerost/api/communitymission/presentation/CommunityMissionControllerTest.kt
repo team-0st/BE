@@ -38,7 +38,7 @@ class CommunityMissionControllerTest {
 
     @Test
     fun `디바이스 아이디가 있으면 공동 미션 진행률을 조회할 수 있다`() {
-        `when`(communityMissionQueryService.getCommunityMissions("device-1")).thenReturn(
+        `when`(communityMissionQueryService.getCommunityMissions(1L)).thenReturn(
             listOf(
                 CommunityMissionProgressResponse(
                     id = 1L,
@@ -70,12 +70,12 @@ class CommunityMissionControllerTest {
             .andExpect(jsonPath("$.data[0].unlocked").value(true))
             .andExpect(jsonPath("$.data[0].completed").value(true))
 
-        verify(communityMissionQueryService).getCommunityMissions("device-1")
+        verify(communityMissionQueryService).getCommunityMissions(1L)
     }
 
     @Test
     fun `디바이스 아이디가 있으면 공동 미션 완료 처리를 할 수 있다`() {
-        `when`(communityMissionCompletionService.complete("device-1", 3L)).thenReturn(
+        `when`(communityMissionCompletionService.complete(1L, 3L)).thenReturn(
             CompleteCommunityMissionResponse(
                 completionId = 11L,
                 communityMissionId = 3L,
@@ -93,6 +93,6 @@ class CommunityMissionControllerTest {
             .andExpect(jsonPath("$.data.communityMissionId").value(3))
             .andExpect(jsonPath("$.data.completedAt").value("2026-07-21T15:30:00"))
 
-        verify(communityMissionCompletionService).complete("device-1", 3L)
+        verify(communityMissionCompletionService).complete(1L, 3L)
     }
 }
