@@ -9,6 +9,7 @@ import java.util.Optional
 
 interface UserRepository : JpaRepository<User, Long> {
     fun findByDeviceId(deviceId: String): Optional<User>
+    fun countByOnboardingCompletedTrue(): Long
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :userId")
