@@ -26,6 +26,12 @@ import java.util.Optional
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Suppress("UNCHECKED_CAST")
+private fun <T> settlementAnyObject(): T {
+    any<T>()
+    return null as T
+}
+
 class CommunityMissionRewardSettlementServiceTest {
 
     private val communityMissionCompletionRepository = mock(CommunityMissionCompletionRepository::class.java)
@@ -36,15 +42,19 @@ class CommunityMissionRewardSettlementServiceTest {
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val userRepository = mock(UserRepository::class.java)
     private val communityMissionRewardRandomProvider = mock(CommunityMissionRewardRandomProvider::class.java)
-    private val communityMissionRewardSettlementService = CommunityMissionRewardSettlementService(
+    private val communityMissionRewardSettlementBatchService = CommunityMissionRewardSettlementBatchService(
         communityMissionCompletionRepository = communityMissionCompletionRepository,
-        communityMissionRewardRepository = communityMissionRewardRepository,
-        ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
         ingredientHistoryRepository = ingredientHistoryRepository,
         userRepository = userRepository,
         communityMissionRewardRandomProvider = communityMissionRewardRandomProvider,
+    )
+    private val communityMissionRewardSettlementService = CommunityMissionRewardSettlementService(
+        communityMissionCompletionRepository = communityMissionCompletionRepository,
+        communityMissionRewardRepository = communityMissionRewardRepository,
+        ingredientRepository = ingredientRepository,
+        communityMissionRewardSettlementBatchService = communityMissionRewardSettlementBatchService,
     )
 
     @Test
@@ -79,7 +89,7 @@ class CommunityMissionRewardSettlementServiceTest {
         assertTrue(secondCompletion.isRewarded())
         verify(communityMissionCompletionRepository, times(2))
             .findTop100ByCommunityMissionIdAndRewardedAtIsNullOrderByIdAsc(1L)
-        verify(ecoJamHistoryRepository, times(2)).save(any())
+        verify(ecoJamHistoryRepository, times(2)).save(settlementAnyObject())
     }
 
     @Test
@@ -124,6 +134,6 @@ class CommunityMissionRewardSettlementServiceTest {
         assertEquals(2, rewardResult.rewardedIngredients.size)
         assertTrue(completion.isRewarded())
         verify(ingredientRepository, times(1)).findAllByType(IngredientType.COMMON)
-        verify(ingredientHistoryRepository, times(2)).save(any())
+        verify(ingredientHistoryRepository, times(2)).save(settlementAnyObject())
     }
 }
