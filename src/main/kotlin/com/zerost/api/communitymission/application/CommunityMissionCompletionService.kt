@@ -24,6 +24,8 @@ import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 
 @Service
@@ -49,7 +51,7 @@ class CommunityMissionCompletionService(
         }
 
         val communityMissions = CommunityMissionUnlockPolicy.sort(communityMissionRepository.findAllByActiveTrue())
-        val communityMission = communityMissions.firstOrNull { it.id == communityMissionId }
+        val communityMission = communityMissionRepository.findByIdAndActiveTrueForUpdate(communityMissionId)
             ?: throw BusinessException(ErrorCode.COMMUNITY_MISSION_NOT_FOUND)
         val resolvedUserId = requireNotNull(user.id)
         val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(resolvedUserId).toSet()
@@ -71,11 +73,65 @@ class CommunityMissionCompletionService(
             ),
         )
         val completionId = requireNotNull(completion.id)
+        val participantCount = communityMissionCompletionRepository.countByCommunityMissionId(communityMissionId)
+        val totalUserCount = userRepository.countByOnboardingCompletedTrue()
+        val exactAchievementRatio = calculateAchievementRatio(participantCount, totalUserCount, 10)
+        val succeededNow = communityMission.hasSucceeded() || exactAchievementRatio >= communityMission.targetRatio
+
+        val currentCompletionReward = if (succeededNow) {
+            if (!communityMission.hasSucceeded()) {
+                communityMission.markSucceeded(completedAt)
+            }
+            rewardPendingCompletions(communityMissionId, completedAt)[completionId]
+        } else {
+            null
+        }
+
+        return CompleteCommunityMissionResponse(
+            completionId = completionId,
+            communityMissionId = requireNotNull(communityMission.id),
+            succeeded = succeededNow,
+            rewardGranted = currentCompletionReward != null,
+            rewardedEcoJam = currentCompletionReward?.rewardedEcoJam ?: 0,
+            rewardedIngredients = currentCompletionReward?.rewardedIngredients ?: emptyList(),
+            completedAt = completedAt.toString(),
+        )
+    }
+
+    private fun rewardPendingCompletions(
+        communityMissionId: Long,
+        rewardedAt: LocalDateTime,
+    ): Map<Long, CompletionRewardResult> {
         val rewards = communityMissionRewardRepository.findAllByCommunityMissionIdOrderByRewardOrderAsc(communityMissionId)
         if (rewards.isEmpty()) {
             throw BusinessException(ErrorCode.COMMUNITY_MISSION_REWARD_NOT_FOUND)
         }
 
+        val pendingCompletions = communityMissionCompletionRepository
+            .findAllByCommunityMissionIdAndRewardedAtIsNullOrderByIdAsc(communityMissionId)
+
+        if (pendingCompletions.isEmpty()) {
+            return emptyMap()
+        }
+
+        val rewardResults = linkedMapOf<Long, CompletionRewardResult>()
+
+        pendingCompletions.forEach { completion ->
+            val lockedUser = userRepository.findByIdForUpdate(requireNotNull(completion.user.id))
+                .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+            val result = rewardCompletion(requireNotNull(completion.id), lockedUser, rewards)
+            completion.markRewarded(rewardedAt)
+            rewardResults[requireNotNull(completion.id)] = result
+        }
+
+        return rewardResults
+    }
+
+    private fun rewardCompletion(
+        completionId: Long,
+        user: User,
+        rewards: List<com.zerost.api.communitymission.domain.CommunityMissionReward>,
+    ): CompletionRewardResult {
         var rewardedEcoJam = 0
         val rewardedIngredientCounts = linkedMapOf<Long, RewardedIngredientAccumulator>()
 
@@ -103,13 +159,24 @@ class CommunityMissionCompletionService(
             }
         }
 
-        return CompleteCommunityMissionResponse(
-            completionId = completionId,
-            communityMissionId = requireNotNull(communityMission.id),
+        return CompletionRewardResult(
             rewardedEcoJam = rewardedEcoJam,
             rewardedIngredients = rewardedIngredientCounts.values.map { it.toResponse() },
-            completedAt = completedAt.toString(),
         )
+    }
+
+    private fun calculateAchievementRatio(
+        participantCount: Long,
+        totalUserCount: Long,
+        scale: Int,
+    ): BigDecimal {
+        if (totalUserCount == 0L) {
+            return BigDecimal.ZERO.setScale(scale)
+        }
+
+        return BigDecimal.valueOf(participantCount)
+            .multiply(BigDecimal("100"))
+            .divide(BigDecimal.valueOf(totalUserCount), scale, RoundingMode.HALF_UP)
     }
 
     private fun pickRandomIngredient(type: IngredientType): Ingredient {
@@ -169,4 +236,9 @@ class CommunityMissionCompletionService(
             quantity = quantity,
         )
     }
+
+    private data class CompletionRewardResult(
+        val rewardedEcoJam: Int,
+        val rewardedIngredients: List<CommunityMissionRewardedIngredientResponse>,
+    )
 }

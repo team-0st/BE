@@ -31,4 +31,15 @@ class CommunityMissionCompletion(
 
     @Column(name = "completed_at", nullable = false)
     val completedAt: LocalDateTime,
+
+    @Column(name = "rewarded_at")
+    var rewardedAt: LocalDateTime? = null,
 ) : BaseEntity()
+
+{
+    fun isRewarded(): Boolean = rewardedAt != null
+
+    fun markRewarded(rewardedAt: LocalDateTime) {
+        this.rewardedAt = rewardedAt
+    }
+}
