@@ -30,14 +30,14 @@ class CommunityMissionCompletionService(
         val communityMissions = CommunityMissionUnlockPolicy.sort(communityMissionRepository.findAllByActiveTrue())
         val communityMission = communityMissions.firstOrNull { it.id == communityMissionId }
             ?: throw BusinessException(ErrorCode.COMMUNITY_MISSION_NOT_FOUND)
-        val userId = requireNotNull(user.id)
-        val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(userId).toSet()
+        val resolvedUserId = requireNotNull(user.id)
+        val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(resolvedUserId).toSet()
 
         if (!CommunityMissionUnlockPolicy.isUnlocked(communityMissions, communityMission, completedMissionIds)) {
             throw BusinessException(ErrorCode.COMMUNITY_MISSION_NOT_UNLOCKED)
         }
 
-        if (communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(communityMissionId, userId)) {
+        if (communityMissionCompletionRepository.existsByCommunityMissionIdAndUserId(communityMissionId, resolvedUserId)) {
             throw BusinessException(ErrorCode.COMMUNITY_MISSION_ALREADY_COMPLETED)
         }
 

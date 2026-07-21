@@ -25,10 +25,12 @@ class AuthTokenServiceTest {
         refreshTokenExpirationSeconds = 1209600,
     )
     private val authTokenProvider = AuthTokenProvider(authTokenProperties)
+    private val refreshTokenHasher = RefreshTokenHasher()
     private val authTokenService = AuthTokenService(
         refreshTokenRepository = refreshTokenRepository,
         authTokenProvider = authTokenProvider,
         authTokenProperties = authTokenProperties,
+        refreshTokenHasher = refreshTokenHasher,
     )
 
     @Test
@@ -41,18 +43,19 @@ class AuthTokenServiceTest {
         val storedRefreshToken = RefreshToken(
             id = 1L,
             user = user,
-            token = "refresh-token",
+            tokenHash = refreshTokenHasher.hash("refresh-token"),
             expiresAt = LocalDateTime.now().plusDays(7),
         )
 
-        `when`(refreshTokenRepository.findByToken("refresh-token")).thenReturn(Optional.of(storedRefreshToken))
+        `when`(refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash("refresh-token")))
+            .thenReturn(Optional.of(storedRefreshToken))
 
         val response = authTokenService.refresh("refresh-token")
 
         assertTrue(response.accessToken.isNotBlank())
         assertNotEquals("refresh-token", response.refreshToken)
         assertEquals("Bearer", response.tokenType)
-        assertEquals(response.refreshToken, storedRefreshToken.token)
+        assertEquals(refreshTokenHasher.hash(response.refreshToken), storedRefreshToken.tokenHash)
     }
 
     @Test
@@ -65,10 +68,11 @@ class AuthTokenServiceTest {
         val storedRefreshToken = RefreshToken(
             id = 1L,
             user = user,
-            token = "refresh-token",
+            tokenHash = refreshTokenHasher.hash("refresh-token"),
             expiresAt = LocalDateTime.now().minusMinutes(1),
         )
-        `when`(refreshTokenRepository.findByToken("refresh-token")).thenReturn(Optional.of(storedRefreshToken))
+        `when`(refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash("refresh-token")))
+            .thenReturn(Optional.of(storedRefreshToken))
 
         val exception = assertFailsWith<BusinessException> {
             authTokenService.refresh("refresh-token")
@@ -88,10 +92,11 @@ class AuthTokenServiceTest {
         val storedRefreshToken = RefreshToken(
             id = 1L,
             user = user,
-            token = "refresh-token",
+            tokenHash = refreshTokenHasher.hash("refresh-token"),
             expiresAt = LocalDateTime.now().plusDays(7),
         )
-        `when`(refreshTokenRepository.findByToken("refresh-token")).thenReturn(Optional.of(storedRefreshToken))
+        `when`(refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash("refresh-token")))
+            .thenReturn(Optional.of(storedRefreshToken))
 
         authTokenService.logout("refresh-token")
 

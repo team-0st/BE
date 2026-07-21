@@ -19,6 +19,7 @@ class AuthLoginService(
     private val passwordEncoder: PasswordEncoder,
     private val authTokenProvider: AuthTokenProvider,
     private val authTokenProperties: AuthTokenProperties,
+    private val refreshTokenHasher: RefreshTokenHasher,
 ) {
 
     @Transactional
@@ -35,12 +36,13 @@ class AuthLoginService(
 
         val accessToken = authTokenProvider.createAccessToken(user)
         val refreshToken = UUID.randomUUID().toString()
+        val refreshTokenHash = refreshTokenHasher.hash(refreshToken)
         val refreshTokenExpiresAt = LocalDateTime.now().plusSeconds(authTokenProperties.refreshTokenExpirationSeconds)
 
         refreshTokenRepository.save(
             RefreshToken(
                 user = user,
-                token = refreshToken,
+                tokenHash = refreshTokenHash,
                 expiresAt = refreshTokenExpiresAt,
             ),
         )

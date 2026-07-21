@@ -29,12 +29,14 @@ class AuthLoginServiceTest {
         refreshTokenExpirationSeconds = 1209600,
     )
     private val authTokenProvider = AuthTokenProvider(authTokenProperties)
+    private val refreshTokenHasher = RefreshTokenHasher()
     private val authLoginService = AuthLoginService(
         userRepository = userRepository,
         refreshTokenRepository = refreshTokenRepository,
         passwordEncoder = passwordEncoder,
         authTokenProvider = authTokenProvider,
         authTokenProperties = authTokenProperties,
+        refreshTokenHasher = refreshTokenHasher,
     )
 
     @Test

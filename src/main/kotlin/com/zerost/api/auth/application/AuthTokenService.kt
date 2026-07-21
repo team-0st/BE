@@ -14,11 +14,12 @@ class AuthTokenService(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val authTokenProvider: AuthTokenProvider,
     private val authTokenProperties: AuthTokenProperties,
+    private val refreshTokenHasher: RefreshTokenHasher,
 ) {
 
     @Transactional
     fun refresh(refreshToken: String): RefreshTokenResponse {
-        val storedRefreshToken = refreshTokenRepository.findByToken(refreshToken)
+        val storedRefreshToken = refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash(refreshToken))
             .orElseThrow { BusinessException(ErrorCode.INVALID_REFRESH_TOKEN) }
 
         if (storedRefreshToken.expiresAt.isBefore(LocalDateTime.now())) {
@@ -29,10 +30,11 @@ class AuthTokenService(
         val user = storedRefreshToken.user
         val newAccessToken = authTokenProvider.createAccessToken(user)
         val newRefreshToken = UUID.randomUUID().toString()
+        val newRefreshTokenHash = refreshTokenHasher.hash(newRefreshToken)
         val newRefreshTokenExpiresAt = LocalDateTime.now().plusSeconds(authTokenProperties.refreshTokenExpirationSeconds)
 
         storedRefreshToken.rotate(
-            token = newRefreshToken,
+            tokenHash = newRefreshTokenHash,
             expiresAt = newRefreshTokenExpiresAt,
         )
 
@@ -47,7 +49,7 @@ class AuthTokenService(
 
     @Transactional
     fun logout(refreshToken: String) {
-        val storedRefreshToken = refreshTokenRepository.findByToken(refreshToken)
+        val storedRefreshToken = refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash(refreshToken))
             .orElseThrow { BusinessException(ErrorCode.INVALID_REFRESH_TOKEN) }
         refreshTokenRepository.delete(storedRefreshToken)
     }

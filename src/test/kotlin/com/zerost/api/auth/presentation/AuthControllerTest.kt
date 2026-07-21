@@ -78,6 +78,18 @@ class AuthControllerTest {
     }
 
     @Test
+    fun `010이 아닌 휴대전화 번호 prefix면 로그인에 실패한다`() {
+        mockMvc.perform(
+            post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createLoginRequestBody(phoneNumber = "011-1234-5678")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
+    }
+
+    @Test
     fun `유효한 refresh token이면 토큰을 재발급한다`() {
         `when`(authTokenService.refresh("refresh-token")).thenReturn(
             RefreshTokenResponse(

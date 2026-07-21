@@ -2,6 +2,7 @@ package com.zerost.api.user.application
 
 import com.zerost.api.auth.application.AuthTokenProperties
 import com.zerost.api.auth.application.AuthTokenProvider
+import com.zerost.api.auth.application.RefreshTokenHasher
 import com.zerost.api.auth.domain.RefreshTokenRepository
 import com.zerost.api.support.createUser
 import com.zerost.api.user.domain.UserRepository
@@ -23,11 +24,13 @@ class UserRegistrationServiceTest {
         accessTokenExpirationSeconds = 3600,
         refreshTokenExpirationSeconds = 1209600,
     )
+    private val refreshTokenHasher = RefreshTokenHasher()
     private val userRegistrationService = UserRegistrationService(
         userRepository = userRepository,
         refreshTokenRepository = refreshTokenRepository,
         authTokenProvider = authTokenProvider,
         authTokenProperties = authTokenProperties,
+        refreshTokenHasher = refreshTokenHasher,
     )
 
     @Test

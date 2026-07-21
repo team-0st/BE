@@ -22,7 +22,7 @@ server:
 app:
   auth:
     token:
-      secret: ${APP_AUTH_TOKEN_SECRET:zerost-dev-secret-zerost-dev-secret}
+      secret: ${APP_AUTH_TOKEN_SECRET}
       access-token-expiration-seconds: ${APP_AUTH_ACCESS_TOKEN_EXPIRATION_SECONDS:3600}
       refresh-token-expiration-seconds: ${APP_AUTH_REFRESH_TOKEN_EXPIRATION_SECONDS:1209600}
   cors:

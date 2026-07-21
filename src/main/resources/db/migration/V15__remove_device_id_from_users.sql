@@ -1,2 +1,1 @@
-alter table users
-    drop column device_id;
+-- device_id 컬럼 제거는 구버전 애플리케이션이 완전히 내려간 뒤 후속 배포에서 진행한다.

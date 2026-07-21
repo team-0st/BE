@@ -23,7 +23,7 @@ class CommunityMissionQueryService(
     fun getCommunityMissions(userId: Long): List<CommunityMissionProgressResponse> {
         val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
-        val userId = requireNotNull(user.id)
+        val resolvedUserId = requireNotNull(user.id)
 
         val communityMissions = CommunityMissionUnlockPolicy.sort(communityMissionRepository.findAllByActiveTrue())
 
@@ -34,7 +34,7 @@ class CommunityMissionQueryService(
         val missionIds = communityMissions.map { requireNotNull(it.id) }
         val completionCounts = communityMissionCompletionRepository.countByCommunityMissionIds(missionIds)
             .associate { it.communityMissionId to it.completionCount }
-        val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(userId).toSet()
+        val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(resolvedUserId).toSet()
         val totalUserCount = userRepository.countByOnboardingCompletedTrue()
 
         return communityMissions.map { communityMission ->
