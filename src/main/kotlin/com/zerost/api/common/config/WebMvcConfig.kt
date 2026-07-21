@@ -15,7 +15,7 @@ class WebMvcConfig(
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry.addInterceptor(deviceIdInterceptor)
             .addPathPatterns("/api/v1/**")
-            .excludePathPatterns("/api/v1/users/register")
+            .excludePathPatterns("/api/v1/users/register", "/api/v1/auth/**")
     }
 
     override fun addCorsMappings(registry: CorsRegistry) {
