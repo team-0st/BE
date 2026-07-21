@@ -27,6 +27,16 @@ interface CommunityMissionCompletionRepository : JpaRepository<CommunityMissionC
 
     @Query(
         """
+        select distinct cmc.communityMission.id
+        from CommunityMissionCompletion cmc
+        where cmc.rewardedAt is null
+          and cmc.communityMission.succeededAt is not null
+        """
+    )
+    fun findDistinctSucceededCommunityMissionIdsWithPendingRewards(): List<Long>
+
+    @Query(
+        """
         select
             cmc.communityMission.id as communityMissionId,
             count(cmc) as completionCount
