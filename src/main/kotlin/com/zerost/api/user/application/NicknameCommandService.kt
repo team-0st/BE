@@ -4,6 +4,7 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.user.domain.UserRepository
 import com.zerost.api.user.presentation.dto.UpdateNicknameResponse
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -21,7 +22,12 @@ class NicknameCommandService(
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         validateNickname(userId = requireNotNull(user.id), nickname = nickname)
-        user.changeNickname(nickname)
+        try {
+            user.changeNickname(nickname)
+            userRepository.flush()
+        } catch (_: DataIntegrityViolationException) {
+            throw BusinessException(ErrorCode.DUPLICATE_NICKNAME)
+        }
 
         return UpdateNicknameResponse(
             userId = requireNotNull(user.id),

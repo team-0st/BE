@@ -26,12 +26,18 @@ class UserControllerTest {
 
     private val userRegistrationService = mock(UserRegistrationService::class.java)
     private val nicknameCommandService = mock(NicknameCommandService::class.java)
-    private lateinit var mockMvc: MockMvc
+    private lateinit var publicMockMvc: MockMvc
+    private lateinit var authenticatedMockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
         val validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() }
-        mockMvc = MockMvcBuilders.standaloneSetup(UserController(userRegistrationService, nicknameCommandService))
+        publicMockMvc = MockMvcBuilders.standaloneSetup(UserController(userRegistrationService, nicknameCommandService))
+            .setControllerAdvice(GlobalExceptionHandler())
+            .setValidator(validator)
+            .build()
+
+        authenticatedMockMvc = MockMvcBuilders.standaloneSetup(UserController(userRegistrationService, nicknameCommandService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
             .addInterceptors(AuthenticationInterceptor(createAuthTokenProvider()))
@@ -53,9 +59,8 @@ class UserControllerTest {
                 ),
             )
 
-        mockMvc.perform(
+        publicMockMvc.perform(
                 post("/api/v1/users/register")
-                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createRegisterUserRequestBody()),
         )
@@ -79,7 +84,7 @@ class UserControllerTest {
                 ),
             )
 
-        mockMvc.perform(
+        authenticatedMockMvc.perform(
             patch("/api/v1/users/me/nickname")
                 .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +100,7 @@ class UserControllerTest {
 
     @Test
     fun `닉네임이 비어 있으면 변경에 실패한다`() {
-        mockMvc.perform(
+        authenticatedMockMvc.perform(
             patch("/api/v1/users/me/nickname")
                 .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
