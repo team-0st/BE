@@ -45,9 +45,15 @@ class CommunityMissionQueryService(
         return communityMissions.map { communityMission ->
             val missionId = requireNotNull(communityMission.id)
             val participantCount = completionCounts[missionId] ?: 0L
+            val exactAchievementRatio = calculateAchievementRatio(
+                participantCount = participantCount,
+                totalUserCount = totalUserCount,
+                scale = 10,
+            )
             val achievementRatio = calculateAchievementRatio(
                 participantCount = participantCount,
                 totalUserCount = totalUserCount,
+                scale = 2,
             )
 
             CommunityMissionProgressResponse(
@@ -61,7 +67,7 @@ class CommunityMissionQueryService(
                 achievementRatio = achievementRatio,
                 participantCount = participantCount,
                 totalUserCount = totalUserCount,
-                succeeded = isSucceeded(achievementRatio, communityMission.targetRatio),
+                succeeded = isSucceeded(exactAchievementRatio, communityMission.targetRatio),
                 unlocked = isUnlocked(communityMissions, communityMission, completedMissionIds),
             )
         }
@@ -70,14 +76,15 @@ class CommunityMissionQueryService(
     private fun calculateAchievementRatio(
         participantCount: Long,
         totalUserCount: Long,
+        scale: Int,
     ): BigDecimal {
         if (totalUserCount == 0L) {
-            return BigDecimal.ZERO.setScale(2)
+            return BigDecimal.ZERO.setScale(scale)
         }
 
         return BigDecimal.valueOf(participantCount)
             .multiply(BigDecimal("100"))
-            .divide(BigDecimal.valueOf(totalUserCount), 2, RoundingMode.HALF_UP)
+            .divide(BigDecimal.valueOf(totalUserCount), scale, RoundingMode.HALF_UP)
     }
 
     private fun isSucceeded(

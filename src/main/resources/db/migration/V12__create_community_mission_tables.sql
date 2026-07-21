@@ -9,7 +9,10 @@ create table community_missions (
     is_active boolean not null default true,
     created_at timestamp not null default current_timestamp,
     updated_at timestamp not null default current_timestamp on update current_timestamp,
-    primary key (id)
+    primary key (id),
+    constraint uq_community_missions_difficulty_stage unique (difficulty, stage),
+    constraint chk_community_missions_stage check (stage >= 1),
+    constraint chk_community_missions_target_ratio check (target_ratio >= 0 and target_ratio <= 100)
 );
 
 create table community_mission_completions (

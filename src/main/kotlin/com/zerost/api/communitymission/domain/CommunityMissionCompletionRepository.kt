@@ -13,6 +13,7 @@ interface CommunityMissionCompletionRepository : JpaRepository<CommunityMissionC
             count(cmc) as completionCount
         from CommunityMissionCompletion cmc
         where cmc.communityMission.id in :missionIds
+          and cmc.user.onboardingCompleted = true
         group by cmc.communityMission.id
         """
     )

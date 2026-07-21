@@ -85,6 +85,27 @@ class CommunityMissionQueryServiceTest {
     }
 
     @Test
+    fun `성공 여부는 반올림 전 달성률 기준으로 판정한다`() {
+        val user = createUser()
+        val mission = createCommunityMission(
+            id = 1L,
+            targetRatio = java.math.BigDecimal("16.67"),
+        )
+
+        `when`(userRepository.findByDeviceId("device-1")).thenReturn(Optional.of(user))
+        `when`(userRepository.countByOnboardingCompletedTrue()).thenReturn(6L)
+        `when`(communityMissionRepository.findAllByActiveTrue()).thenReturn(listOf(mission))
+        `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L)))
+            .thenReturn(listOf(countProjection(1L, 1L)))
+        `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
+
+        val response = communityMissionQueryService.getCommunityMissions("device-1")
+
+        assertEquals("16.67", response[0].achievementRatio.toPlainString())
+        assertFalse(response[0].succeeded)
+    }
+
+    @Test
     fun `이전 단계를 완료하지 않으면 다음 단계 공동 미션은 잠금 상태다`() {
         val user = createUser()
         val mission1 = createCommunityMission(
