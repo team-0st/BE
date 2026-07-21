@@ -6,6 +6,8 @@ import org.springframework.data.repository.query.Param
 
 interface CommunityMissionCompletionRepository : JpaRepository<CommunityMissionCompletion, Long> {
 
+    fun existsByCommunityMissionIdAndUserId(communityMissionId: Long, userId: Long): Boolean
+
     @Query(
         """
         select
