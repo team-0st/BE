@@ -198,6 +198,7 @@ fun createCommunityMission(
     targetRatio: BigDecimal = BigDecimal("30.00"),
     imageUrl: String? = "https://example.com/images/community-mission-1.png",
     active: Boolean = true,
+    succeededAt: LocalDateTime? = null,
 ): CommunityMission = CommunityMission(
     id = id,
     title = title,
@@ -207,6 +208,7 @@ fun createCommunityMission(
     targetRatio = targetRatio,
     imageUrl = imageUrl,
     active = active,
+    succeededAt = succeededAt,
 )
 
 fun createCommunityMissionCompletion(
@@ -214,11 +216,13 @@ fun createCommunityMissionCompletion(
     communityMission: CommunityMission = createCommunityMission(),
     user: User = createUser(),
     completedAt: LocalDateTime = LocalDateTime.of(2026, 7, 21, 10, 0, 0),
+    rewardedAt: LocalDateTime? = null,
 ): CommunityMissionCompletion = CommunityMissionCompletion(
     id = id,
     communityMission = communityMission,
     user = user,
     completedAt = completedAt,
+    rewardedAt = rewardedAt,
 )
 
 fun createCommunityMissionReward(

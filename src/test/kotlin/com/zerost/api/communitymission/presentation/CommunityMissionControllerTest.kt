@@ -80,6 +80,8 @@ class CommunityMissionControllerTest {
             CompleteCommunityMissionResponse(
                 completionId = 11L,
                 communityMissionId = 3L,
+                succeeded = true,
+                rewardGranted = true,
                 rewardedEcoJam = 50,
                 rewardedIngredients = listOf(
                     CommunityMissionRewardedIngredientResponse(
@@ -101,6 +103,8 @@ class CommunityMissionControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.completionId").value(11))
             .andExpect(jsonPath("$.data.communityMissionId").value(3))
+            .andExpect(jsonPath("$.data.succeeded").value(true))
+            .andExpect(jsonPath("$.data.rewardGranted").value(true))
             .andExpect(jsonPath("$.data.rewardedEcoJam").value(50))
             .andExpect(jsonPath("$.data.rewardedIngredients[0].ingredientName").value("토마토"))
             .andExpect(jsonPath("$.data.completedAt").value("2026-07-21T15:30:00"))
