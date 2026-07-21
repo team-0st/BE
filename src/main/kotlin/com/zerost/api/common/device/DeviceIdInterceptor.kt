@@ -20,6 +20,17 @@ class DeviceIdInterceptor(
         response: HttpServletResponse,
         handler: Any,
     ) : Boolean {
+        if (request.requestURI == "/api/v1/onboarding/complete") {
+            val deviceId = request.getHeader(DeviceConstants.DEVICE_ID_HEADER)?.trim()
+
+            if (deviceId.isNullOrEmpty()) {
+                throw BusinessException(ErrorCode.DEVICE_ID_HEADER_MISSING)
+            }
+
+            request.setAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE, deviceId)
+            return true
+        }
+
         val authorization = request.getHeader("Authorization")?.trim()
         if (!authorization.isNullOrEmpty() && authorization.startsWith("Bearer ")) {
             val accessToken = authorization.removePrefix("Bearer ").trim()
@@ -29,13 +40,6 @@ class DeviceIdInterceptor(
             return true
         }
 
-        val deviceId = request.getHeader(DeviceConstants.DEVICE_ID_HEADER)?.trim()
-
-        if (deviceId.isNullOrEmpty()) {
-            throw BusinessException(ErrorCode.DEVICE_ID_HEADER_MISSING)
-        }
-
-        request.setAttribute(DeviceConstants.DEVICE_ID_ATTRIBUTE, deviceId)
-        return true
+        throw BusinessException(ErrorCode.ACCESS_TOKEN_REQUIRED)
     }
 }

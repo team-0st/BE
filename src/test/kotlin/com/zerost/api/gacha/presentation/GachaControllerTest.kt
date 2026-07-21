@@ -1,12 +1,12 @@
 package com.zerost.api.gacha.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.gacha.application.GachaExecutionService
 import com.zerost.api.gacha.application.GachaQueryService
 import com.zerost.api.gacha.presentation.dto.ExecuteGachaResponse
 import com.zerost.api.gacha.presentation.dto.GachaHistoryResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -29,7 +29,7 @@ class GachaControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(GachaController(gachaExecutionService, gachaQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -50,7 +50,7 @@ class GachaControllerTest {
 
         mockMvc.perform(
             post("/api/v1/gachas/draw")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -81,7 +81,7 @@ class GachaControllerTest {
 
         mockMvc.perform(
             get("/api/v1/gachas/histories")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

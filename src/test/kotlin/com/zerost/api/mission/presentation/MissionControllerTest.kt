@@ -1,6 +1,5 @@
 package com.zerost.api.mission.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mission.application.MissionQueryService
@@ -11,6 +10,7 @@ import com.zerost.api.mission.presentation.dto.MissionRewardedIngredientResponse
 import com.zerost.api.mission.presentation.dto.MissionSummaryResponse
 import com.zerost.api.mission.presentation.dto.MissionTodayStatus
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationResponse
+import com.zerost.api.support.createAuthTokenProvider
 import com.zerost.api.support.createSubmitMissionVerificationRequestBody
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -40,7 +40,7 @@ class MissionControllerTest {
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -60,7 +60,7 @@ class MissionControllerTest {
 
         mockMvc.perform(
             get("/api/v1/missions")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -84,7 +84,7 @@ class MissionControllerTest {
 
         mockMvc.perform(
             get("/api/v1/missions/1")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.id").value(1))
@@ -110,7 +110,7 @@ class MissionControllerTest {
 
         mockMvc.perform(
             post("/api/v1/missions/1/verify")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createSubmitMissionVerificationRequestBody()),
         )
@@ -129,7 +129,7 @@ class MissionControllerTest {
     fun `photoKey가 비어 있으면 미션 인증 제출에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/missions/1/verify")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createSubmitMissionVerificationRequestBody(photoKey = "")),
         )
@@ -160,7 +160,7 @@ class MissionControllerTest {
 
         mockMvc.perform(
             get("/api/v1/missions/completions")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data[0].completionId").value(55))

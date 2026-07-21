@@ -1,10 +1,10 @@
 package com.zerost.api.ingredient.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.ingredient.application.UserIngredientQueryService
 import com.zerost.api.ingredient.presentation.dto.UserIngredientResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -25,7 +25,7 @@ class IngredientControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(IngredientController(userIngredientQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -45,7 +45,7 @@ class IngredientControllerTest {
 
         mockMvc.perform(
             get("/api/v1/ingredients")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

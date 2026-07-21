@@ -1,10 +1,10 @@
 package com.zerost.api.history.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.history.application.HistoryQueryService
 import com.zerost.api.history.presentation.dto.AssetHistoryResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -25,7 +25,7 @@ class HistoryControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(HistoryController(historyQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -45,7 +45,7 @@ class HistoryControllerTest {
 
         mockMvc.perform(
             get("/api/v1/histories/eco-jams")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -71,7 +71,7 @@ class HistoryControllerTest {
 
         mockMvc.perform(
             get("/api/v1/histories/points")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

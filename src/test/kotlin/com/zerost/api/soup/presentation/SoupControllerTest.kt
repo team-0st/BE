@@ -1,12 +1,12 @@
 package com.zerost.api.soup.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.soup.application.SoupBrewingService
 import com.zerost.api.soup.application.SoupRerollService
 import com.zerost.api.soup.presentation.dto.BrewSoupResponse
 import com.zerost.api.soup.presentation.dto.RerollSoupResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -32,7 +32,7 @@ class SoupControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(SoupController(soupBrewingService, soupRerollService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -53,7 +53,7 @@ class SoupControllerTest {
 
         mockMvc.perform(
             post("/api/v1/soups/brew")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"ingredientIds":[1,2,3]}"""),
         )
@@ -81,7 +81,7 @@ class SoupControllerTest {
 
         mockMvc.perform(
             post("/api/v1/soups/10/reroll")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -96,7 +96,7 @@ class SoupControllerTest {
     fun `재료 수가 부족하면 제작 요청에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/soups/brew")
-                .header("X-Device-Id", "device-1")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""{"ingredientIds":[1,2]}"""),
         )

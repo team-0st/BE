@@ -1,9 +1,9 @@
 package com.zerost.api.user.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.support.createOnboardingCommand
+import com.zerost.api.support.createAuthTokenProvider
 import com.zerost.api.support.createOnboardingRequestBody
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.application.OnboardingService
@@ -32,7 +32,7 @@ class OnboardingControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(OnboardingController(onboardingService))
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 

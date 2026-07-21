@@ -42,8 +42,9 @@ class DeviceIdInterceptorTest {
     }
 
     @Test
-    fun `Authorization 헤더가 없으면 X-Device-Id를 사용한다`() {
+    fun `온보딩 완료 요청은 Authorization 헤더가 없어도 X-Device-Id를 사용한다`() {
         val request = MockHttpServletRequest().apply {
+            requestURI = "/api/v1/onboarding/complete"
             addHeader("X-Device-Id", "device-1")
         }
         val response = mock(HttpServletResponse::class.java)
@@ -63,6 +64,6 @@ class DeviceIdInterceptorTest {
             interceptor.preHandle(request, response, Any())
         }
 
-        assertEquals(ErrorCode.DEVICE_ID_HEADER_MISSING, exception.errorCode)
+        assertEquals(ErrorCode.ACCESS_TOKEN_REQUIRED, exception.errorCode)
     }
 }

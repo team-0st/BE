@@ -1,11 +1,11 @@
 package com.zerost.api.mypage.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mypage.application.MyPageQueryService
 import com.zerost.api.mypage.presentation.dto.MyPageIngredientResponse
 import com.zerost.api.mypage.presentation.dto.MyPageResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -26,7 +26,7 @@ class MyPageControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(MyPageController(myPageQueryService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -55,7 +55,7 @@ class MyPageControllerTest {
 
         mockMvc.perform(
             get("/api/v1/my-page")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

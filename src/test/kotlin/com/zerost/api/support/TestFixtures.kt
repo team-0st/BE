@@ -1,5 +1,7 @@
 package com.zerost.api.support
 
+import com.zerost.api.auth.application.AccessTokenClaims
+import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.shop.domain.Shop
 import com.zerost.api.ecojam.domain.EcoJamHistory
 import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
@@ -25,6 +27,8 @@ import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.User
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 fun createUser(
     id: Long = 1L,
@@ -137,6 +141,20 @@ fun createRefreshTokenRequestBody(
 ): String = """
     {"refreshToken":"$refreshToken"}
 """.trimIndent()
+
+fun createAuthTokenProvider(
+    userId: Long = 1L,
+    deviceId: String = "device-1",
+): AuthTokenProvider {
+    val authTokenProvider = mock(AuthTokenProvider::class.java)
+    `when`(authTokenProvider.parseAccessToken("access-token")).thenReturn(
+        AccessTokenClaims(
+            userId = userId,
+            deviceId = deviceId,
+        ),
+    )
+    return authTokenProvider
+}
 
 fun createMission(
     id: Long = 1L,

@@ -1,6 +1,5 @@
 package com.zerost.api.recipe.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.recipe.application.RecipeQueryService
@@ -9,6 +8,7 @@ import com.zerost.api.recipe.presentation.dto.RecipeDetailIngredientResponse
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
 import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
 import com.zerost.api.recipe.presentation.dto.UnlockHiddenRecipeResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -31,7 +31,7 @@ class RecipeControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(RecipeController(recipeQueryService, recipeUnlockService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -58,7 +58,7 @@ class RecipeControllerTest {
 
         mockMvc.perform(
             get("/api/v1/recipes")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -92,7 +92,7 @@ class RecipeControllerTest {
 
         mockMvc.perform(
             get("/api/v1/recipes/1")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -114,7 +114,7 @@ class RecipeControllerTest {
 
         mockMvc.perform(
             post("/api/v1/recipes/unlock/hidden")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

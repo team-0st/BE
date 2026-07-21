@@ -1,12 +1,12 @@
 package com.zerost.api.communitymission.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.communitymission.application.CommunityMissionCompletionService
 import com.zerost.api.communitymission.application.CommunityMissionQueryService
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
 import com.zerost.api.communitymission.presentation.dto.CommunityMissionProgressResponse
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -32,7 +32,7 @@ class CommunityMissionControllerTest {
             CommunityMissionController(communityMissionQueryService, communityMissionCompletionService),
         )
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -60,7 +60,7 @@ class CommunityMissionControllerTest {
 
         mockMvc.perform(
             get("/api/v1/community-missions")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -85,7 +85,7 @@ class CommunityMissionControllerTest {
 
         mockMvc.perform(
             post("/api/v1/community-missions/3/complete")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))

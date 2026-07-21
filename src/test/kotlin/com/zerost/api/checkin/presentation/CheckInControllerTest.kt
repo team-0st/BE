@@ -1,12 +1,12 @@
 package com.zerost.api.checkin.presentation
 
-import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.checkin.application.CheckInService
 import com.zerost.api.checkin.presentation.dto.CheckInResponse
 import com.zerost.api.checkin.presentation.dto.CheckInStatusResponse
 import com.zerost.api.checkin.presentation.dto.RewardedIngredientResponse
 import com.zerost.api.common.device.DeviceIdInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
+import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -28,7 +28,7 @@ class CheckInControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(CheckInController(checkInService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(mock(AuthTokenProvider::class.java)))
+            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -46,7 +46,7 @@ class CheckInControllerTest {
 
         mockMvc.perform(
             post("/api/v1/check-in")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
@@ -62,7 +62,7 @@ class CheckInControllerTest {
 
         mockMvc.perform(
             get("/api/v1/check-in/status")
-                .header("X-Device-Id", "device-1"),
+                .header("Authorization", "Bearer access-token"),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
