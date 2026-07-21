@@ -31,6 +31,7 @@ fun createUser(
     deviceId: String = "device-1",
     nickname: String? = null,
     phoneNumber: String? = null,
+    passwordHash: String? = null,
     shop: Shop? = null,
     ecoJam: Int = 0,
     point: Int = 0,
@@ -40,6 +41,7 @@ fun createUser(
     deviceId = deviceId,
     nickname = nickname,
     phoneNumber = phoneNumber,
+    passwordHash = passwordHash,
     shop = shop,
     ecoJam = ecoJam,
     point = point,
@@ -86,11 +88,13 @@ fun createOnboardingCommand(
     deviceId: String = "device-1",
     nickname: String = "펭귄탐험가",
     phoneNumber: String = "010-1234-5678",
+    password: String = "zerost1234",
     shopId: Long = 1L,
 ): CompleteOnboardingCommand = CompleteOnboardingCommand(
     deviceId = deviceId,
     nickname = nickname,
     phoneNumber = phoneNumber,
+    password = password,
     shopId = shopId,
 )
 
@@ -103,6 +107,7 @@ fun createRegisterUserRequestBody(
 fun createOnboardingRequestBody(
     nickname: String = "펭귄탐험가",
     phoneNumber: String = "010-1234-5678",
+    password: String = "zerost1234",
     shopId: Long? = 1L,
 ): String {
     val shopIdField = shopId?.let {
@@ -114,10 +119,18 @@ fun createOnboardingRequestBody(
     return """
         {
           "nickname": "$nickname",
-          "phoneNumber": "$phoneNumber"$shopIdField
+          "phoneNumber": "$phoneNumber",
+          "password": "$password"$shopIdField
         }
     """.trimIndent()
 }
+
+fun createLoginRequestBody(
+    phoneNumber: String = "010-1234-5678",
+    password: String = "zerost1234",
+): String = """
+    {"phoneNumber":"$phoneNumber","password":"$password"}
+""".trimIndent()
 
 fun createMission(
     id: Long = 1L,

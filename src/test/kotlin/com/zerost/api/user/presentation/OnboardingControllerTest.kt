@@ -74,6 +74,19 @@ class OnboardingControllerTest {
     }
 
     @Test
+    fun `비밀번호가 너무 짧으면 온보딩 완료에 실패한다`() {
+        mockMvc.perform(
+            post("/api/v1/onboarding/complete")
+                .header("X-Device-Id", "device-1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createOnboardingRequestBody(password = "short")),
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("INVALID_INPUT_VALUE"))
+    }
+
+    @Test
     fun `상점 아이디가 없으면 온보딩 완료에 실패한다`() {
         mockMvc.perform(
             post("/api/v1/onboarding/complete")
