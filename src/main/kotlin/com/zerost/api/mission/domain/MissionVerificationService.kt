@@ -13,6 +13,8 @@ import com.zerost.api.mission.presentation.dto.UpdateMissionVerificationResponse
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -83,6 +85,8 @@ class MissionVerificationService(
             throw BusinessException(ErrorCode.MISSION_COMPLETION_NOT_FOUND)
         }
 
+        completion.validateEditable()
+
         fileUploadService.validateMissionImageKey(
             userId = requireNotNull(user.id),
             missionId = requireNotNull(completion.mission.id),
@@ -90,10 +94,10 @@ class MissionVerificationService(
         )
 
         val previousPhotoKey = completion.photoKey
-        completion.updatePhotoKey(photoKey)
+        val updated = completion.updatePhotoKey(photoKey)
 
-        if (previousPhotoKey != photoKey) {
-            fileUploadService.delete(previousPhotoKey)
+        if (updated) {
+            deleteFileAfterCommit(previousPhotoKey)
         }
 
         return UpdateMissionVerificationResponse(
@@ -120,10 +124,25 @@ class MissionVerificationService(
 
         completion.validateDeletable()
         missionCompletionRepository.delete(completion)
-        fileUploadService.delete(completion.photoKey)
+        deleteFileAfterCommit(completion.photoKey)
 
         return DeleteMissionVerificationResponse(
             completionId = completionId,
+        )
+    }
+
+    private fun deleteFileAfterCommit(fileKey: String) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            fileUploadService.delete(fileKey)
+            return
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCommit() {
+                    fileUploadService.delete(fileKey)
+                }
+            },
         )
     }
 

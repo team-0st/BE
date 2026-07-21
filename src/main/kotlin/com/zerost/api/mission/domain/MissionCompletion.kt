@@ -84,9 +84,25 @@ class MissionCompletion(
         this.rewardedIngredient = ingredient
     }
 
-    fun updatePhotoKey(photoKey: String) {
+    fun validateEditable() {
         validateEditableStatus()
+    }
+
+    fun updatePhotoKey(photoKey: String): Boolean {
+        validateEditableStatus()
+
+        if (this.photoKey == photoKey) {
+            return false
+        }
+
         this.photoKey = photoKey
+
+        if (this.status == MissionCompletionStatus.REJECTED) {
+            this.status = MissionCompletionStatus.PENDING
+            this.reviewedAt = null
+        }
+
+        return true
     }
 
     fun validateDeletable() {

@@ -163,19 +163,52 @@ class MissionVerificationServiceTest {
             mission = mission,
             photoKey = "missions/1/3/2026/07/18/same.jpg",
             status = MissionCompletionStatus.REJECTED,
+            reviewedAt = LocalDateTime.of(2026, 7, 18, 12, 0, 0),
         )
 
         `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
 
-        missionVerificationService.updateVerification(
+        val response = missionVerificationService.updateVerification(
             userId = 1L,
             completionId = 55L,
             photoKey = "missions/1/3/2026/07/18/same.jpg",
         )
 
+        assertEquals("REJECTED", response.status)
+        assertEquals(LocalDateTime.of(2026, 7, 18, 12, 0, 0), completion.reviewedAt)
         verify(fileUploadService).validateMissionImageKey(1L, 3L, "missions/1/3/2026/07/18/same.jpg")
         verify(fileUploadService, never()).delete("missions/1/3/2026/07/18/same.jpg")
+    }
+
+    @Test
+    fun `반려된 미션 인증을 새 이미지로 수정하면 재검수 상태로 돌아간다`() {
+        val user = createUser(id = 1L)
+        val mission = createMission(id = 3L)
+        val reviewedAt = LocalDateTime.of(2026, 7, 18, 12, 0, 0)
+        val completion = createMissionCompletion(
+            id = 55L,
+            user = user,
+            mission = mission,
+            photoKey = "missions/1/3/2026/07/18/rejected-old.jpg",
+            status = MissionCompletionStatus.REJECTED,
+            reviewedAt = reviewedAt,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(missionCompletionRepository.findByIdForUpdate(55L)).thenReturn(Optional.of(completion))
+
+        val response = missionVerificationService.updateVerification(
+            userId = 1L,
+            completionId = 55L,
+            photoKey = "missions/1/3/2026/07/18/rejected-new.jpg",
+        )
+
+        assertEquals("PENDING", response.status)
+        assertEquals(MissionCompletionStatus.PENDING, completion.status)
+        assertEquals(null, completion.reviewedAt)
+        verify(fileUploadService).validateMissionImageKey(1L, 3L, "missions/1/3/2026/07/18/rejected-new.jpg")
+        verify(fileUploadService).delete("missions/1/3/2026/07/18/rejected-old.jpg")
     }
 
     @Test
@@ -197,6 +230,7 @@ class MissionVerificationServiceTest {
         }
 
         assertEquals(ErrorCode.MISSION_COMPLETION_MODIFICATION_NOT_ALLOWED, exception.errorCode)
+        verify(fileUploadService, never()).validateMissionImageKey(anyLong(), anyLong(), anyString())
         verify(fileUploadService, never()).delete(anyString())
     }
 
