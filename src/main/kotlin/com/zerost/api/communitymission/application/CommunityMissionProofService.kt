@@ -8,6 +8,7 @@ import com.zerost.api.communitymission.domain.CommunityMissionProof
 import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
 import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.presentation.dto.SubmitCommunityMissionProofResponse
 import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.user.domain.UserRepository
@@ -56,10 +57,6 @@ class CommunityMissionProofService(
         val requirement = communityMissionProofRequirementRepository.findByIdAndCommunityMissionId(requirementId, communityMissionId)
             ?: throw BusinessException(ErrorCode.COMMUNITY_MISSION_PROOF_REQUIREMENT_NOT_FOUND)
 
-        if (communityMissionProofRepository.existsByProofRequirementIdAndUserId(requirementId, resolvedUserId)) {
-            throw BusinessException(ErrorCode.COMMUNITY_MISSION_PROOF_ALREADY_SUBMITTED)
-        }
-
         if (photoKeys.size != requirement.requiredImageCount) {
             throw BusinessException(ErrorCode.COMMUNITY_MISSION_INVALID_PROOF_IMAGE_COUNT)
         }
@@ -73,23 +70,35 @@ class CommunityMissionProofService(
         }
 
         val submittedAt = LocalDateTime.now()
-        val proof = CommunityMissionProof(
-            communityMission = communityMission,
-            proofRequirement = requirement,
-            user = user,
-            submittedAt = submittedAt,
-        ).apply {
-            photoKeys.forEachIndexed { index, photoKey ->
-                addImage(
-                    imageKey = photoKey,
-                    imageOrder = index + 1,
-                )
+        val existingProof = communityMissionProofRepository.findByProofRequirementIdAndUserId(requirementId, resolvedUserId)
+        val savedProof = if (existingProof == null) {
+            val proof = CommunityMissionProof.submit(
+                communityMission = communityMission,
+                proofRequirement = requirement,
+                user = user,
+                submittedAt = submittedAt,
+            ).apply {
+                photoKeys.forEachIndexed { index, photoKey ->
+                    addImage(
+                        imageKey = photoKey,
+                        imageOrder = index + 1,
+                    )
+                }
             }
+            communityMissionProofRepository.save(proof)
+        } else {
+            existingProof.resubmit(
+                submittedAt = submittedAt,
+                imageKeys = photoKeys,
+            )
+            existingProof
         }
-
-        val savedProof = communityMissionProofRepository.save(proof)
         val requiredProofCount = communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(communityMissionId).size
-        val submittedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserId(communityMissionId, resolvedUserId)
+        val approvedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(
+            communityMissionId = communityMissionId,
+            userId = resolvedUserId,
+            status = CommunityMissionProofStatus.APPROVED,
+        )
 
         return SubmitCommunityMissionProofResponse(
             proofId = requireNotNull(savedProof.id),
@@ -97,7 +106,7 @@ class CommunityMissionProofService(
             requirementId = requireNotNull(requirement.id),
             proofOrder = requirement.proofOrder,
             submittedAt = submittedAt.toString(),
-            readyToComplete = submittedProofCount == requiredProofCount.toLong(),
+            readyToComplete = approvedProofCount == requiredProofCount.toLong(),
         )
     }
 }

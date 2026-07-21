@@ -64,6 +64,7 @@ class CommunityMissionControllerTest {
                     completed = true,
                     requiredProofCount = 1,
                     submittedProofCount = 1,
+                    approvedProofCount = 1,
                     readyToComplete = false,
                 ),
             ),
@@ -100,6 +101,7 @@ class CommunityMissionControllerTest {
                 completed = false,
                 requiredProofCount = 1,
                 submittedProofCount = 0,
+                approvedProofCount = 0,
                 readyToComplete = false,
                 proofRequirements = listOf(
                     CommunityMissionProofRequirementResponse(
@@ -112,6 +114,8 @@ class CommunityMissionControllerTest {
                         submitted = false,
                         submittedProofId = null,
                         submittedAt = null,
+                        reviewStatus = null,
+                        reviewedAt = null,
                         submittedImageKeys = emptyList(),
                     ),
                 ),

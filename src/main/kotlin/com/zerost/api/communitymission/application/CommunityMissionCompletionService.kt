@@ -7,6 +7,7 @@ import com.zerost.api.communitymission.domain.CommunityMissionCompletionReposito
 import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
 import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.context.ApplicationEventPublisher
@@ -58,6 +59,15 @@ class CommunityMissionCompletionService(
         val submittedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserId(communityMissionId, resolvedUserId)
         if (submittedProofCount != requiredProofCount.toLong()) {
             throw BusinessException(ErrorCode.COMMUNITY_MISSION_PROOFS_INCOMPLETE)
+        }
+
+        val approvedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(
+            communityMissionId = communityMissionId,
+            userId = resolvedUserId,
+            status = CommunityMissionProofStatus.APPROVED,
+        )
+        if (approvedProofCount != requiredProofCount.toLong()) {
+            throw BusinessException(ErrorCode.COMMUNITY_MISSION_PROOFS_NOT_APPROVED)
         }
 
         val completedAt = LocalDateTime.now()

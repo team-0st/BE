@@ -51,6 +51,9 @@ data class CommunityMissionProgressResponse(
     @Schema(description = "현재 유저 제출 완료 단계 수", example = "1")
     val submittedProofCount: Int,
 
+    @Schema(description = "현재 유저 승인 완료 단계 수", example = "1")
+    val approvedProofCount: Int,
+
     @Schema(description = "완료 처리 가능 여부", example = "false")
     val readyToComplete: Boolean,
 )
