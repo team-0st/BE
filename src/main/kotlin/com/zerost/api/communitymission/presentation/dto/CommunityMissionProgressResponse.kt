@@ -41,4 +41,7 @@ data class CommunityMissionProgressResponse(
 
     @Schema(description = "현재 유저 기준 해금 여부", example = "true")
     val unlocked: Boolean,
+
+    @Schema(description = "현재 유저 완료 여부", example = "false")
+    val completed: Boolean,
 )
