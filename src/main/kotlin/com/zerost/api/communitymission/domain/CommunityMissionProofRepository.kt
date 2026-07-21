@@ -45,4 +45,22 @@ interface CommunityMissionProofRepository : JpaRepository<CommunityMissionProof,
         @Param("userId") userId: Long,
         @Param("communityMissionIds") communityMissionIds: Collection<Long>,
     ): List<CommunityMissionProofCountProjection>
+
+    @Query(
+        """
+        select
+            cmp.communityMission.id as communityMissionId,
+            count(cmp) as proofCount
+        from CommunityMissionProof cmp
+        where cmp.user.id = :userId
+          and cmp.status = :status
+          and cmp.communityMission.id in :communityMissionIds
+        group by cmp.communityMission.id
+        """
+    )
+    fun countByUserIdAndCommunityMissionIdsAndStatus(
+        @Param("userId") userId: Long,
+        @Param("status") status: CommunityMissionProofStatus,
+        @Param("communityMissionIds") communityMissionIds: Collection<Long>,
+    ): List<CommunityMissionProofCountProjection>
 }

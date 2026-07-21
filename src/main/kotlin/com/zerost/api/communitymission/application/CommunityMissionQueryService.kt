@@ -44,6 +44,13 @@ class CommunityMissionQueryService(
         val proofRequirementCounts = missionIds.associateWith { communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(it).size }
         val proofCounts = communityMissionProofRepository.countByUserIdAndCommunityMissionIds(resolvedUserId, missionIds)
             .associate { it.communityMissionId to it.proofCount.toInt() }
+        val approvedProofCounts = communityMissionProofRepository
+            .countByUserIdAndCommunityMissionIdsAndStatus(
+                userId = resolvedUserId,
+                status = CommunityMissionProofStatus.APPROVED,
+                communityMissionIds = missionIds,
+            )
+            .associate { it.communityMissionId to it.proofCount.toInt() }
         val completedMissionIds = communityMissionCompletionRepository.findCompletedMissionIdsByUserId(resolvedUserId).toSet()
         val totalUserCount = userRepository.countByOnboardingCompletedTrue()
 
@@ -52,11 +59,7 @@ class CommunityMissionQueryService(
             val participantCount = completionCounts[missionId] ?: 0L
             val requiredProofCount = proofRequirementCounts[missionId] ?: 0
             val submittedProofCount = proofCounts[missionId] ?: 0
-            val approvedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(
-                communityMissionId = missionId,
-                userId = resolvedUserId,
-                status = CommunityMissionProofStatus.APPROVED,
-            ).toInt()
+            val approvedProofCount = approvedProofCounts[missionId] ?: 0
             val exactAchievementRatio = calculateAchievementRatio(
                 participantCount = participantCount,
                 totalUserCount = totalUserCount,

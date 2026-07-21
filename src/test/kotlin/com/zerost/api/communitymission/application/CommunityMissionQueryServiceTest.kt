@@ -77,8 +77,12 @@ class CommunityMissionQueryServiceTest {
                 proofCountProjection(2L, 2L),
             ),
         )
-        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(1L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(1L)
-        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(2L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(1L)
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIdsAndStatus(1L, CommunityMissionProofStatus.APPROVED, listOf(1L, 2L))).thenReturn(
+            listOf(
+                proofCountProjection(1L, 1L),
+                proofCountProjection(2L, 1L),
+            ),
+        )
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(listOf(1L))
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -114,7 +118,7 @@ class CommunityMissionQueryServiceTest {
         `when`(communityMissionCompletionRepository.countByCommunityMissionIds(listOf(1L))).thenReturn(emptyList())
         `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(emptyList())
         `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L))).thenReturn(emptyList())
-        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(1L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(0L)
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIdsAndStatus(1L, CommunityMissionProofStatus.APPROVED, listOf(1L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -139,7 +143,7 @@ class CommunityMissionQueryServiceTest {
             .thenReturn(listOf(countProjection(1L, 1L)))
         `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(emptyList())
         `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L))).thenReturn(emptyList())
-        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(1L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(0L)
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIdsAndStatus(1L, CommunityMissionProofStatus.APPROVED, listOf(1L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
@@ -170,8 +174,7 @@ class CommunityMissionQueryServiceTest {
         `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(1L)).thenReturn(emptyList())
         `when`(communityMissionProofRequirementRepository.findAllByCommunityMissionIdOrderByProofOrderAsc(2L)).thenReturn(emptyList())
         `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIds(1L, listOf(1L, 2L))).thenReturn(emptyList())
-        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(1L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(0L)
-        `when`(communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(2L, 1L, CommunityMissionProofStatus.APPROVED)).thenReturn(0L)
+        `when`(communityMissionProofRepository.countByUserIdAndCommunityMissionIdsAndStatus(1L, CommunityMissionProofStatus.APPROVED, listOf(1L, 2L))).thenReturn(emptyList())
         `when`(communityMissionCompletionRepository.findCompletedMissionIdsByUserId(1L)).thenReturn(emptyList())
 
         val response = communityMissionQueryService.getCommunityMissions(1L)
