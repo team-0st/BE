@@ -1,0 +1,29 @@
+package com.zerost.api.communitymission.domain
+
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+
+interface CommunityMissionCompletionRepository : JpaRepository<CommunityMissionCompletion, Long> {
+
+    @Query(
+        """
+        select
+            cmc.communityMission.id as communityMissionId,
+            count(cmc) as completionCount
+        from CommunityMissionCompletion cmc
+        where cmc.communityMission.id in :missionIds
+        group by cmc.communityMission.id
+        """
+    )
+    fun countByCommunityMissionIds(@Param("missionIds") missionIds: Collection<Long>): List<CommunityMissionCompletionCountProjection>
+
+    @Query(
+        """
+        select cmc.communityMission.id
+        from CommunityMissionCompletion cmc
+        where cmc.user.id = :userId
+        """
+    )
+    fun findCompletedMissionIdsByUserId(@Param("userId") userId: Long): List<Long>
+}

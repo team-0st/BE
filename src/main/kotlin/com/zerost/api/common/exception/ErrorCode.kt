@@ -28,6 +28,9 @@ enum class ErrorCode(
     MISSION_COMPLETION_NOT_FOUND(HttpStatus.NOT_FOUND, "MISSION_COMPLETION_NOT_FOUND", "미션 인증 정보를 찾을 수 없습니다."),
     INVALID_MISSION_REVIEW_STATUS(HttpStatus.CONFLICT, "INVALID_MISSION_REVIEW_STATUS", "검수할 수 없는 미션 인증 상태입니다."),
 
+    // COMMUNITY MISSION
+    COMMUNITY_MISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMUNITY_MISSION_NOT_FOUND", "공동 미션 정보를 찾을 수 없습니다."),
+
     // SOUP
     SOUP_NOT_FOUND(HttpStatus.NOT_FOUND, "SOUP_NOT_FOUND", "스프 제작 정보를 찾을 수 없습니다."),
     INVALID_SOUP_SLOT_COUNT(HttpStatus.BAD_REQUEST, "INVALID_SOUP_SLOT_COUNT", "스프 제작 재료 수가 올바르지 않습니다."),
