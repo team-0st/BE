@@ -32,6 +32,12 @@ data class CommunityMissionProofRequirementResponse(
     @Schema(description = "제출 시각", example = "2026-07-21T15:30:00", nullable = true)
     val submittedAt: String?,
 
+    @Schema(description = "검수 상태", example = "PENDING", nullable = true)
+    val reviewStatus: String?,
+
+    @Schema(description = "검수 시각", example = "2026-07-21T16:00:00", nullable = true)
+    val reviewedAt: String?,
+
     @Schema(description = "제출 이미지 파일 키 목록")
     val submittedImageKeys: List<String>,
 )

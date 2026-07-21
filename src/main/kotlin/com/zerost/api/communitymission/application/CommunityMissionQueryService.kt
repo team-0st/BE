@@ -6,6 +6,7 @@ import com.zerost.api.communitymission.domain.CommunityMission
 import com.zerost.api.communitymission.domain.CommunityMissionCompletionRepository
 import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
 import com.zerost.api.communitymission.domain.CommunityMissionProofRequirementRepository
+import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.presentation.dto.CommunityMissionDetailResponse
 import com.zerost.api.communitymission.presentation.dto.CommunityMissionProofRequirementResponse
 import com.zerost.api.communitymission.domain.CommunityMissionRepository
@@ -51,6 +52,11 @@ class CommunityMissionQueryService(
             val participantCount = completionCounts[missionId] ?: 0L
             val requiredProofCount = proofRequirementCounts[missionId] ?: 0
             val submittedProofCount = proofCounts[missionId] ?: 0
+            val approvedProofCount = communityMissionProofRepository.countByCommunityMissionIdAndUserIdAndStatus(
+                communityMissionId = missionId,
+                userId = resolvedUserId,
+                status = CommunityMissionProofStatus.APPROVED,
+            ).toInt()
             val exactAchievementRatio = calculateAchievementRatio(
                 participantCount = participantCount,
                 totalUserCount = totalUserCount,
@@ -78,7 +84,8 @@ class CommunityMissionQueryService(
                 completed = missionId in completedMissionIds,
                 requiredProofCount = requiredProofCount,
                 submittedProofCount = submittedProofCount,
-                readyToComplete = requiredProofCount > 0 && submittedProofCount == requiredProofCount && missionId !in completedMissionIds,
+                approvedProofCount = approvedProofCount,
+                readyToComplete = requiredProofCount > 0 && approvedProofCount == requiredProofCount && missionId !in completedMissionIds,
             )
         }
     }
@@ -96,6 +103,7 @@ class CommunityMissionQueryService(
         val submittedProofs = communityMissionProofRepository
             .findAllByCommunityMissionIdAndUserIdOrderByProofRequirementProofOrderAsc(communityMissionId, resolvedUserId)
             .associateBy { requireNotNull(it.proofRequirement.id) }
+        val approvedProofCount = submittedProofs.values.count { it.isApproved() }
 
         return CommunityMissionDetailResponse(
             id = requireNotNull(communityMission.id),
@@ -110,7 +118,8 @@ class CommunityMissionQueryService(
             completed = communityMissionId in completedMissionIds,
             requiredProofCount = proofRequirements.size,
             submittedProofCount = submittedProofs.size,
-            readyToComplete = proofRequirements.isNotEmpty() && proofRequirements.size == submittedProofs.size && communityMissionId !in completedMissionIds,
+            approvedProofCount = approvedProofCount,
+            readyToComplete = proofRequirements.isNotEmpty() && proofRequirements.size == approvedProofCount && communityMissionId !in completedMissionIds,
             proofRequirements = proofRequirements.map { requirement ->
                 val submittedProof = submittedProofs[requireNotNull(requirement.id)]
                 CommunityMissionProofRequirementResponse(
@@ -123,6 +132,8 @@ class CommunityMissionQueryService(
                     submitted = submittedProof != null,
                     submittedProofId = submittedProof?.id,
                     submittedAt = submittedProof?.submittedAt?.toString(),
+                    reviewStatus = submittedProof?.status?.name,
+                    reviewedAt = submittedProof?.reviewedAt?.toString(),
                     submittedImageKeys = submittedProof?.images?.sortedBy { it.imageOrder }?.map { it.imageKey } ?: emptyList(),
                 )
             },
