@@ -5,6 +5,9 @@ import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.auth.application.RefreshTokenHasher
 import com.zerost.api.auth.domain.RefreshToken
 import com.zerost.api.auth.domain.RefreshTokenRepository
+import com.zerost.api.ecojam.domain.EcoJamHistory
+import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
+import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
 import com.zerost.api.user.presentation.RegisterUserResponse
@@ -23,11 +26,20 @@ class UserRegistrationService(
     private val authTokenProvider: AuthTokenProvider,
     private val authTokenProperties: AuthTokenProperties,
     private val refreshTokenHasher: RefreshTokenHasher,
+    private val ecoJamHistoryRepository: EcoJamHistoryRepository,
 ) {
 
     @Transactional
     fun register(): RegisterUserResponse {
         val user = userRepository.save(User())
+        ecoJamHistoryRepository.save(
+            EcoJamHistory.earn(
+                user = user,
+                amount = User.SIGNUP_ECO_JAM_BONUS,
+                sourceType = EcoJamHistorySourceType.SIGNUP,
+                sourceId = 0L,
+            ),
+        )
         val accessToken = authTokenProvider.createAccessToken(user)
         val refreshToken = UUID.randomUUID().toString()
         val refreshTokenHash = refreshTokenHasher.hash(refreshToken)
@@ -44,10 +56,11 @@ class UserRegistrationService(
         val userId = requireNotNull(user.id)
         registerAfterCommitLog {
             log.info(
-                "user_registered userId={} role={} onboardingCompleted={}",
+                "user_registered userId={} role={} onboardingCompleted={} ecoJam={}",
                 userId,
                 user.role,
                 user.onboardingCompleted,
+                user.ecoJam,
             )
         }
 

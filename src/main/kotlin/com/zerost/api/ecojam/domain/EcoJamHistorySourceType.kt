@@ -8,4 +8,6 @@ enum class EcoJamHistorySourceType {
     COMMUNITY_MISSION,
     CHECKIN,
     RECIPE_UNLOCK,
+    SIGNUP,
+    ADMIN_GRANT,
 }

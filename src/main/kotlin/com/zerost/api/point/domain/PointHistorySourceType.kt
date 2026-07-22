@@ -6,4 +6,5 @@ enum class PointHistorySourceType {
     GACHA,
     MISSION,
     CHECKIN,
+    ADMIN_GRANT,
 }

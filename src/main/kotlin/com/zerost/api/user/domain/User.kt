@@ -46,7 +46,7 @@ class User(
     var shop: Shop? = null,
 
     @Column(name = "eco_jam", nullable = false)
-    var ecoJam: Int = 0,
+    var ecoJam: Int = 500,
 
     @Column(name = "point", nullable = false)
     var point: Int = 0,
@@ -104,5 +104,10 @@ class User(
             throw BusinessException(ErrorCode.INSUFFICIENT_POINT)
         }
         this.point -= amount
+    }
+
+    companion object {
+        /** 신규 가입 시 지급 에코잼 */
+        const val SIGNUP_ECO_JAM_BONUS = 500
     }
 }
