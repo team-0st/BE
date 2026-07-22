@@ -109,3 +109,33 @@ variable "github_oidc_branches" {
   description = "Git branches allowed to assume the GitHub Actions deploy role."
   type        = list(string)
 }
+
+variable "public_assets_domain" {
+  description = "Custom domain used for public asset delivery through CloudFront."
+  type        = string
+  default     = "assets.zero-st.com"
+}
+
+variable "public_assets_origin_prefix" {
+  description = "S3 prefix used as the CloudFront origin path for public assets."
+  type        = string
+  default     = "public"
+}
+
+variable "public_assets_enable_custom_domain" {
+  description = "Whether to request or manage the custom public assets domain certificate."
+  type        = bool
+  default     = false
+}
+
+variable "public_assets_attach_custom_domain" {
+  description = "Whether to attach the custom public assets domain to CloudFront."
+  type        = bool
+  default     = false
+}
+
+variable "public_assets_acm_certificate_arn" {
+  description = "Issued ACM certificate ARN in us-east-1 for the public assets domain. Leave empty to use the Terraform-managed certificate."
+  type        = string
+  default     = ""
+}

@@ -31,3 +31,8 @@ github_oidc_branches = [
   "main",
   "develop",
 ]
+public_assets_domain                = "assets.zero-st.com"
+public_assets_origin_prefix         = "public"
+public_assets_enable_custom_domain  = false
+public_assets_attach_custom_domain  = false
+public_assets_acm_certificate_arn   = ""

@@ -1,6 +1,11 @@
 locals {
-  name_prefix               = var.project_name
-  primary_public_subnet_key = "0"
+  name_prefix                             = var.project_name
+  primary_public_subnet_key               = "0"
+  public_assets_origin_path               = "/${trim(var.public_assets_origin_prefix, "/")}"
+  public_assets_requested_certificate_arn = try(aws_acm_certificate.public_assets[0].arn, "")
+  public_assets_effective_certificate_arn = trimspace(var.public_assets_acm_certificate_arn) != "" ? trimspace(var.public_assets_acm_certificate_arn) : local.public_assets_requested_certificate_arn
+  public_assets_has_certificate           = var.public_assets_attach_custom_domain && local.public_assets_effective_certificate_arn != ""
+  public_assets_aliases                   = local.public_assets_has_certificate ? [var.public_assets_domain] : []
   github_oidc_subjects = [
     for branch in var.github_oidc_branches :
     "repo:${var.github_repository}:ref:refs/heads/${branch}"
@@ -306,6 +311,87 @@ resource "aws_s3_bucket_ownership_controls" "upload" {
   }
 }
 
+resource "aws_cloudfront_origin_access_control" "public_assets" {
+  name                              = "${local.name_prefix}-public-assets-oac"
+  description                       = "Origin access control for public asset delivery"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_acm_certificate" "public_assets" {
+  provider = aws.us_east_1
+  count    = var.public_assets_enable_custom_domain && var.public_assets_acm_certificate_arn == "" ? 1 : 0
+
+  domain_name       = var.public_assets_domain
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-public-assets-certificate"
+  })
+}
+
+data "aws_cloudfront_cache_policy" "caching_optimized" {
+  name = "Managed-CachingOptimized"
+}
+
+resource "aws_cloudfront_distribution" "public_assets" {
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "${local.name_prefix} public assets"
+  default_root_object = ""
+  aliases             = local.public_assets_aliases
+  price_class         = "PriceClass_200"
+
+  origin {
+    domain_name              = aws_s3_bucket.upload.bucket_regional_domain_name
+    origin_id                = "s3-${aws_s3_bucket.upload.id}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.public_assets.id
+    origin_path              = local.public_assets_origin_path
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_optimized.id
+    compress               = true
+    target_origin_id       = "s3-${aws_s3_bucket.upload.id}"
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = local.public_assets_has_certificate ? [1] : []
+
+    content {
+      acm_certificate_arn      = local.public_assets_effective_certificate_arn
+      ssl_support_method       = "sni-only"
+      minimum_protocol_version = "TLSv1.2_2021"
+    }
+  }
+
+  dynamic "viewer_certificate" {
+    for_each = local.public_assets_has_certificate ? [] : [1]
+
+    content {
+      cloudfront_default_certificate = true
+    }
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.name_prefix}-public-assets-cdn"
+  })
+}
+
 resource "aws_iam_role" "app" {
   name               = "${local.name_prefix}-app-role"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
@@ -332,6 +418,34 @@ data "aws_iam_policy_document" "app_s3_upload" {
     ]
     resources = [aws_s3_bucket.upload.arn]
   }
+}
+
+data "aws_iam_policy_document" "upload_bucket_policy" {
+  statement {
+    sid    = "AllowCloudFrontReadPublicAssets"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    actions = ["s3:GetObject"]
+    resources = [
+      "${aws_s3_bucket.upload.arn}/${trim(var.public_assets_origin_prefix, "/")}/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [aws_cloudfront_distribution.public_assets.arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "upload" {
+  bucket = aws_s3_bucket.upload.id
+  policy = data.aws_iam_policy_document.upload_bucket_policy.json
 }
 
 resource "aws_iam_policy" "app_s3_upload" {
