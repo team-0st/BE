@@ -17,6 +17,7 @@ import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.domain.CommunityMissionReward
 import com.zerost.api.communitymission.domain.CommunityMissionRewardType
 import com.zerost.api.mission.domain.Mission
+import com.zerost.api.mission.domain.MissionCategory
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.point.domain.PointHistory
@@ -175,12 +176,14 @@ fun createMission(
     title: String = "텀블러 사용하기",
     description: String? = "개인 컵 또는 텀블러를 사용한 사진을 제출합니다.",
     imageUrl: String? = "https://example.com/images/mission-1.png",
+    missionCategory: MissionCategory = MissionCategory.GENERAL,
     rewardIngredientPool: String = "[1,2,3]",
 ): Mission = Mission(
     id = id,
     title = title,
     description = description,
     imageUrl = imageUrl,
+    missionCategory = missionCategory,
     rewardIngredientPool = rewardIngredientPool,
 )
 
