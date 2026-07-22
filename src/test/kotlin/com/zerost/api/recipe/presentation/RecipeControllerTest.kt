@@ -6,6 +6,7 @@ import com.zerost.api.recipe.application.RecipeQueryService
 import com.zerost.api.recipe.application.RecipeUnlockService
 import com.zerost.api.recipe.presentation.dto.RecipeDetailIngredientResponse
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
+import com.zerost.api.recipe.presentation.dto.RecipeSectionsResponse
 import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
 import com.zerost.api.recipe.presentation.dto.UnlockHiddenRecipeResponse
 import com.zerost.api.support.createAuthTokenProvider
@@ -38,20 +39,31 @@ class RecipeControllerTest {
     @Test
     fun `인증된 사용자는 레시피 목록을 조회할 수 있다`() {
         `when`(recipeQueryService.getRecipes(1L)).thenReturn(
-            listOf(
-                RecipeSummaryResponse(
-                    recipeId = 1L,
+            RecipeSectionsResponse(
+                introRecipes = listOf(
+                    RecipeSummaryResponse(
+                        recipeId = 1L,
+                        name = "따뜻한 입문 스프",
+                        type = "COMMON",
+                        slotCount = 2,
+                        recipeVisible = true,
+                    ),
+                ),
+                weeklyRecipe = RecipeSummaryResponse(
+                    recipeId = 2L,
                     name = "오리지널 스프",
                     type = "COMMON",
                     slotCount = 3,
                     recipeVisible = true,
                 ),
-                RecipeSummaryResponse(
-                    recipeId = 2L,
-                    name = "???",
-                    type = "HIDDEN",
-                    slotCount = 4,
-                    recipeVisible = false,
+                hiddenRecipes = listOf(
+                    RecipeSummaryResponse(
+                        recipeId = 3L,
+                        name = "???",
+                        type = "HIDDEN",
+                        slotCount = 4,
+                        recipeVisible = false,
+                    ),
                 ),
             ),
         )
@@ -62,9 +74,10 @@ class RecipeControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data[0].name").value("오리지널 스프"))
-            .andExpect(jsonPath("$.data[1].name").value("???"))
-            .andExpect(jsonPath("$.data[1].recipeVisible").value(false))
+            .andExpect(jsonPath("$.data.introRecipes[0].name").value("따뜻한 입문 스프"))
+            .andExpect(jsonPath("$.data.weeklyRecipe.name").value("오리지널 스프"))
+            .andExpect(jsonPath("$.data.hiddenRecipes[0].name").value("???"))
+            .andExpect(jsonPath("$.data.hiddenRecipes[0].recipeVisible").value(false))
 
         verify(recipeQueryService).getRecipes(1L)
     }
