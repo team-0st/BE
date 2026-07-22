@@ -73,6 +73,10 @@ class NicknameCommandService(
     }
 
     private fun registerAfterCommitLog(action: () -> Unit) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            action()
+            return
+        }
         TransactionSynchronizationManager.registerSynchronization(
             object : TransactionSynchronization {
                 override fun afterCommit() {

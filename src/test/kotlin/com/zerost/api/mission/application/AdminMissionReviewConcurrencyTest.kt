@@ -34,6 +34,7 @@ class AdminMissionReviewConcurrencyTest(
     @Autowired private val ingredientRepository: IngredientRepository,
     @Autowired private val userIngredientRepository: UserIngredientRepository,
 ) {
+    private val reviewerId = 999L
 
     @Test
     fun `같은 미션 인증을 동시에 승인해도 한 번만 보상이 확정된다`() {
@@ -102,6 +103,7 @@ class AdminMissionReviewConcurrencyTest(
         startLatch.await()
         runCatching {
             adminMissionReviewService.reviewMissionCompletion(
+                reviewerId = reviewerId,
                 completionId = completionId,
                 status = "APPROVED",
             )

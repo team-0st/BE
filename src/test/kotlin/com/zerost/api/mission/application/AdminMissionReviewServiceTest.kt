@@ -20,6 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class AdminMissionReviewServiceTest {
+    private val reviewerId = 99L
 
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
     private val ingredientRepository = mock(IngredientRepository::class.java)
@@ -41,7 +42,7 @@ class AdminMissionReviewServiceTest {
         `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
         `when`(ingredientRepository.findById(1L)).thenReturn(Optional.of(ingredient))
 
-        val response = adminMissionReviewService.reviewMissionCompletion(1L, "APPROVED")
+        val response = adminMissionReviewService.reviewMissionCompletion(reviewerId, 1L, "APPROVED")
 
         assertEquals(1L, response.completionId)
         assertEquals("APPROVED", response.status)
@@ -56,7 +57,7 @@ class AdminMissionReviewServiceTest {
         )
         `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
-        val response = adminMissionReviewService.reviewMissionCompletion(1L, "REJECTED")
+        val response = adminMissionReviewService.reviewMissionCompletion(reviewerId, 1L, "REJECTED")
 
         assertEquals(1L, response.completionId)
         assertEquals("REJECTED", response.status)
@@ -72,7 +73,7 @@ class AdminMissionReviewServiceTest {
         `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
         val exception = assertThrows<BusinessException> {
-            adminMissionReviewService.reviewMissionCompletion(1L, "APPROVED")
+            adminMissionReviewService.reviewMissionCompletion(reviewerId, 1L, "APPROVED")
         }
 
         assertEquals(ErrorCode.INVALID_MISSION_REVIEW_STATUS, exception.errorCode)
@@ -83,7 +84,7 @@ class AdminMissionReviewServiceTest {
         `when`(missionCompletionRepository.findByIdForUpdate(999L)).thenReturn(Optional.empty())
 
         val exception = assertThrows<BusinessException> {
-            adminMissionReviewService.reviewMissionCompletion(999L, "APPROVED")
+            adminMissionReviewService.reviewMissionCompletion(reviewerId, 999L, "APPROVED")
         }
 
         assertEquals(ErrorCode.MISSION_COMPLETION_NOT_FOUND, exception.errorCode)
@@ -97,7 +98,7 @@ class AdminMissionReviewServiceTest {
         `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
         val exception = assertThrows<BusinessException> {
-            adminMissionReviewService.reviewMissionCompletion(1L, "DONE")
+            adminMissionReviewService.reviewMissionCompletion(reviewerId, 1L, "DONE")
         }
 
         assertEquals(ErrorCode.INVALID_INPUT_VALUE, exception.errorCode)
@@ -113,7 +114,7 @@ class AdminMissionReviewServiceTest {
         `when`(missionCompletionRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(completion))
 
         val exception = assertThrows<BusinessException> {
-            adminMissionReviewService.reviewMissionCompletion(1L, "APPROVED")
+            adminMissionReviewService.reviewMissionCompletion(reviewerId, 1L, "APPROVED")
         }
 
         assertEquals(ErrorCode.INVALID_MISSION_REWARD_POOL, exception.errorCode)

@@ -2,6 +2,7 @@ package com.zerost.api.communitymission.presentation
 
 import com.zerost.api.common.auth.AdminAuthorizationInterceptor
 import com.zerost.api.common.auth.AuthenticationInterceptor
+import com.zerost.api.common.auth.RequestTracingInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewQueryService
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewService
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
 class AdminCommunityMissionReviewControllerTest {
+    private val reviewerId = 1L
 
     private val adminCommunityMissionReviewQueryService = mock(AdminCommunityMissionReviewQueryService::class.java)
     private val adminCommunityMissionReviewService = mock(AdminCommunityMissionReviewService::class.java)
@@ -40,7 +42,8 @@ class AdminCommunityMissionReviewControllerTest {
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .addInterceptors(
-                AuthenticationInterceptor(createAuthTokenProvider(role = UserRole.ADMIN)),
+                RequestTracingInterceptor(),
+                AuthenticationInterceptor(createAuthTokenProvider(userId = reviewerId, role = UserRole.ADMIN)),
                 AdminAuthorizationInterceptor(),
             )
             .build()
@@ -88,7 +91,7 @@ class AdminCommunityMissionReviewControllerTest {
 
     @Test
     fun `관리자는 공동 미션 인증을 검수할 수 있다`() {
-        `when`(adminCommunityMissionReviewService.reviewProof(101L, "APPROVED")).thenReturn(
+        `when`(adminCommunityMissionReviewService.reviewProof(reviewerId, 101L, "APPROVED")).thenReturn(
             ReviewCommunityMissionProofResponse(
                 proofId = 101L,
                 status = "APPROVED",
@@ -106,7 +109,7 @@ class AdminCommunityMissionReviewControllerTest {
             .andExpect(jsonPath("$.data.proofId").value(101))
             .andExpect(jsonPath("$.data.status").value("APPROVED"))
 
-        verify(adminCommunityMissionReviewService).reviewProof(101L, "APPROVED")
+        verify(adminCommunityMissionReviewService).reviewProof(reviewerId, 101L, "APPROVED")
     }
 
     @Test
@@ -119,7 +122,8 @@ class AdminCommunityMissionReviewControllerTest {
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .addInterceptors(
-                AuthenticationInterceptor(createAuthTokenProvider(role = UserRole.USER)),
+                RequestTracingInterceptor(),
+                AuthenticationInterceptor(createAuthTokenProvider(userId = reviewerId, role = UserRole.USER)),
                 AdminAuthorizationInterceptor(),
             )
             .build()
