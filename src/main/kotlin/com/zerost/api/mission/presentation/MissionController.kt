@@ -4,10 +4,10 @@ import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.MissionQueryService
 import com.zerost.api.mission.domain.MissionVerificationService
+import com.zerost.api.mission.presentation.dto.DailyMissionSectionsResponse
 import com.zerost.api.mission.presentation.dto.DeleteMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
-import com.zerost.api.mission.presentation.dto.MissionSummaryResponse
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationRequest
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.UpdateMissionVerificationResponse
@@ -36,7 +36,7 @@ class MissionController(
 
     @Operation(
         summary = "미션 목록 조회",
-        description = "오늘 상태를 포함한 미션 목록을 조회합니다.",
+        description = "일반 미션 3개와 특별 미션 1개를 오늘 기준 고정 편성 결과로 조회합니다.",
     )
     @ApiResponses(
         value = [
@@ -47,7 +47,7 @@ class MissionController(
     @GetMapping
     fun getMissions(
         httpServletRequest: HttpServletRequest,
-    ): ApiResponse<List<MissionSummaryResponse>> {
+    ): ApiResponse<DailyMissionSectionsResponse> {
         val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
         val response = missionQueryService.getMissions(userId)
         return ApiResponse.success(response)
