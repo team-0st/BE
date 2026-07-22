@@ -24,7 +24,8 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     ): ResponseEntity<ApiResponse<Nothing>> {
         val errorCode = ex.errorCode
         log.warn(
-            "business_exception method={} path={} code={} message={}",
+            "business_exception traceId={} method={} path={} code={} message={}",
+            request.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
             request.method,
             request.requestURI,
             errorCode.code,
@@ -52,7 +53,8 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         val message = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: errorCode.message
         val servletRequest = (request as? ServletWebRequest)?.request
         log.warn(
-            "validation_exception method={} path={} code={} message={}",
+            "validation_exception traceId={} method={} path={} code={} message={}",
+            servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
             servletRequest?.method,
             servletRequest?.requestURI,
             errorCode.code,
@@ -94,10 +96,11 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             else -> ErrorCode.INTERNAL_SERVER_ERROR
         }
         val servletRequest = (request as? ServletWebRequest)?.request
-        val logMessage = "internal_exception method={} path={} status={} code={}"
+        val logMessage = "internal_exception traceId={} method={} path={} status={} code={}"
         if (statusCode.value() >= 500) {
             log.error(
                 logMessage,
+                servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
                 servletRequest?.method,
                 servletRequest?.requestURI,
                 statusCode.value(),
@@ -107,6 +110,7 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
         } else {
             log.warn(
                 logMessage,
+                servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
                 servletRequest?.method,
                 servletRequest?.requestURI,
                 statusCode.value(),

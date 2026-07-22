@@ -1,5 +1,6 @@
 package com.zerost.api.communitymission.presentation
 
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewQueryService
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewService
@@ -12,7 +13,9 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -42,6 +45,7 @@ class AdminCommunityMissionReviewController(
     )
     @GetMapping("/proofs/pending")
     fun getPendingProofs(
+        request: HttpServletRequest,
         @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
         @RequestParam(defaultValue = "0")
         page: Int,
@@ -49,6 +53,13 @@ class AdminCommunityMissionReviewController(
         @RequestParam(defaultValue = "20")
         size: Int,
     ): ApiResponse<AdminCommunityMissionProofReviewPageResponse> {
+        log.info(
+            "admin_pending_community_mission_proofs_requested traceId={} adminUserId={} page={} size={}",
+            request.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            request.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE),
+            page,
+            size,
+        )
         return ApiResponse.success(adminCommunityMissionReviewQueryService.getPendingProofs(page, size))
     }
 
@@ -69,12 +80,24 @@ class AdminCommunityMissionReviewController(
     fun reviewProof(
         @PathVariable proofId: Long,
         @Valid @RequestBody request: ReviewCommunityMissionProofRequest,
+        servletRequest: HttpServletRequest,
     ): ApiResponse<ReviewCommunityMissionProofResponse> {
+        log.info(
+            "admin_community_mission_review_requested traceId={} adminUserId={} proofId={} status={}",
+            servletRequest.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            servletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE),
+            proofId,
+            request.status,
+        )
         return ApiResponse.success(
             adminCommunityMissionReviewService.reviewProof(
                 proofId = proofId,
                 status = request.status,
             ),
         )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AdminCommunityMissionReviewController::class.java)
     }
 }
