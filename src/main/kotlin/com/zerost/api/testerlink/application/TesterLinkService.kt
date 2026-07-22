@@ -1,7 +1,5 @@
 package com.zerost.api.testerlink.application
 
-import com.zerost.api.common.exception.BusinessException
-import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.testerlink.domain.TesterLink
 import com.zerost.api.testerlink.domain.TesterLinkRepository
 import com.zerost.api.testerlink.presentation.dto.AdminTesterLinkResponse
@@ -41,7 +39,7 @@ class TesterLinkService(
         adminUserId: Long,
     ): AdminTesterLinkResponse {
         val parsed = TesterLinkParser.parse(rawDeepLink)
-        val tossShareUrl = normalizeTossShareUrl(rawTossShareUrl)
+        val tossShareUrl = TossShareUrlNormalizer.normalize(rawTossShareUrl)
         val existing = testerLinkRepository.findById(TesterLink.SINGLETON_ID).orElse(null)
         val saved = if (existing == null) {
             testerLinkRepository.save(
@@ -57,14 +55,6 @@ class TesterLinkService(
             existing
         }
         return toAdminResponse(saved)
-    }
-
-    private fun normalizeTossShareUrl(raw: String): String {
-        val url = raw.trim()
-        if (!url.startsWith("https://") || url.length > 2048) {
-            throw BusinessException(ErrorCode.INVALID_INPUT_VALUE)
-        }
-        return url
     }
 
     private fun toAdminResponse(link: TesterLink?): AdminTesterLinkResponse =
