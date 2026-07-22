@@ -9,6 +9,7 @@ import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.recipe.domain.UserUnlockedRecipeRepository
 import com.zerost.api.recipe.presentation.dto.RecipeDetailIngredientResponse
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
+import com.zerost.api.recipe.presentation.dto.RecipeSectionsResponse
 import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
@@ -23,20 +24,22 @@ class RecipeQueryService(
 ) {
 
     @Transactional(readOnly = true)
-    fun getRecipes(userId: Long): List<RecipeSummaryResponse> {
+    fun getRecipes(userId: Long): RecipeSectionsResponse {
         val user = getUser(userId)
         val unlockedRecipeIds = userUnlockedRecipeRepository.findRecipeIdsByUserId(requireNotNull(user.id)).toSet()
+        val recipes = recipeRepository.findAllByOrderByIdAsc()
 
-        return recipeRepository.findAllByOrderByIdAsc()
-            .map { recipe ->
-                RecipeSummaryResponse(
-                    recipeId = requireNotNull(recipe.id),
-                    name = recipe.getDisplayName(unlockedRecipeIds),
-                    type = recipe.type.name,
-                    slotCount = recipe.slotCount,
-                    recipeVisible = recipe.isVisible(unlockedRecipeIds),
-                )
-            }
+        return RecipeSectionsResponse(
+            introRecipes = recipes
+                .filter { it.intro }
+                .map { it.toSummaryResponse(unlockedRecipeIds) },
+            weeklyRecipe = recipes
+                .firstOrNull { it.weekly }
+                ?.toSummaryResponse(unlockedRecipeIds),
+            hiddenRecipes = recipes
+                .filter { it.hidden }
+                .map { it.toSummaryResponse(unlockedRecipeIds) },
+        )
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +80,15 @@ class RecipeQueryService(
 
     private fun Recipe.getDisplayName(unlockedRecipeIds: Set<Long>): String =
         if (isVisible(unlockedRecipeIds)) name else MASKED_RECIPE_NAME
+
+    private fun Recipe.toSummaryResponse(unlockedRecipeIds: Set<Long>) =
+        RecipeSummaryResponse(
+            recipeId = requireNotNull(id),
+            name = getDisplayName(unlockedRecipeIds),
+            type = type.name,
+            slotCount = slotCount,
+            recipeVisible = isVisible(unlockedRecipeIds),
+        )
 
     private fun Recipe.isVisible(unlockedRecipeIds: Set<Long>): Boolean {
         if (!hidden) {

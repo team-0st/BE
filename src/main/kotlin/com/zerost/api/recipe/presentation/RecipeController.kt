@@ -5,7 +5,7 @@ import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.recipe.application.RecipeQueryService
 import com.zerost.api.recipe.application.RecipeUnlockService
 import com.zerost.api.recipe.presentation.dto.RecipeDetailResponse
-import com.zerost.api.recipe.presentation.dto.RecipeSummaryResponse
+import com.zerost.api.recipe.presentation.dto.RecipeSectionsResponse
 import com.zerost.api.recipe.presentation.dto.UnlockHiddenRecipeResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
@@ -28,7 +28,7 @@ class RecipeController(
 
     @Operation(
         summary = "레시피 목록 조회",
-        description = "현재 서비스에 등록된 레시피 목록을 조회합니다. 비공개 레시피는 이름이 ???로 마스킹되어 반환됩니다.",
+        description = "입문 레시피, 이번 주 레시피, 히든 레시피를 구분해 조회합니다. 비공개 레시피는 이름이 ???로 마스킹되어 반환됩니다.",
     )
     @ApiResponses(
         value = [
@@ -39,7 +39,7 @@ class RecipeController(
     @GetMapping
     fun getRecipes(
         httpServletRequest: HttpServletRequest,
-    ): ApiResponse<List<RecipeSummaryResponse>> {
+    ): ApiResponse<RecipeSectionsResponse> {
         val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
         val response = recipeQueryService.getRecipes(userId)
         return ApiResponse.success(response)
