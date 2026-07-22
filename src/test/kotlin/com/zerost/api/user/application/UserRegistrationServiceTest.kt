@@ -25,17 +25,19 @@ class UserRegistrationServiceTest {
         refreshTokenExpirationSeconds = 1209600,
     )
     private val refreshTokenHasher = RefreshTokenHasher()
+    private val ecoJamHistoryRepository = mock(com.zerost.api.ecojam.domain.EcoJamHistoryRepository::class.java)
     private val userRegistrationService = UserRegistrationService(
         userRepository = userRepository,
         refreshTokenRepository = refreshTokenRepository,
         authTokenProvider = authTokenProvider,
         authTokenProperties = authTokenProperties,
         refreshTokenHasher = refreshTokenHasher,
+        ecoJamHistoryRepository = ecoJamHistoryRepository,
     )
 
     @Test
     fun `임시 유저를 생성하고 토큰을 발급한다`() {
-        val savedUser = createUser()
+        val savedUser = createUser(ecoJam = 500)
         `when`(userRepository.save(any(com.zerost.api.user.domain.User::class.java))).thenReturn(savedUser)
         `when`(authTokenProvider.createAccessToken(savedUser)).thenReturn("access-token")
 
@@ -46,6 +48,7 @@ class UserRegistrationServiceTest {
         assertEquals("access-token", response.accessToken)
         assertEquals("Bearer", response.tokenType)
         verify(userRepository).save(any(com.zerost.api.user.domain.User::class.java))
+        verify(ecoJamHistoryRepository).save(any())
         verify(refreshTokenRepository).save(any())
     }
 }
