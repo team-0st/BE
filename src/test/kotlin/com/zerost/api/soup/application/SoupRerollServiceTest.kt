@@ -10,6 +10,8 @@ import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.SoupRepository
+import com.zerost.api.soup.domain.SoupBonusRewardPolicyIngredientRepository
+import com.zerost.api.soup.domain.SoupBonusRewardPolicyRepository
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredientRepository
 import com.zerost.api.soup.domain.SoupRewardPolicyIngredientRepository
@@ -47,6 +49,8 @@ class SoupRerollServiceTest {
     private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
     private val soupRewardPolicyRepository = mock(SoupRewardPolicyRepository::class.java)
     private val soupRewardPolicyIngredientRepository = mock(SoupRewardPolicyIngredientRepository::class.java)
+    private val soupBonusRewardPolicyRepository = mock(SoupBonusRewardPolicyRepository::class.java)
+    private val soupBonusRewardPolicyIngredientRepository = mock(SoupBonusRewardPolicyIngredientRepository::class.java)
     private val soupRerollPolicyGroupRepository = mock(SoupRerollPolicyGroupRepository::class.java)
     private val soupRerollPolicyCandidateRepository = mock(SoupRerollPolicyCandidateRepository::class.java)
     private val soupRerollPolicyIngredientRepository = mock(SoupRerollPolicyIngredientRepository::class.java)
@@ -63,6 +67,8 @@ class SoupRerollServiceTest {
         pointHistoryRepository = pointHistoryRepository,
         soupRewardPolicyRepository = soupRewardPolicyRepository,
         soupRewardPolicyIngredientRepository = soupRewardPolicyIngredientRepository,
+        soupBonusRewardPolicyRepository = soupBonusRewardPolicyRepository,
+        soupBonusRewardPolicyIngredientRepository = soupBonusRewardPolicyIngredientRepository,
         soupRerollPolicyGroupRepository = soupRerollPolicyGroupRepository,
         soupRerollPolicyCandidateRepository = soupRerollPolicyCandidateRepository,
         soupRerollPolicyIngredientRepository = soupRerollPolicyIngredientRepository,

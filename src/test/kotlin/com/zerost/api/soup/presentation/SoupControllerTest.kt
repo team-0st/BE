@@ -6,6 +6,7 @@ import com.zerost.api.soup.application.SoupBrewingService
 import com.zerost.api.soup.application.SoupRerollService
 import com.zerost.api.soup.presentation.dto.BrewSoupResponse
 import com.zerost.api.soup.presentation.dto.RerollSoupResponse
+import com.zerost.api.soup.presentation.dto.SoupRewardSectionResponse
 import com.zerost.api.support.createAuthTokenProvider
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -48,6 +49,8 @@ class SoupControllerTest {
                 rewardEcoJam = 0,
                 rewardPoint = 2_000,
                 rewardedIngredients = emptyList(),
+                baseReward = SoupRewardSectionResponse("JACKPOT", 0, 2_000, emptyList()),
+                bonusReward = null,
             ),
         )
 
@@ -77,6 +80,8 @@ class SoupControllerTest {
                 rewardEcoJam = 30,
                 rewardPoint = 0,
                 rewardedIngredients = emptyList(),
+                baseReward = SoupRewardSectionResponse("CONSOLATION", 30, 0, emptyList()),
+                bonusReward = null,
             ),
         )
 

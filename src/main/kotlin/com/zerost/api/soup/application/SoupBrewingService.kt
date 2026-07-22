@@ -52,6 +52,8 @@ class SoupBrewingService(
             rewardEcoJam = reward.ecoJam,
             rewardPoint = reward.point,
             rewardedIngredients = reward.rewardedIngredients,
+            baseReward = reward.baseReward,
+            bonusReward = reward.bonusReward,
         )
     }
 

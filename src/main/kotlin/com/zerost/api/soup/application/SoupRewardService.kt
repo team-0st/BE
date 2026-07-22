@@ -20,6 +20,10 @@ import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.Soup
+import com.zerost.api.soup.domain.SoupBonusRewardPolicy
+import com.zerost.api.soup.domain.SoupBonusRewardPolicyIngredient
+import com.zerost.api.soup.domain.SoupBonusRewardPolicyIngredientRepository
+import com.zerost.api.soup.domain.SoupBonusRewardPolicyRepository
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.soup.domain.SoupRewardIngredientRepository
@@ -35,6 +39,7 @@ import com.zerost.api.soup.domain.SoupRerollPolicyGroupRepository
 import com.zerost.api.soup.domain.SoupRerollPolicyIngredient
 import com.zerost.api.soup.domain.SoupRerollPolicyIngredientRepository
 import com.zerost.api.soup.presentation.dto.SoupRewardIngredientResponse
+import com.zerost.api.soup.presentation.dto.SoupRewardSectionResponse
 import com.zerost.api.soup.presentation.dto.SoupRewardSummary
 import java.math.BigDecimal
 import org.springframework.stereotype.Service
@@ -49,6 +54,8 @@ class SoupRewardService(
     private val pointHistoryRepository: PointHistoryRepository,
     private val soupRewardPolicyRepository: SoupRewardPolicyRepository,
     private val soupRewardPolicyIngredientRepository: SoupRewardPolicyIngredientRepository,
+    private val soupBonusRewardPolicyRepository: SoupBonusRewardPolicyRepository,
+    private val soupBonusRewardPolicyIngredientRepository: SoupBonusRewardPolicyIngredientRepository,
     private val soupRerollPolicyGroupRepository: SoupRerollPolicyGroupRepository,
     private val soupRerollPolicyCandidateRepository: SoupRerollPolicyCandidateRepository,
     private val soupRerollPolicyIngredientRepository: SoupRerollPolicyIngredientRepository,
@@ -57,12 +64,20 @@ class SoupRewardService(
 
     companion object {
         private val PROBABILITY_SCALE = BigDecimal("100")
+        private val BONUS_REWARD_RECIPE_TYPES = setOf(RecipeType.HIDDEN, RecipeType.LEGENDARY)
     }
 
     fun reward(soup: Soup): SoupRewardSummary {
-        val reward = loadPolicyBasedReward(soup)
+        val baseReward = loadPolicyBasedReward(soup)
+        val bonusReward = loadBonusRewardOrNull(soup)
+        val reward = mergeRewards(baseReward, bonusReward)
 
-        applyReward(soup, reward)
+        applyReward(
+            soup = soup,
+            reward = reward,
+            baseReward = baseReward,
+            bonusReward = bonusReward,
+        )
 
         return SoupRewardSummary(
             rewardGrade = reward.rewardGrade.name,
@@ -75,6 +90,8 @@ class SoupRewardService(
                     quantity = ingredientReward.quantity,
                 )
             },
+            baseReward = baseReward.toSectionResponse(),
+            bonusReward = bonusReward?.toSectionResponse(),
         )
     }
 
@@ -86,6 +103,8 @@ class SoupRewardService(
         applyReward(
             soup = soup,
             reward = reward,
+            baseReward = reward,
+            bonusReward = null,
             ecoJamHistorySourceType = EcoJamHistorySourceType.SOUP_REROLL,
             pointHistorySourceType = PointHistorySourceType.SOUP_REROLL,
             ingredientHistorySourceType = IngredientHistorySourceType.SOUP_REROLL,
@@ -102,6 +121,7 @@ class SoupRewardService(
                     quantity = ingredientReward.quantity,
                 )
             },
+            baseReward = reward.toSectionResponse(),
         )
     }
 
@@ -178,9 +198,39 @@ class SoupRewardService(
         )
     }
 
+    private fun loadBonusRewardOrNull(soup: Soup): RewardResult? {
+        if (soup.recipe.intro || soup.recipe.type !in BONUS_REWARD_RECIPE_TYPES) {
+            return null
+        }
+
+        val policies = soupBonusRewardPolicyRepository.findAllByRecipeTypeAndActiveTrueOrderByIdAsc(soup.recipe.type)
+        if (policies.isEmpty()) {
+            return null
+        }
+
+        val policyIds = policies.map { requireNotNull(it.id) }
+        val ingredientsByPolicyId = soupBonusRewardPolicyIngredientRepository
+            .findAllBySoupBonusRewardPolicyIdInOrderByIdAsc(policyIds)
+            .groupBy { requireNotNull(it.soupBonusRewardPolicy.id) }
+
+        val selectedPolicy = selectBonusPolicy(policies)
+        val rewardedIngredients = resolveBonusRewardedIngredients(
+            ingredients = ingredientsByPolicyId[requireNotNull(selectedPolicy.id)].orEmpty(),
+        )
+
+        return RewardResult(
+            rewardGrade = selectedPolicy.rewardGrade,
+            ecoJam = selectedPolicy.ecoJamAmount,
+            point = selectedPolicy.pointAmount,
+            rewardedIngredients = rewardedIngredients,
+        )
+    }
+
     private fun applyReward(
         soup: Soup,
         reward: RewardResult,
+        baseReward: RewardResult,
+        bonusReward: RewardResult? = null,
         ecoJamHistorySourceType: EcoJamHistorySourceType = EcoJamHistorySourceType.SOUP,
         pointHistorySourceType: PointHistorySourceType = PointHistorySourceType.SOUP,
         ingredientHistorySourceType: IngredientHistorySourceType = IngredientHistorySourceType.SOUP,
@@ -188,6 +238,12 @@ class SoupRewardService(
         soup.rewardGrade = reward.rewardGrade
         soup.rewardEcoJam = reward.ecoJam
         soup.rewardPoint = reward.point
+        soup.baseRewardGrade = baseReward.rewardGrade
+        soup.baseRewardEcoJam = baseReward.ecoJam
+        soup.baseRewardPoint = baseReward.point
+        soup.bonusRewardGrade = bonusReward?.rewardGrade
+        soup.bonusRewardEcoJam = bonusReward?.ecoJam ?: 0
+        soup.bonusRewardPoint = bonusReward?.point ?: 0
 
         soup.user.increaseEcoJam(reward.ecoJam)
         soup.user.increasePoint(reward.point)
@@ -375,6 +431,35 @@ class SoupRewardService(
         return rewardedIngredientMap.values.toList()
     }
 
+    private fun resolveBonusRewardedIngredients(ingredients: List<SoupBonusRewardPolicyIngredient>): List<IngredientReward> {
+        if (ingredients.isEmpty()) {
+            return emptyList()
+        }
+
+        val rewardedIngredientMap = linkedMapOf<Long, IngredientReward>()
+
+        ingredients.forEach { ingredientPolicy ->
+            when (ingredientPolicy.selectionType) {
+                SoupRewardIngredientSelectionType.FIXED -> {
+                    val ingredient = ingredientPolicy.ingredient
+                        ?: throw BusinessException(ErrorCode.INVALID_SOUP_REWARD_POLICY)
+                    accumulateIngredientReward(rewardedIngredientMap, ingredient, ingredientPolicy.quantity)
+                }
+
+                SoupRewardIngredientSelectionType.RANDOM_BY_TYPE -> {
+                    val ingredientType = ingredientPolicy.ingredientType
+                        ?: throw BusinessException(ErrorCode.INVALID_SOUP_REWARD_POLICY)
+                    repeat(ingredientPolicy.quantity) {
+                        val ingredient = randomIngredientByType(ingredientType)
+                        accumulateIngredientReward(rewardedIngredientMap, ingredient, 1)
+                    }
+                }
+            }
+        }
+
+        return rewardedIngredientMap.values.toList()
+    }
+
     private fun accumulateIngredientReward(
         rewardedIngredientMap: MutableMap<Long, IngredientReward>,
         ingredient: Ingredient,
@@ -417,6 +502,20 @@ class SoupRewardService(
         }
     }
 
+    private fun selectBonusPolicy(policies: List<SoupBonusRewardPolicy>): SoupBonusRewardPolicy {
+        val weightedPolicies = policies.map { policy ->
+            val weight = policy.probability.multiply(PROBABILITY_SCALE).toInt()
+            if (weight <= 0) {
+                throw BusinessException(ErrorCode.INVALID_SOUP_REWARD_POLICY)
+            }
+            WeightedCandidate(value = policy, weight = weight)
+        }
+
+        return WeightedRandomSelector.select(weightedPolicies) { totalWeight ->
+            randomProvider.nextInt(totalWeight)
+        }
+    }
+
     private fun selectRerollCandidate(candidates: List<SoupRerollPolicyCandidate>): SoupRerollPolicyCandidate {
         val weightedCandidates = candidates.map { candidate ->
             val weight = candidate.probability.multiply(PROBABILITY_SCALE).toInt()
@@ -436,10 +535,43 @@ class SoupRewardService(
         val ecoJam: Int = 0,
         val point: Int = 0,
         val rewardedIngredients: List<IngredientReward> = emptyList(),
-    )
+    ) {
+        fun toSectionResponse(): SoupRewardSectionResponse =
+            SoupRewardSectionResponse(
+                rewardGrade = rewardGrade.name,
+                ecoJam = ecoJam,
+                point = point,
+                rewardedIngredients = rewardedIngredients.map { ingredientReward ->
+                    SoupRewardIngredientResponse(
+                        ingredientId = requireNotNull(ingredientReward.ingredient.id),
+                        ingredientName = ingredientReward.ingredient.name,
+                        quantity = ingredientReward.quantity,
+                    )
+                },
+            )
+    }
 
     private data class IngredientReward(
         val ingredient: Ingredient,
         val quantity: Int,
     )
+
+    private fun mergeRewards(baseReward: RewardResult, bonusReward: RewardResult?): RewardResult {
+        if (bonusReward == null) {
+            return baseReward
+        }
+
+        val rewardedIngredientMap = linkedMapOf<Long, IngredientReward>()
+        (baseReward.rewardedIngredients + bonusReward.rewardedIngredients).forEach { ingredientReward ->
+            accumulateIngredientReward(rewardedIngredientMap, ingredientReward.ingredient, ingredientReward.quantity)
+        }
+
+        return RewardResult(
+            rewardGrade = bonusReward.rewardGrade,
+            ecoJam = baseReward.ecoJam + bonusReward.ecoJam,
+            point = baseReward.point + bonusReward.point,
+            rewardedIngredients = rewardedIngredientMap.values.toList(),
+        )
+    }
+
 }
