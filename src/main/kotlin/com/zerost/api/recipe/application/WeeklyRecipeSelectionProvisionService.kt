@@ -7,7 +7,6 @@ import com.zerost.api.recipe.domain.RecipeRepository
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.recipe.domain.WeeklyRecipeSelection
 import com.zerost.api.recipe.domain.WeeklyRecipeSelectionRepository
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -21,9 +20,7 @@ class WeeklyRecipeSelectionProvisionService(
 ) {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    fun createOrLoad(weekStartDate: LocalDate): Recipe? {
-        weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)?.let { return it.recipe }
-
+    fun create(weekStartDate: LocalDate): Recipe {
         val candidates = recipeRepository.findAllByTypeAndIntroFalseAndHiddenFalseOrderByIdAsc(RecipeType.COMMON)
         if (candidates.isEmpty()) {
             throw BusinessException(ErrorCode.INVALID_WEEKLY_RECIPE_SELECTION)
@@ -31,17 +28,12 @@ class WeeklyRecipeSelectionProvisionService(
 
         val selectedRecipe = candidates[weeklyRecipeSelectionRandomProvider.nextInt(candidates.size)]
 
-        return try {
-            weeklyRecipeSelectionRepository.saveAndFlush(
-                WeeklyRecipeSelection(
-                    weekStartDate = weekStartDate,
-                    recipe = selectedRecipe,
-                ),
-            )
-            selectedRecipe
-        } catch (_: DataIntegrityViolationException) {
-            weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)?.recipe
-                ?: throw BusinessException(ErrorCode.INVALID_WEEKLY_RECIPE_SELECTION)
-        }
+        weeklyRecipeSelectionRepository.saveAndFlush(
+            WeeklyRecipeSelection(
+                weekStartDate = weekStartDate,
+                recipe = selectedRecipe,
+            ),
+        )
+        return selectedRecipe
     }
 }

@@ -12,6 +12,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
+import org.springframework.dao.DataIntegrityViolationException
 import java.time.Clock
 import java.time.Instant
 import java.time.DayOfWeek
@@ -54,19 +55,19 @@ class WeeklyRecipeSelectionServiceTest {
         val recipe2 = createRecipe(id = 2L, name = "채소 스프", type = RecipeType.COMMON)
         val weekStartDate = currentWeekStartDate()
         `when`(weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)).thenReturn(null)
-        `when`(weeklyRecipeSelectionProvisionService.createOrLoad(weekStartDate)).thenReturn(recipe2)
+        `when`(weeklyRecipeSelectionProvisionService.create(weekStartDate)).thenReturn(recipe2)
 
         val response = weeklyRecipeSelectionService.getCurrentWeeklyRecipe()
 
         assertEquals("채소 스프", response?.name)
-        verify(weeklyRecipeSelectionProvisionService).createOrLoad(weekStartDate)
+        verify(weeklyRecipeSelectionProvisionService).create(weekStartDate)
     }
 
     @Test
     fun `편성 가능한 일반 레시피가 없으면 예외가 발생한다`() {
         val weekStartDate = currentWeekStartDate()
         `when`(weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)).thenReturn(null)
-        `when`(weeklyRecipeSelectionProvisionService.createOrLoad(weekStartDate)).thenThrow(
+        `when`(weeklyRecipeSelectionProvisionService.create(weekStartDate)).thenThrow(
             BusinessException(ErrorCode.INVALID_WEEKLY_RECIPE_SELECTION),
         )
 
@@ -75,6 +76,27 @@ class WeeklyRecipeSelectionServiceTest {
         }
 
         assertEquals(ErrorCode.INVALID_WEEKLY_RECIPE_SELECTION, exception.errorCode)
+    }
+
+    @Test
+    fun `주간 레시피 저장 충돌이 나면 트랜잭션 바깥에서 기존 편성을 다시 조회한다`() {
+        val recipe = createRecipe(id = 2L, name = "오리지널 스프", type = RecipeType.COMMON)
+        val weekStartDate = currentWeekStartDate()
+        `when`(weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)).thenReturn(null)
+            .thenReturn(
+                WeeklyRecipeSelection(
+                    id = 1L,
+                    weekStartDate = weekStartDate,
+                    recipe = recipe,
+                ),
+            )
+        `when`(weeklyRecipeSelectionProvisionService.create(weekStartDate)).thenThrow(
+            DataIntegrityViolationException("duplicate"),
+        )
+
+        val response = weeklyRecipeSelectionService.getCurrentWeeklyRecipe()
+
+        assertEquals("오리지널 스프", response?.name)
     }
 
     private fun currentWeekStartDate(): LocalDate =

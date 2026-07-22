@@ -5,6 +5,7 @@ import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.mission.domain.DailyMissionSelectionRepository
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCategory
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.LocalDate
@@ -23,7 +24,11 @@ class DailyMissionSelectionService(
             return existingSelections
         }
 
-        return dailyMissionSelectionProvisionService.createOrLoad(today)
+        return try {
+            dailyMissionSelectionProvisionService.create(today)
+        } catch (_: DataIntegrityViolationException) {
+            loadSelections(today) ?: throw BusinessException(ErrorCode.INVALID_DAILY_MISSION_SELECTION)
+        }
     }
 
     private fun loadSelections(selectedDate: LocalDate): DailyMissionSelections? {

@@ -7,7 +7,6 @@ import com.zerost.api.mission.domain.DailyMissionSelectionRepository
 import com.zerost.api.mission.domain.Mission
 import com.zerost.api.mission.domain.MissionCategory
 import com.zerost.api.mission.domain.MissionRepository
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -21,9 +20,7 @@ class DailyMissionSelectionProvisionService(
 ) {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    fun createOrLoad(selectedDate: LocalDate): DailyMissionSelections {
-        loadSelections(selectedDate)?.let { return it }
-
+    fun create(selectedDate: LocalDate): DailyMissionSelections {
         val generalCandidates = missionRepository.findAllByMissionCategoryOrderByIdAsc(MissionCategory.GENERAL)
         val specialCandidates = missionRepository.findAllByMissionCategoryOrderByIdAsc(MissionCategory.SPECIAL)
 
@@ -56,34 +53,10 @@ class DailyMissionSelectionProvisionService(
             )
         }
 
-        return try {
-            dailyMissionSelectionRepository.saveAllAndFlush(selections)
-            DailyMissionSelections(
-                generalMissions = selectedGeneralMissions,
-                specialMission = selectedSpecialMission,
-            )
-        } catch (_: DataIntegrityViolationException) {
-            loadSelections(selectedDate) ?: throw BusinessException(ErrorCode.INVALID_DAILY_MISSION_SELECTION)
-        }
-    }
-
-    private fun loadSelections(selectedDate: LocalDate): DailyMissionSelections? {
-        val generalSelections = dailyMissionSelectionRepository
-            .findAllBySelectedDateAndMissionCategoryOrderByDisplayOrderAsc(selectedDate, MissionCategory.GENERAL)
-        val specialSelections = dailyMissionSelectionRepository
-            .findAllBySelectedDateAndMissionCategoryOrderByDisplayOrderAsc(selectedDate, MissionCategory.SPECIAL)
-
-        if (generalSelections.isEmpty() && specialSelections.isEmpty()) {
-            return null
-        }
-
-        if (generalSelections.size != GENERAL_MISSION_COUNT || specialSelections.size != SPECIAL_MISSION_COUNT) {
-            throw BusinessException(ErrorCode.INVALID_DAILY_MISSION_SELECTION)
-        }
-
+        dailyMissionSelectionRepository.saveAllAndFlush(selections)
         return DailyMissionSelections(
-            generalMissions = generalSelections.map { it.mission },
-            specialMission = specialSelections.first().mission,
+            generalMissions = selectedGeneralMissions,
+            specialMission = selectedSpecialMission,
         )
     }
 
