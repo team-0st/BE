@@ -19,13 +19,22 @@ class TesterLink(
     @Column(name = "deployment_id", nullable = false, length = 100)
     var deploymentId: String,
 
+    @Column(name = "toss_share_url", length = 2048)
+    var tossShareUrl: String? = null,
+
     @Column(name = "updated_by_user_id")
     var updatedByUserId: Long? = null,
 ) : BaseEntity() {
 
-    fun update(deepLink: String, deploymentId: String, updatedByUserId: Long) {
+    fun update(
+        deepLink: String,
+        deploymentId: String,
+        tossShareUrl: String,
+        updatedByUserId: Long,
+    ) {
         this.deepLink = deepLink
         this.deploymentId = deploymentId
+        this.tossShareUrl = tossShareUrl
         this.updatedByUserId = updatedByUserId
     }
 
