@@ -35,7 +35,8 @@ class HomeControllerTest {
         `when`(homeQueryService.getHome(1L)).thenReturn(
             HomeResponse(
                 nickname = "펭귄탐험가",
-                profileCharacterCode = "BASIC_1",
+                profileCharacterCode = "BROCCOLI",
+                profileCharacterImageUrl = "https://assets.zero-st.com/profile-characters/broccoli.png",
                 ecoJam = 320,
                 point = 1500,
                 checkedInToday = true,
@@ -56,7 +57,8 @@ class HomeControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.nickname").value("펭귄탐험가"))
-            .andExpect(jsonPath("$.data.profileCharacterCode").value("BASIC_1"))
+            .andExpect(jsonPath("$.data.profileCharacterCode").value("BROCCOLI"))
+            .andExpect(jsonPath("$.data.profileCharacterImageUrl").value("https://assets.zero-st.com/profile-characters/broccoli.png"))
             .andExpect(jsonPath("$.data.checkedInToday").value(true))
             .andExpect(jsonPath("$.data.missionProgress.totalMissionCount").value(7))
 

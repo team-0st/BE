@@ -1,8 +1,10 @@
 package com.zerost.api.mypage.application
 
+import com.zerost.api.common.config.PublicAssetsProperties
 import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
 import com.zerost.api.soup.domain.SoupRepository
 import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createShop
@@ -22,11 +24,17 @@ class MyPageQueryServiceTest {
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
     private val soupRepository = mock(SoupRepository::class.java)
+    private val profileCharacterImageUrlResolver = ProfileCharacterImageUrlResolver(
+        PublicAssetsProperties(
+            baseUrl = "https://assets.zero-st.com",
+        ),
+    )
     private val myPageQueryService = MyPageQueryService(
         userRepository = userRepository,
         userIngredientRepository = userIngredientRepository,
         missionCompletionRepository = missionCompletionRepository,
         soupRepository = soupRepository,
+        profileCharacterImageUrlResolver = profileCharacterImageUrlResolver,
     )
 
     @Test
@@ -34,7 +42,7 @@ class MyPageQueryServiceTest {
         val shop = createShop(name = "알맹상점")
         val user = createUser(
             nickname = "펭귄탐험가",
-            profileCharacterCode = ProfileCharacterCode.BASIC_2,
+            profileCharacterCode = ProfileCharacterCode.CABBAGE,
             shop = shop,
             ecoJam = 410,
             point = 2200,
@@ -56,7 +64,8 @@ class MyPageQueryServiceTest {
         val response = myPageQueryService.getMyPage(1L)
 
         assertEquals("펭귄탐험가", response.nickname)
-        assertEquals("BASIC_2", response.profileCharacterCode)
+        assertEquals("CABBAGE", response.profileCharacterCode)
+        assertEquals("https://assets.zero-st.com/profile-characters/cabbage.png", response.profileCharacterImageUrl)
         assertEquals("알맹상점", response.shopName)
         assertEquals(410, response.ecoJam)
         assertEquals(2200, response.point)

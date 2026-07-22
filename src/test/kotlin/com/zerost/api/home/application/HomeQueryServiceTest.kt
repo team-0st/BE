@@ -1,9 +1,11 @@
 package com.zerost.api.home.application
 
 import com.zerost.api.checkin.domain.CheckInRepository
+import com.zerost.api.common.config.PublicAssetsProperties
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mission.domain.MissionRepository
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
 import com.zerost.api.support.createMission
 import com.zerost.api.support.createMissionCompletion
 import com.zerost.api.support.createUser
@@ -24,18 +26,24 @@ class HomeQueryServiceTest {
     private val checkInRepository = mock(CheckInRepository::class.java)
     private val missionRepository = mock(MissionRepository::class.java)
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
+    private val profileCharacterImageUrlResolver = ProfileCharacterImageUrlResolver(
+        PublicAssetsProperties(
+            baseUrl = "https://assets.zero-st.com",
+        ),
+    )
     private val homeQueryService = HomeQueryService(
         userRepository = userRepository,
         checkInRepository = checkInRepository,
         missionRepository = missionRepository,
         missionCompletionRepository = missionCompletionRepository,
+        profileCharacterImageUrlResolver = profileCharacterImageUrlResolver,
     )
 
     @Test
     fun `홈 화면 조회 시 자산과 오늘 미션 진행 현황을 함께 반환한다`() {
         val user = createUser(
             nickname = "펭귄탐험가",
-            profileCharacterCode = ProfileCharacterCode.BASIC_1,
+            profileCharacterCode = ProfileCharacterCode.BROCCOLI,
             ecoJam = 320,
             point = 1500,
         )
@@ -82,7 +90,8 @@ class HomeQueryServiceTest {
         val response = homeQueryService.getHome(1L)
 
         assertEquals("펭귄탐험가", response.nickname)
-        assertEquals("BASIC_1", response.profileCharacterCode)
+        assertEquals("BROCCOLI", response.profileCharacterCode)
+        assertEquals("https://assets.zero-st.com/profile-characters/broccoli.png", response.profileCharacterImageUrl)
         assertEquals(320, response.ecoJam)
         assertEquals(1500, response.point)
         assertTrue(response.checkedInToday)
