@@ -27,6 +27,8 @@ import com.zerost.api.recipe.domain.RecipeIngredient
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.recipe.domain.UserUnlockedRecipe
 import com.zerost.api.soup.domain.Soup
+import com.zerost.api.soup.domain.SoupBonusRewardPolicy
+import com.zerost.api.soup.domain.SoupBonusRewardPolicyIngredient
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.soup.domain.SoupRewardIngredientSelectionType
@@ -370,6 +372,12 @@ fun createSoup(
     rewardGrade: SoupRewardGrade = SoupRewardGrade.CONSOLATION,
     rewardEcoJam: Int = 0,
     rewardPoint: Int = 0,
+    baseRewardGrade: SoupRewardGrade? = null,
+    baseRewardEcoJam: Int = 0,
+    baseRewardPoint: Int = 0,
+    bonusRewardGrade: SoupRewardGrade? = null,
+    bonusRewardEcoJam: Int = 0,
+    bonusRewardPoint: Int = 0,
     rerolled: Boolean = false,
 ): Soup = Soup(
     id = id,
@@ -378,6 +386,12 @@ fun createSoup(
     rewardGrade = rewardGrade,
     rewardEcoJam = rewardEcoJam,
     rewardPoint = rewardPoint,
+    baseRewardGrade = baseRewardGrade,
+    baseRewardEcoJam = baseRewardEcoJam,
+    baseRewardPoint = baseRewardPoint,
+    bonusRewardGrade = bonusRewardGrade,
+    bonusRewardEcoJam = bonusRewardEcoJam,
+    bonusRewardPoint = bonusRewardPoint,
     rerolled = rerolled,
 )
 
@@ -411,6 +425,40 @@ fun createSoupRewardPolicyIngredient(
 ): SoupRewardPolicyIngredient = SoupRewardPolicyIngredient(
     id = id,
     soupRewardPolicy = soupRewardPolicy,
+    selectionType = selectionType,
+    ingredient = ingredient,
+    ingredientType = ingredientType,
+    quantity = quantity,
+)
+
+fun createSoupBonusRewardPolicy(
+    id: Long = 1L,
+    recipeType: RecipeType = RecipeType.HIDDEN,
+    rewardGrade: SoupRewardGrade = SoupRewardGrade.SMALL,
+    probability: BigDecimal = BigDecimal("100.00"),
+    pointAmount: Int = 0,
+    ecoJamAmount: Int = 0,
+    active: Boolean = true,
+): SoupBonusRewardPolicy = SoupBonusRewardPolicy(
+    id = id,
+    recipeType = recipeType,
+    rewardGrade = rewardGrade,
+    probability = probability,
+    pointAmount = pointAmount,
+    ecoJamAmount = ecoJamAmount,
+    active = active,
+)
+
+fun createSoupBonusRewardPolicyIngredient(
+    id: Long = 1L,
+    soupBonusRewardPolicy: SoupBonusRewardPolicy = createSoupBonusRewardPolicy(),
+    selectionType: SoupRewardIngredientSelectionType = SoupRewardIngredientSelectionType.RANDOM_BY_TYPE,
+    ingredient: Ingredient? = null,
+    ingredientType: IngredientType? = IngredientType.HIDDEN,
+    quantity: Int = 1,
+): SoupBonusRewardPolicyIngredient = SoupBonusRewardPolicyIngredient(
+    id = id,
+    soupBonusRewardPolicy = soupBonusRewardPolicy,
     selectionType = selectionType,
     ingredient = ingredient,
     ingredientType = ingredientType,

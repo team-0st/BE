@@ -41,6 +41,26 @@ class Soup(
     @Column(name = "reward_point", nullable = false)
     var rewardPoint: Int = 0,
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "base_reward_grade", length = 30)
+    var baseRewardGrade: SoupRewardGrade? = null,
+
+    @Column(name = "base_reward_eco_jam", nullable = false)
+    var baseRewardEcoJam: Int = 0,
+
+    @Column(name = "base_reward_point", nullable = false)
+    var baseRewardPoint: Int = 0,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bonus_reward_grade", length = 30)
+    var bonusRewardGrade: SoupRewardGrade? = null,
+
+    @Column(name = "bonus_reward_eco_jam", nullable = false)
+    var bonusRewardEcoJam: Int = 0,
+
+    @Column(name = "bonus_reward_point", nullable = false)
+    var bonusRewardPoint: Int = 0,
+
     @Column(nullable = false)
     var rerolled: Boolean = false,
 ) : BaseEntity() {

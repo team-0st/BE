@@ -27,4 +27,10 @@ data class BrewSoupResponse(
     val rewardPoint: Int,
 
     val rewardedIngredients: List<SoupRewardIngredientResponse>,
+
+    @field:Schema(description = "확정 보상")
+    val baseReward: SoupRewardSectionResponse,
+
+    @field:Schema(description = "추가 보상. 일반/입문 스프는 null")
+    val bonusReward: SoupRewardSectionResponse? = null,
 )

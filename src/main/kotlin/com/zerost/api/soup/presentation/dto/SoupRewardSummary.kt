@@ -5,4 +5,6 @@ data class SoupRewardSummary(
     val ecoJam: Int,
     val point: Int,
     val rewardedIngredients: List<SoupRewardIngredientResponse>,
+    val baseReward: SoupRewardSectionResponse,
+    val bonusReward: SoupRewardSectionResponse? = null,
 )
