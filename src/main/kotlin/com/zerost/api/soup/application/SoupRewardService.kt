@@ -28,6 +28,12 @@ import com.zerost.api.soup.domain.SoupRewardPolicy
 import com.zerost.api.soup.domain.SoupRewardPolicyIngredient
 import com.zerost.api.soup.domain.SoupRewardPolicyIngredientRepository
 import com.zerost.api.soup.domain.SoupRewardPolicyRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyCandidate
+import com.zerost.api.soup.domain.SoupRerollPolicyCandidateRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyGroup
+import com.zerost.api.soup.domain.SoupRerollPolicyGroupRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyIngredient
+import com.zerost.api.soup.domain.SoupRerollPolicyIngredientRepository
 import com.zerost.api.soup.presentation.dto.SoupRewardIngredientResponse
 import com.zerost.api.soup.presentation.dto.SoupRewardSummary
 import java.math.BigDecimal
@@ -43,6 +49,9 @@ class SoupRewardService(
     private val pointHistoryRepository: PointHistoryRepository,
     private val soupRewardPolicyRepository: SoupRewardPolicyRepository,
     private val soupRewardPolicyIngredientRepository: SoupRewardPolicyIngredientRepository,
+    private val soupRerollPolicyGroupRepository: SoupRerollPolicyGroupRepository,
+    private val soupRerollPolicyCandidateRepository: SoupRerollPolicyCandidateRepository,
+    private val soupRerollPolicyIngredientRepository: SoupRerollPolicyIngredientRepository,
     private val randomProvider: RandomProvider,
 ) {
 
@@ -72,11 +81,7 @@ class SoupRewardService(
     fun reroll(soup: Soup): SoupRewardSummary {
         revokeReward(soup)
 
-        val reward = when (soup.recipe.type) {
-            RecipeType.COMMON -> rerollCommonSoup(soup.rewardGrade)
-            RecipeType.HIDDEN -> rerollHiddenSoup(soup.rewardGrade)
-            RecipeType.LEGENDARY -> rerollLegendarySoup(soup.rewardGrade)
-        }
+        val reward = loadRerollPolicyBasedReward(soup)
 
         applyReward(
             soup = soup,
@@ -143,274 +148,34 @@ class SoupRewardService(
         )
     }
 
-    private fun rerollCommonSoup(currentGrade: SoupRewardGrade): RewardResult {
-        return when (currentGrade) {
-            SoupRewardGrade.CONSOLATION -> selectReward(
-                rewardCandidate(weight = 60) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.INGREDIENT,
-                        ecoJam = 50,
-                        rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
-                    )
-                },
-                rewardCandidate(weight = 30) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        point = 500,
-                    )
-                },
-                rewardCandidate(weight = 8) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        point = 1_000,
-                    )
-                },
-                rewardCandidate(weight = 2) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        point = 2_000,
-                    )
-                },
-            )
+    private fun loadRerollPolicyBasedReward(soup: Soup): RewardResult {
+        val group = soupRerollPolicyGroupRepository.findByRecipeTypeAndCurrentRewardGradeAndActiveTrue(
+            recipeType = soup.recipe.type,
+            currentRewardGrade = soup.rewardGrade,
+        ).orElseThrow { BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE) }
 
-            SoupRewardGrade.INGREDIENT -> selectReward(
-                rewardCandidate(weight = 65) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.INGREDIENT,
-                        ecoJam = 50,
-                        rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
-                    )
-                },
-                rewardCandidate(weight = 25) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        point = 500,
-                    )
-                },
-                rewardCandidate(weight = 8) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        point = 1_000,
-                    )
-                },
-                rewardCandidate(weight = 2) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        point = 2_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.SMALL -> selectReward(
-                rewardCandidate(weight = 75) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        point = 500,
-                    )
-                },
-                rewardCandidate(weight = 20) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        point = 1_000,
-                    )
-                },
-                rewardCandidate(weight = 5) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        point = 2_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.MIDDLE -> selectReward(
-                rewardCandidate(weight = 90) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        point = 1_000,
-                    )
-                },
-                rewardCandidate(weight = 10) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        point = 2_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.JACKPOT -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
+        val candidates = soupRerollPolicyCandidateRepository
+            .findAllBySoupRerollPolicyGroupIdAndActiveTrueOrderByIdAsc(requireNotNull(group.id))
+        if (candidates.isEmpty()) {
+            throw BusinessException(ErrorCode.SOUP_REROLL_POLICY_NOT_FOUND)
         }
-    }
 
-    private fun rerollHiddenSoup(currentGrade: SoupRewardGrade): RewardResult {
-        val baseEcoJam = 300
-        val basePoint = 500
+        val candidateIds = candidates.map { requireNotNull(it.id) }
+        val ingredientsByCandidateId = soupRerollPolicyIngredientRepository
+            .findAllBySoupRerollPolicyCandidateIdInOrderByIdAsc(candidateIds)
+            .groupBy { requireNotNull(it.soupRerollPolicyCandidate.id) }
 
-        return when (currentGrade) {
-            SoupRewardGrade.INGREDIENT -> selectReward(
-                rewardCandidate(weight = 70) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.INGREDIENT,
-                        ecoJam = baseEcoJam + 100,
-                        point = basePoint,
-                        rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
-                    )
-                },
-                rewardCandidate(weight = 20) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        ecoJam = baseEcoJam + 50,
-                        point = basePoint + 500,
-                    )
-                },
-                rewardCandidate(weight = 8) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        ecoJam = baseEcoJam + 100,
-                        point = basePoint + 1_000,
-                    )
-                },
-                rewardCandidate(weight = 2) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint + 2_000,
-                    )
-                },
-            )
+        val selectedCandidate = selectRerollCandidate(candidates)
+        val rewardedIngredients = resolveRerollRewardedIngredients(
+            ingredients = ingredientsByCandidateId[requireNotNull(selectedCandidate.id)].orEmpty(),
+        )
 
-            SoupRewardGrade.SMALL -> selectReward(
-                rewardCandidate(weight = 80) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        ecoJam = baseEcoJam + 50,
-                        point = basePoint + 500,
-                    )
-                },
-                rewardCandidate(weight = 15) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        ecoJam = baseEcoJam + 100,
-                        point = basePoint + 1_000,
-                    )
-                },
-                rewardCandidate(weight = 5) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint + 2_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.MIDDLE -> selectReward(
-                rewardCandidate(weight = 92) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        ecoJam = baseEcoJam + 100,
-                        point = basePoint + 1_000,
-                    )
-                },
-                rewardCandidate(weight = 8) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint + 2_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.CONSOLATION,
-            SoupRewardGrade.JACKPOT,
-            -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-        }
-    }
-
-    private fun rerollLegendarySoup(currentGrade: SoupRewardGrade): RewardResult {
-        val baseEcoJam = 500
-        val basePoint = 1_500
-
-        return when (currentGrade) {
-            SoupRewardGrade.INGREDIENT -> selectReward(
-                rewardCandidate(weight = 75) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.INGREDIENT,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint,
-                        rewardedIngredients = listOf(
-                            IngredientReward(randomHiddenIngredient(), 1),
-                            IngredientReward(randomCommonIngredient(), 1),
-                            IngredientReward(randomCommonIngredient(), 1),
-                        ),
-                    )
-                },
-                rewardCandidate(weight = 18) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        ecoJam = baseEcoJam + 100,
-                        point = basePoint + 2_000,
-                    )
-                },
-                rewardCandidate(weight = 5) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint + 3_000,
-                    )
-                },
-                rewardCandidate(weight = 2) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        ecoJam = baseEcoJam + 300,
-                        point = basePoint + 4_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.SMALL -> selectReward(
-                rewardCandidate(weight = 82) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.SMALL,
-                        ecoJam = baseEcoJam + 100,
-                        point = basePoint + 2_000,
-                    )
-                },
-                rewardCandidate(weight = 15) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint + 3_000,
-                    )
-                },
-                rewardCandidate(weight = 3) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        ecoJam = baseEcoJam + 300,
-                        point = basePoint + 4_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.MIDDLE -> selectReward(
-                rewardCandidate(weight = 95) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.MIDDLE,
-                        ecoJam = baseEcoJam + 200,
-                        point = basePoint + 3_000,
-                    )
-                },
-                rewardCandidate(weight = 5) {
-                    RewardResult(
-                        rewardGrade = SoupRewardGrade.JACKPOT,
-                        ecoJam = baseEcoJam + 300,
-                        point = basePoint + 4_000,
-                    )
-                },
-            )
-
-            SoupRewardGrade.CONSOLATION,
-            SoupRewardGrade.JACKPOT,
-            -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-        }
+        return RewardResult(
+            rewardGrade = selectedCandidate.nextRewardGrade,
+            ecoJam = selectedCandidate.ecoJamAmount,
+            point = selectedCandidate.pointAmount,
+            rewardedIngredients = rewardedIngredients,
+        )
     }
 
     private fun applyReward(
@@ -581,6 +346,35 @@ class SoupRewardService(
         return rewardedIngredientMap.values.toList()
     }
 
+    private fun resolveRerollRewardedIngredients(ingredients: List<SoupRerollPolicyIngredient>): List<IngredientReward> {
+        if (ingredients.isEmpty()) {
+            return emptyList()
+        }
+
+        val rewardedIngredientMap = linkedMapOf<Long, IngredientReward>()
+
+        ingredients.forEach { ingredientPolicy ->
+            when (ingredientPolicy.selectionType) {
+                SoupRewardIngredientSelectionType.FIXED -> {
+                    val ingredient = ingredientPolicy.ingredient
+                        ?: throw BusinessException(ErrorCode.INVALID_SOUP_REROLL_POLICY)
+                    accumulateIngredientReward(rewardedIngredientMap, ingredient, ingredientPolicy.quantity)
+                }
+
+                SoupRewardIngredientSelectionType.RANDOM_BY_TYPE -> {
+                    val ingredientType = ingredientPolicy.ingredientType
+                        ?: throw BusinessException(ErrorCode.INVALID_SOUP_REROLL_POLICY)
+                    repeat(ingredientPolicy.quantity) {
+                        val ingredient = randomIngredientByType(ingredientType)
+                        accumulateIngredientReward(rewardedIngredientMap, ingredient, 1)
+                    }
+                }
+            }
+        }
+
+        return rewardedIngredientMap.values.toList()
+    }
+
     private fun accumulateIngredientReward(
         rewardedIngredientMap: MutableMap<Long, IngredientReward>,
         ingredient: Ingredient,
@@ -619,6 +413,20 @@ class SoupRewardService(
         }
 
         return WeightedRandomSelector.select(weightedPolicies) { totalWeight ->
+            randomProvider.nextInt(totalWeight)
+        }
+    }
+
+    private fun selectRerollCandidate(candidates: List<SoupRerollPolicyCandidate>): SoupRerollPolicyCandidate {
+        val weightedCandidates = candidates.map { candidate ->
+            val weight = candidate.probability.multiply(PROBABILITY_SCALE).toInt()
+            if (weight <= 0) {
+                throw BusinessException(ErrorCode.INVALID_SOUP_REROLL_POLICY)
+            }
+            WeightedCandidate(value = candidate, weight = weight)
+        }
+
+        return WeightedRandomSelector.select(weightedCandidates) { totalWeight ->
             randomProvider.nextInt(totalWeight)
         }
     }

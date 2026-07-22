@@ -14,9 +14,15 @@ import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredientRepository
 import com.zerost.api.soup.domain.SoupRewardPolicyIngredientRepository
 import com.zerost.api.soup.domain.SoupRewardPolicyRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyCandidateRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyGroupRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyIngredientRepository
 import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createRecipe
 import com.zerost.api.support.createSoup
+import com.zerost.api.support.createSoupRerollPolicyCandidate
+import com.zerost.api.support.createSoupRerollPolicyGroup
+import com.zerost.api.support.createSoupRerollPolicyIngredient
 import com.zerost.api.support.createSoupRewardIngredient
 import com.zerost.api.support.createUser
 import com.zerost.api.support.createUserIngredient
@@ -41,6 +47,9 @@ class SoupRerollServiceTest {
     private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
     private val soupRewardPolicyRepository = mock(SoupRewardPolicyRepository::class.java)
     private val soupRewardPolicyIngredientRepository = mock(SoupRewardPolicyIngredientRepository::class.java)
+    private val soupRerollPolicyGroupRepository = mock(SoupRerollPolicyGroupRepository::class.java)
+    private val soupRerollPolicyCandidateRepository = mock(SoupRerollPolicyCandidateRepository::class.java)
+    private val soupRerollPolicyIngredientRepository = mock(SoupRerollPolicyIngredientRepository::class.java)
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
@@ -54,6 +63,9 @@ class SoupRerollServiceTest {
         pointHistoryRepository = pointHistoryRepository,
         soupRewardPolicyRepository = soupRewardPolicyRepository,
         soupRewardPolicyIngredientRepository = soupRewardPolicyIngredientRepository,
+        soupRerollPolicyGroupRepository = soupRerollPolicyGroupRepository,
+        soupRerollPolicyCandidateRepository = soupRerollPolicyCandidateRepository,
+        soupRerollPolicyIngredientRepository = soupRerollPolicyIngredientRepository,
         randomProvider = randomProvider,
     )
     private val soupRerollService = SoupRerollService(
@@ -61,6 +73,7 @@ class SoupRerollServiceTest {
         soupRepository = soupRepository,
         soupRewardService = soupRewardService,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
+        soupRerollPolicyGroupRepository = soupRerollPolicyGroupRepository,
     )
 
     @Test
@@ -80,7 +93,47 @@ class SoupRerollServiceTest {
         `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(soupRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(soup))
         `when`(soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(10L)).thenReturn(emptyList())
-        `when`(randomProvider.nextInt(100)).thenReturn(65)
+        val policyGroup = createSoupRerollPolicyGroup(
+            id = 1L,
+            recipeType = RecipeType.COMMON,
+            currentRewardGrade = SoupRewardGrade.CONSOLATION,
+            rerollCostEcoJam = 30,
+        )
+        val smallCandidate = createSoupRerollPolicyCandidate(
+            id = 2L,
+            soupRerollPolicyGroup = policyGroup,
+            nextRewardGrade = SoupRewardGrade.SMALL,
+            probability = java.math.BigDecimal("30.00"),
+            pointAmount = 500,
+        )
+        val ingredientCandidate = createSoupRerollPolicyCandidate(
+            id = 1L,
+            soupRerollPolicyGroup = policyGroup,
+            nextRewardGrade = SoupRewardGrade.INGREDIENT,
+            probability = java.math.BigDecimal("60.00"),
+            ecoJamAmount = 50,
+        )
+        val middleCandidate = createSoupRerollPolicyCandidate(
+            id = 3L,
+            soupRerollPolicyGroup = policyGroup,
+            nextRewardGrade = SoupRewardGrade.MIDDLE,
+            probability = java.math.BigDecimal("8.00"),
+            pointAmount = 1_000,
+        )
+        val jackpotCandidate = createSoupRerollPolicyCandidate(
+            id = 4L,
+            soupRerollPolicyGroup = policyGroup,
+            nextRewardGrade = SoupRewardGrade.JACKPOT,
+            probability = java.math.BigDecimal("2.00"),
+            pointAmount = 2_000,
+        )
+        `when`(soupRerollPolicyGroupRepository.findByRecipeTypeAndCurrentRewardGradeAndActiveTrue(RecipeType.COMMON, SoupRewardGrade.CONSOLATION))
+            .thenReturn(Optional.of(policyGroup))
+        `when`(soupRerollPolicyCandidateRepository.findAllBySoupRerollPolicyGroupIdAndActiveTrueOrderByIdAsc(1L))
+            .thenReturn(listOf(ingredientCandidate, smallCandidate, middleCandidate, jackpotCandidate))
+        `when`(soupRerollPolicyIngredientRepository.findAllBySoupRerollPolicyCandidateIdInOrderByIdAsc(listOf(1L, 2L, 3L, 4L)))
+            .thenReturn(emptyList())
+        `when`(randomProvider.nextInt(10_000)).thenReturn(6_500)
 
         val response = soupRerollService.reroll(1L, 10L)
 
@@ -125,7 +178,33 @@ class SoupRerollServiceTest {
         `when`(userIngredientRepository.findByUserAndIngredient(user, ingredient)).thenReturn(Optional.of(existingUserIngredient))
         `when`(ingredientRepository.findAllByType(IngredientType.COMMON)).thenReturn(listOf(newIngredient))
         `when`(userIngredientRepository.findByUserAndIngredient(user, newIngredient)).thenReturn(Optional.empty())
-        `when`(randomProvider.nextInt(100)).thenReturn(0, 0)
+        val policyGroup = createSoupRerollPolicyGroup(
+            id = 2L,
+            recipeType = RecipeType.COMMON,
+            currentRewardGrade = SoupRewardGrade.INGREDIENT,
+            rerollCostEcoJam = 50,
+        )
+        val ingredientCandidate = createSoupRerollPolicyCandidate(
+            id = 11L,
+            soupRerollPolicyGroup = policyGroup,
+            nextRewardGrade = SoupRewardGrade.INGREDIENT,
+            probability = java.math.BigDecimal("65.00"),
+            ecoJamAmount = 50,
+        )
+        val ingredientPolicy = createSoupRerollPolicyIngredient(
+            id = 21L,
+            soupRerollPolicyCandidate = ingredientCandidate,
+            ingredientType = IngredientType.COMMON,
+            quantity = 1,
+        )
+        `when`(soupRerollPolicyGroupRepository.findByRecipeTypeAndCurrentRewardGradeAndActiveTrue(RecipeType.COMMON, SoupRewardGrade.INGREDIENT))
+            .thenReturn(Optional.of(policyGroup))
+        `when`(soupRerollPolicyCandidateRepository.findAllBySoupRerollPolicyGroupIdAndActiveTrueOrderByIdAsc(2L))
+            .thenReturn(listOf(ingredientCandidate))
+        `when`(soupRerollPolicyIngredientRepository.findAllBySoupRerollPolicyCandidateIdInOrderByIdAsc(listOf(11L)))
+            .thenReturn(listOf(ingredientPolicy))
+        `when`(randomProvider.nextInt(6_500)).thenReturn(0)
+        `when`(randomProvider.nextInt(1)).thenReturn(0)
 
         val response = soupRerollService.reroll(1L, 10L)
 
@@ -178,6 +257,17 @@ class SoupRerollServiceTest {
         `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(soupRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(soup))
         `when`(soupRewardIngredientRepository.findAllBySoupIdOrderByIdAsc(10L)).thenReturn(emptyList())
+        `when`(soupRerollPolicyGroupRepository.findByRecipeTypeAndCurrentRewardGradeAndActiveTrue(RecipeType.COMMON, SoupRewardGrade.CONSOLATION))
+            .thenReturn(
+                Optional.of(
+                    createSoupRerollPolicyGroup(
+                        id = 3L,
+                        recipeType = RecipeType.COMMON,
+                        currentRewardGrade = SoupRewardGrade.CONSOLATION,
+                        rerollCostEcoJam = 30,
+                    ),
+                ),
+            )
 
         val exception = assertThrows<BusinessException> {
             soupRerollService.reroll(1L, 10L)

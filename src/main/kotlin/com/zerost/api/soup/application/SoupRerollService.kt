@@ -8,6 +8,7 @@ import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.SoupRepository
 import com.zerost.api.soup.domain.SoupRewardGrade
+import com.zerost.api.soup.domain.SoupRerollPolicyGroupRepository
 import com.zerost.api.soup.presentation.dto.RerollSoupResponse
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
@@ -19,6 +20,7 @@ class SoupRerollService(
     private val soupRepository: SoupRepository,
     private val soupRewardService: SoupRewardService,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
+    private val soupRerollPolicyGroupRepository: SoupRerollPolicyGroupRepository,
 ) {
 
     @Transactional
@@ -69,31 +71,9 @@ class SoupRerollService(
     }
 
     private fun calculateRerollCost(recipeType: RecipeType, rewardGrade: SoupRewardGrade): Int =
-        when (recipeType) {
-            RecipeType.COMMON -> when (rewardGrade) {
-                SoupRewardGrade.CONSOLATION -> 30
-                SoupRewardGrade.INGREDIENT -> 50
-                SoupRewardGrade.SMALL -> 70
-                SoupRewardGrade.MIDDLE -> 100
-                SoupRewardGrade.JACKPOT -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-            }
-
-            RecipeType.HIDDEN -> when (rewardGrade) {
-                SoupRewardGrade.INGREDIENT -> 80
-                SoupRewardGrade.SMALL -> 120
-                SoupRewardGrade.MIDDLE -> 150
-                SoupRewardGrade.JACKPOT,
-                SoupRewardGrade.CONSOLATION,
-                -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-            }
-
-            RecipeType.LEGENDARY -> when (rewardGrade) {
-                SoupRewardGrade.INGREDIENT -> 100
-                SoupRewardGrade.SMALL -> 150
-                SoupRewardGrade.MIDDLE -> 200
-                SoupRewardGrade.JACKPOT,
-                SoupRewardGrade.CONSOLATION,
-                -> throw BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE)
-            }
-        }
+        soupRerollPolicyGroupRepository.findByRecipeTypeAndCurrentRewardGradeAndActiveTrue(
+            recipeType = recipeType,
+            currentRewardGrade = rewardGrade,
+        ).map { it.rerollCostEcoJam }
+            .orElseThrow { BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE) }
 }
