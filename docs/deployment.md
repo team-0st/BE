@@ -1,5 +1,16 @@
 # 배포 운영 메모
 
+## Cloudflare HTTPS 및 Nginx 도메인 라우팅
+
+- 운영 API 도메인은 `api.zero-st.com`, 개발 API 도메인은 `dev-api.zero-st.com`을 사용합니다.
+- Cloudflare DNS는 두 도메인 모두 동일한 EC2 공인 IP를 가리키고, Nginx가 `server_name` 기준으로 prod/dev upstream을 분기합니다.
+- prod는 `127.0.0.1:8080`, dev는 `127.0.0.1:8081`로 reverse proxy 됩니다.
+- Origin 인증서는 서버에 수동으로 저장하며, 현재 경로는 다음과 같습니다.
+  - `/etc/ssl/cloudflare/zero-st-origin.crt`
+  - `/etc/ssl/cloudflare/zero-st-origin.key`
+- Cloudflare SSL/TLS 모드는 origin 인증서 반영 후 `Full (strict)`를 사용합니다.
+- 배포 workflow는 레포의 `nginx/prod.conf`, `nginx/dev.conf`를 EC2의 `${APP_DIR}/nginx`로 동기화하고, `deploy.sh`가 이를 `/etc/nginx/conf.d`에 반영합니다.
+
 ## 배포 리소스 정리 기준
 
 - ECR 이미지는 lifecycle policy로 원격 저장소 기준 정리를 수행합니다.
