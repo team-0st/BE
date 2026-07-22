@@ -33,6 +33,7 @@ class AdminMissionReviewController(
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+            SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
         ],
     )
     @GetMapping("/completions/pending")
@@ -49,6 +50,7 @@ class AdminMissionReviewController(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "검수 처리 성공"),
             SwaggerApiResponse(responseCode = "400", description = "잘못된 요청 또는 허용되지 않은 검수 상태값"),
+            SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
             SwaggerApiResponse(responseCode = "404", description = "미션 인증 정보를 찾을 수 없음"),
             SwaggerApiResponse(responseCode = "409", description = "이미 검수된 미션 인증으로 상태를 변경할 수 없음"),
         ],

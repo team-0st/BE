@@ -37,6 +37,7 @@ class AdminCommunityMissionReviewController(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
             SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 page 또는 size 값"),
+            SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
         ],
     )
     @GetMapping("/proofs/pending")
@@ -59,6 +60,7 @@ class AdminCommunityMissionReviewController(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "검수 처리 성공"),
             SwaggerApiResponse(responseCode = "400", description = "잘못된 요청 또는 허용되지 않은 검수 상태값"),
+            SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
             SwaggerApiResponse(responseCode = "404", description = "공동 미션 인증 제출 정보를 찾을 수 없음"),
             SwaggerApiResponse(responseCode = "409", description = "이미 검수된 공동 미션 인증은 상태를 변경할 수 없음"),
         ],
