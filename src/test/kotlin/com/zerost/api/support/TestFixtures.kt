@@ -29,6 +29,9 @@ import com.zerost.api.recipe.domain.UserUnlockedRecipe
 import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredient
+import com.zerost.api.soup.domain.SoupRewardIngredientSelectionType
+import com.zerost.api.soup.domain.SoupRewardPolicy
+import com.zerost.api.soup.domain.SoupRewardPolicyIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.User
@@ -371,6 +374,42 @@ fun createSoup(
     rewardEcoJam = rewardEcoJam,
     rewardPoint = rewardPoint,
     rerolled = rerolled,
+)
+
+fun createSoupRewardPolicy(
+    id: Long = 1L,
+    recipeType: RecipeType = RecipeType.COMMON,
+    introOnly: Boolean = false,
+    rewardGrade: SoupRewardGrade = SoupRewardGrade.JACKPOT,
+    probability: BigDecimal = BigDecimal("100.00"),
+    pointAmount: Int = 0,
+    ecoJamAmount: Int = 0,
+    active: Boolean = true,
+): SoupRewardPolicy = SoupRewardPolicy(
+    id = id,
+    recipeType = recipeType,
+    introOnly = introOnly,
+    rewardGrade = rewardGrade,
+    probability = probability,
+    pointAmount = pointAmount,
+    ecoJamAmount = ecoJamAmount,
+    active = active,
+)
+
+fun createSoupRewardPolicyIngredient(
+    id: Long = 1L,
+    soupRewardPolicy: SoupRewardPolicy = createSoupRewardPolicy(),
+    selectionType: SoupRewardIngredientSelectionType = SoupRewardIngredientSelectionType.RANDOM_BY_TYPE,
+    ingredient: Ingredient? = null,
+    ingredientType: IngredientType? = IngredientType.COMMON,
+    quantity: Int = 1,
+): SoupRewardPolicyIngredient = SoupRewardPolicyIngredient(
+    id = id,
+    soupRewardPolicy = soupRewardPolicy,
+    selectionType = selectionType,
+    ingredient = ingredient,
+    ingredientType = ingredientType,
+    quantity = quantity,
 )
 
 fun createSoupRewardIngredient(
