@@ -47,6 +47,7 @@ class RecipeControllerTest {
                         type = "COMMON",
                         slotCount = 2,
                         recipeVisible = true,
+                        hints = emptyList(),
                     ),
                 ),
                 weeklyRecipe = RecipeSummaryResponse(
@@ -55,6 +56,7 @@ class RecipeControllerTest {
                     type = "COMMON",
                     slotCount = 3,
                     recipeVisible = true,
+                    hints = emptyList(),
                 ),
                 hiddenRecipes = listOf(
                     RecipeSummaryResponse(
@@ -63,6 +65,7 @@ class RecipeControllerTest {
                         type = "HIDDEN",
                         slotCount = 4,
                         recipeVisible = false,
+                        hints = emptyList(),
                     ),
                 ),
             ),
@@ -91,6 +94,7 @@ class RecipeControllerTest {
                 type = "COMMON",
                 slotCount = 3,
                 recipeVisible = true,
+                hints = emptyList(),
                 ingredients = listOf(
                     RecipeDetailIngredientResponse(
                         ingredientId = 1L,
