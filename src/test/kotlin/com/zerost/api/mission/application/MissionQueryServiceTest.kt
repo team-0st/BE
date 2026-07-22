@@ -2,6 +2,7 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.mission.presentation.dto.DailyMissionSectionsResponse
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mission.domain.MissionRepository
@@ -25,10 +26,12 @@ class MissionQueryServiceTest {
     private val userRepository = mock(UserRepository::class.java)
     private val missionRepository = mock(MissionRepository::class.java)
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
+    private val dailyMissionSelectionService = mock(DailyMissionSelectionService::class.java)
     private val missionQueryService = MissionQueryService(
         userRepository = userRepository,
         missionRepository = missionRepository,
         missionCompletionRepository = missionCompletionRepository,
+        dailyMissionSelectionService = dailyMissionSelectionService,
     )
 
     @Test
@@ -42,7 +45,12 @@ class MissionQueryServiceTest {
             status = MissionCompletionStatus.PENDING,
         )
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
-        `when`(missionRepository.findAll()).thenReturn(listOf(mission1, mission2))
+        `when`(dailyMissionSelectionService.getTodaySelections()).thenReturn(
+            DailyMissionSelections(
+                generalMissions = listOf(mission1, mission2, createMission(id = 3L, title = "분리배출")),
+                specialMission = createMission(id = 4L, title = "플로깅 인증"),
+            ),
+        )
         `when`(
             missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
                 1L,
@@ -62,10 +70,11 @@ class MissionQueryServiceTest {
 
         val response = missionQueryService.getMissions(1L)
 
-        assertEquals(2, response.size)
-        assertEquals("텀블러 사용하기", response[0].title)
-        assertEquals("PENDING", response[0].todayStatus?.name)
-        assertNull(response[1].todayStatus)
+        assertEquals(3, response.generalMissions.size)
+        assertEquals("텀블러 사용하기", response.generalMissions[0].title)
+        assertEquals("PENDING", response.generalMissions[0].todayStatus?.name)
+        assertNull(response.generalMissions[1].todayStatus)
+        assertEquals("플로깅 인증", response.specialMission?.title)
     }
 
     @Test

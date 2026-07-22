@@ -4,6 +4,7 @@ import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mission.application.MissionQueryService
 import com.zerost.api.mission.domain.MissionVerificationService
+import com.zerost.api.mission.presentation.dto.DailyMissionSectionsResponse
 import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
 import com.zerost.api.mission.presentation.dto.MissionRewardedIngredientResponse
@@ -51,13 +52,22 @@ class MissionControllerTest {
     @Test
     fun `인증된 사용자는 미션 목록을 조회할 수 있다`() {
         `when`(missionQueryService.getMissions(1L)).thenReturn(
-            listOf(
-                MissionSummaryResponse(
+            DailyMissionSectionsResponse(
+                generalMissions = listOf(
+                    MissionSummaryResponse(
+                        id = 1L,
+                        title = "텀블러 사용하기",
+                        description = "설명",
+                        imageUrl = "image-1",
+                        todayStatus = MissionTodayStatus.PENDING,
+                    ),
+                ),
+                specialMission = MissionSummaryResponse(
                     id = 1L,
-                    title = "텀블러 사용하기",
+                    title = "플로깅 인증",
                     description = "설명",
                     imageUrl = "image-1",
-                    todayStatus = MissionTodayStatus.PENDING,
+                    todayStatus = null,
                 ),
             ),
         )
@@ -68,8 +78,9 @@ class MissionControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data[0].id").value(1))
-            .andExpect(jsonPath("$.data[0].todayStatus").value("PENDING"))
+            .andExpect(jsonPath("$.data.generalMissions[0].id").value(1))
+            .andExpect(jsonPath("$.data.generalMissions[0].todayStatus").value("PENDING"))
+            .andExpect(jsonPath("$.data.specialMission.title").value("플로깅 인증"))
 
         verify(missionQueryService).getMissions(1L)
     }
