@@ -96,7 +96,31 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             else -> ErrorCode.INTERNAL_SERVER_ERROR
         }
         val servletRequest = (request as? ServletWebRequest)?.request
+        val requestUri = servletRequest?.requestURI
+        val apiRequest = requestUri?.startsWith("/api/v1/") == true
         val logMessage = "internal_exception traceId={} method={} path={} status={} code={}"
+        if (!apiRequest && statusCode.value() == HttpServletResponse.SC_NOT_FOUND) {
+            log.debug(
+                logMessage,
+                servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+                servletRequest?.method,
+                requestUri,
+                statusCode.value(),
+                errorCode.code,
+            )
+            return ResponseEntity
+                .status(statusCode)
+                .headers(headers)
+                .body(
+                    ApiResponse.failure(
+                        ApiErrorResponse(
+                            code = errorCode.code,
+                            message = errorCode.message
+                        )
+                    )
+                )
+        }
+
         if (statusCode.value() >= 500) {
             log.error(
                 logMessage,
