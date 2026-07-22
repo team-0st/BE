@@ -1,9 +1,19 @@
 alter table soups
-    add column base_reward_grade varchar(30) null,
-    add column base_reward_eco_jam int not null default 0,
-    add column base_reward_point int not null default 0,
-    add column bonus_reward_grade varchar(30) null,
-    add column bonus_reward_eco_jam int not null default 0,
+    add column base_reward_grade varchar(30) null;
+
+alter table soups
+    add column base_reward_eco_jam int not null default 0;
+
+alter table soups
+    add column base_reward_point int not null default 0;
+
+alter table soups
+    add column bonus_reward_grade varchar(30) null;
+
+alter table soups
+    add column bonus_reward_eco_jam int not null default 0;
+
+alter table soups
     add column bonus_reward_point int not null default 0;
 
 create table soup_bonus_reward_policies (
