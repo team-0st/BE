@@ -7,6 +7,6 @@ import jakarta.validation.constraints.NotBlank
 data class UpdateProfileCharacterRequest(
 
     @field:NotBlank(message = "profileCharacterCode는 필수입니다.")
-    @Schema(description = "선택할 프로필 캐릭터 코드", example = "BASIC_1")
+    @Schema(description = "선택할 프로필 캐릭터 코드", example = "BROCCOLI")
     val profileCharacterCode: String,
 )

@@ -7,6 +7,7 @@ import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mypage.presentation.dto.MyPageIngredientResponse
 import com.zerost.api.mypage.presentation.dto.MyPageResponse
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
 import com.zerost.api.soup.domain.SoupRepository
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
@@ -18,6 +19,7 @@ class MyPageQueryService(
     private val userIngredientRepository: UserIngredientRepository,
     private val missionCompletionRepository: MissionCompletionRepository,
     private val soupRepository: SoupRepository,
+    private val profileCharacterImageUrlResolver: ProfileCharacterImageUrlResolver,
 ) {
 
     @Transactional(readOnly = true)
@@ -39,6 +41,7 @@ class MyPageQueryService(
         return MyPageResponse(
             nickname = user.nickname,
             profileCharacterCode = user.profileCharacterCode?.name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolveOrNull(user.profileCharacterCode),
             shopName = user.shop?.name,
             ecoJam = user.ecoJam,
             point = user.point,
