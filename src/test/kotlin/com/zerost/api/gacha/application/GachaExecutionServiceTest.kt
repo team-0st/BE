@@ -9,6 +9,8 @@ import com.zerost.api.gacha.domain.GachaRewardPolicy
 import com.zerost.api.gacha.domain.GachaRewardPolicyRepository
 import com.zerost.api.gacha.domain.GachaRewardType
 import com.zerost.api.ingredient.domain.IngredientHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientRepository
+import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.point.domain.PointHistoryRepository
@@ -32,6 +34,7 @@ class GachaExecutionServiceTest {
     private val userRepository = mock(UserRepository::class.java)
     private val gachaRewardPolicyRepository = mock(GachaRewardPolicyRepository::class.java)
     private val gachaRepository = mock(GachaRepository::class.java)
+    private val ingredientRepository = mock(IngredientRepository::class.java)
     private val userIngredientRepository = mock(UserIngredientRepository::class.java)
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
@@ -42,6 +45,7 @@ class GachaExecutionServiceTest {
         userRepository = userRepository,
         gachaRewardPolicyRepository = gachaRewardPolicyRepository,
         gachaRepository = gachaRepository,
+        ingredientRepository = ingredientRepository,
         userIngredientRepository = userIngredientRepository,
         ingredientHistoryRepository = ingredientHistoryRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
@@ -136,6 +140,50 @@ class GachaExecutionServiceTest {
         verify(ingredientHistoryRepository).save(any())
         verify(ecoJamHistoryRepository).save(any())
         verify(pointHistoryRepository, never()).save(any())
+    }
+
+    @Test
+    fun `랜덤 재료 보상이면 재료 타입 후보 중 하나를 골라 지급한다`() {
+        val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 300)
+        val firstIngredient = createIngredient(id = 1L, name = "양배추", type = IngredientType.COMMON)
+        val secondIngredient = createIngredient(id = 2L, name = "토마토", type = IngredientType.COMMON)
+        val ingredientPolicy = GachaRewardPolicy(
+            id = 7L,
+            name = "랜덤 일반 재료 2개",
+            rewardType = GachaRewardType.INGREDIENT,
+            probability = BigDecimal("10.00"),
+            ingredientType = IngredientType.COMMON,
+            ingredientQuantity = 2,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(ingredientPolicy))
+        `when`(gachaRandomProvider.nextInt(1000)).thenReturn(0)
+        `when`(ingredientRepository.findAllByType(IngredientType.COMMON)).thenReturn(listOf(firstIngredient, secondIngredient))
+        `when`(gachaRandomProvider.nextInt(2)).thenReturn(1)
+        `when`(userIngredientRepository.findByUserAndIngredient(user, secondIngredient)).thenReturn(Optional.empty())
+        `when`(gachaRepository.save(any(Gacha::class.java))).thenAnswer { invocation ->
+            val gacha = invocation.arguments[0] as Gacha
+            Gacha(
+                id = 14L,
+                user = gacha.user,
+                rewardPolicy = gacha.rewardPolicy,
+                costEcoJam = gacha.costEcoJam,
+                resultType = gacha.resultType,
+                resultPoint = gacha.resultPoint,
+                resultEcoJam = gacha.resultEcoJam,
+                resultIngredient = gacha.resultIngredient,
+                resultIngredientQuantity = gacha.resultIngredientQuantity,
+            )
+        }
+
+        val response = gachaExecutionService.execute(1L)
+
+        assertEquals("INGREDIENT", response.resultType)
+        assertEquals(2L, response.resultIngredientId)
+        assertEquals(2, response.resultIngredientQuantity)
+        verify(userIngredientRepository).findByUserAndIngredient(user, secondIngredient)
+        verify(userIngredientRepository).save(any(UserIngredient::class.java))
     }
 
     @Test
@@ -263,5 +311,29 @@ class GachaExecutionServiceTest {
         }
 
         assertEquals(ErrorCode.INVALID_GACHA_REWARD_POLICY, exception.errorCode)
+    }
+
+    @Test
+    fun `랜덤 재료 보상인데 후보 재료가 없으면 가챠를 실행할 수 없다`() {
+        val user = createUser(id = 1L, deviceId = "device-1", ecoJam = 300)
+        val ingredientPolicy = GachaRewardPolicy(
+            id = 8L,
+            name = "랜덤 히든 재료 1개",
+            rewardType = GachaRewardType.INGREDIENT,
+            probability = BigDecimal("2.00"),
+            ingredientType = IngredientType.HIDDEN,
+            ingredientQuantity = 1,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(gachaRewardPolicyRepository.findAllByActiveTrueOrderByIdAsc()).thenReturn(listOf(ingredientPolicy))
+        `when`(gachaRandomProvider.nextInt(200)).thenReturn(0)
+        `when`(ingredientRepository.findAllByType(IngredientType.HIDDEN)).thenReturn(emptyList())
+
+        val exception = assertThrows<BusinessException> {
+            gachaExecutionService.execute(1L)
+        }
+
+        assertEquals(ErrorCode.INGREDIENT_NOT_FOUND, exception.errorCode)
     }
 }
