@@ -46,7 +46,7 @@ class AdminTesterLinkController(
     @ApiResponses(
         value = [
             SwaggerApiResponse(responseCode = "200", description = "갱신 성공"),
-            SwaggerApiResponse(responseCode = "400", description = "deepLink 형식 오류"),
+            SwaggerApiResponse(responseCode = "400", description = "deepLink 또는 tossShareUrl 형식 오류"),
             SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
         ],
     )
@@ -61,7 +61,11 @@ class AdminTesterLinkController(
             request.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
             adminUserId,
         )
-        val response = testerLinkService.updateTesterLink(body.deepLink, adminUserId)
+        val response = testerLinkService.updateTesterLink(
+            body.deepLink,
+            body.tossShareUrl,
+            adminUserId,
+        )
         return ApiResponse.success(response)
     }
 

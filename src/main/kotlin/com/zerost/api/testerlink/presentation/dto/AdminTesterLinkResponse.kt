@@ -22,6 +22,13 @@ data class AdminTesterLinkResponse(
     )
     val deploymentId: String?,
 
+    @Schema(
+        description = "토스 https 공유 링크 (getTossShareLink 결과)",
+        example = "https://toss.im/_m/abcdef",
+        nullable = true,
+    )
+    val tossShareUrl: String?,
+
     @Schema(description = "마지막 갱신 시각", example = "2026-07-23T01:30:00", nullable = true)
     val updatedAt: String?,
 )

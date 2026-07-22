@@ -18,4 +18,11 @@ data class CurrentTesterLinkResponse(
         nullable = true,
     )
     val deploymentId: String?,
+
+    @Schema(
+        description = "토스 https 공유 링크. /open 랜딩이 우선 사용",
+        example = "https://toss.im/_m/abcdef",
+        nullable = true,
+    )
+    val tossShareUrl: String?,
 )

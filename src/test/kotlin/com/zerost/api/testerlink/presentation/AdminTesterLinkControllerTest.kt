@@ -47,6 +47,7 @@ class AdminTesterLinkControllerTest {
                 shareUrl = "https://zero-st.com/open",
                 deepLink = "intoss-private://0st?_deploymentId=019f893b-a962-71de-b3ea-2c2544ad7afa",
                 deploymentId = "019f893b-a962-71de-b3ea-2c2544ad7afa",
+                tossShareUrl = "https://toss.im/_m/example",
                 updatedAt = "2026-07-23T01:30:00",
             ),
         )
@@ -57,6 +58,7 @@ class AdminTesterLinkControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.shareUrl").value("https://zero-st.com/open"))
+            .andExpect(jsonPath("$.data.tossShareUrl").value("https://toss.im/_m/example"))
 
         verify(testerLinkService).getAdminTesterLink()
     }
@@ -66,6 +68,7 @@ class AdminTesterLinkControllerTest {
         `when`(
             testerLinkService.updateTesterLink(
                 "intoss-private://0st?_deploymentId=019f893b-a962-71de-b3ea-2c2544ad7afa",
+                "https://toss.im/_m/example",
                 1L,
             ),
         ).thenReturn(
@@ -73,6 +76,7 @@ class AdminTesterLinkControllerTest {
                 shareUrl = "https://zero-st.com/open",
                 deepLink = "intoss-private://0st?_deploymentId=019f893b-a962-71de-b3ea-2c2544ad7afa",
                 deploymentId = "019f893b-a962-71de-b3ea-2c2544ad7afa",
+                tossShareUrl = "https://toss.im/_m/example",
                 updatedAt = "2026-07-23T01:30:00",
             ),
         )
@@ -82,11 +86,17 @@ class AdminTesterLinkControllerTest {
                 .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
-                    """{"deepLink":"intoss-private://0st?_deploymentId=019f893b-a962-71de-b3ea-2c2544ad7afa"}""",
+                    """
+                    {
+                      "deepLink":"intoss-private://0st?_deploymentId=019f893b-a962-71de-b3ea-2c2544ad7afa",
+                      "tossShareUrl":"https://toss.im/_m/example"
+                    }
+                    """.trimIndent(),
                 ),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.deploymentId").value("019f893b-a962-71de-b3ea-2c2544ad7afa"))
+            .andExpect(jsonPath("$.data.tossShareUrl").value("https://toss.im/_m/example"))
     }
 
     @Test
@@ -109,7 +119,6 @@ class AdminTesterLinkControllerTest {
 
     @Test
     fun `공개 current는 서비스 응답을 그대로 반환한다`() {
-        // standalone without auth interceptor for public path
         mockMvc = MockMvcBuilders.standaloneSetup(
             TesterLinkController(testerLinkService),
         )
@@ -120,11 +129,13 @@ class AdminTesterLinkControllerTest {
             CurrentTesterLinkResponse(
                 deepLink = "intoss-private://0st?_deploymentId=019f893b-a962-71de-b3ea-2c2544ad7afa",
                 deploymentId = "019f893b-a962-71de-b3ea-2c2544ad7afa",
+                tossShareUrl = "https://toss.im/_m/example",
             ),
         )
 
         mockMvc.perform(get("/api/v1/tester-link/current"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.deploymentId").value("019f893b-a962-71de-b3ea-2c2544ad7afa"))
+            .andExpect(jsonPath("$.data.tossShareUrl").value("https://toss.im/_m/example"))
     }
 }

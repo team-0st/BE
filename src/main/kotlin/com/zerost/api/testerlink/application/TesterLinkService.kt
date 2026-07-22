@@ -28,23 +28,30 @@ class TesterLinkService(
         return CurrentTesterLinkResponse(
             deepLink = link?.deepLink,
             deploymentId = link?.deploymentId,
+            tossShareUrl = link?.tossShareUrl,
         )
     }
 
     @Transactional
-    fun updateTesterLink(rawDeepLink: String, adminUserId: Long): AdminTesterLinkResponse {
+    fun updateTesterLink(
+        rawDeepLink: String,
+        rawTossShareUrl: String,
+        adminUserId: Long,
+    ): AdminTesterLinkResponse {
         val parsed = TesterLinkParser.parse(rawDeepLink)
+        val tossShareUrl = TossShareUrlNormalizer.normalize(rawTossShareUrl)
         val existing = testerLinkRepository.findById(TesterLink.SINGLETON_ID).orElse(null)
         val saved = if (existing == null) {
             testerLinkRepository.save(
                 TesterLink(
                     deepLink = parsed.deepLink,
                     deploymentId = parsed.deploymentId,
+                    tossShareUrl = tossShareUrl,
                     updatedByUserId = adminUserId,
                 ),
             )
         } else {
-            existing.update(parsed.deepLink, parsed.deploymentId, adminUserId)
+            existing.update(parsed.deepLink, parsed.deploymentId, tossShareUrl, adminUserId)
             existing
         }
         return toAdminResponse(saved)
@@ -55,6 +62,7 @@ class TesterLinkService(
             shareUrl = shareUrl,
             deepLink = link?.deepLink,
             deploymentId = link?.deploymentId,
+            tossShareUrl = link?.tossShareUrl,
             updatedAt = link?.updatedAt?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
         )
 }
