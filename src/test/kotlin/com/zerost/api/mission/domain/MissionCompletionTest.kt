@@ -90,4 +90,30 @@ class MissionCompletionTest {
 
         assertEquals(ErrorCode.MISSION_COMPLETION_MODIFICATION_NOT_ALLOWED, exception.errorCode)
     }
+
+    @Test
+    fun `승인되고 보상 재료가 확정된 미션은 수령 가능 상태다`() {
+        val completion = createMissionCompletion(
+            status = MissionCompletionStatus.APPROVED,
+            rewardedIngredient = com.zerost.api.support.createIngredient(id = 1L),
+        )
+
+        assertEquals(true, completion.isRewardClaimable())
+        assertEquals(false, completion.isRewardClaimed())
+    }
+
+    @Test
+    fun `미션 보상을 수령하면 수령 시각이 기록된다`() {
+        val completion = createMissionCompletion(
+            status = MissionCompletionStatus.APPROVED,
+            rewardedIngredient = com.zerost.api.support.createIngredient(id = 1L),
+        )
+
+        val claimedAt = java.time.LocalDateTime.of(2026, 7, 22, 19, 30, 0)
+        completion.markRewardClaimed(claimedAt)
+
+        assertEquals(claimedAt, completion.rewardClaimedAt)
+        assertEquals(true, completion.isRewardClaimed())
+        assertEquals(false, completion.isRewardClaimable())
+    }
 }

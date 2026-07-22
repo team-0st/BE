@@ -207,6 +207,7 @@ fun createMissionCompletion(
     rewardedIngredient: Ingredient? = null,
     submittedAt: LocalDateTime = LocalDateTime.of(2026, 7, 17, 10, 0, 0),
     reviewedAt: LocalDateTime? = null,
+    rewardClaimedAt: LocalDateTime? = null,
 ): MissionCompletion = MissionCompletion(
     id = id,
     user = user,
@@ -216,6 +217,7 @@ fun createMissionCompletion(
     rewardedIngredient = rewardedIngredient,
     submittedAt = submittedAt,
     reviewedAt = reviewedAt,
+    rewardClaimedAt = rewardClaimedAt,
 )
 
 fun createCommunityMission(

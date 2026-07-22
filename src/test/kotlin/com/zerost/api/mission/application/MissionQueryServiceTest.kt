@@ -78,6 +78,8 @@ class MissionQueryServiceTest {
         assertEquals(3, response.generalMissions.size)
         assertEquals("텀블러 사용하기", response.generalMissions[0].title)
         assertEquals("PENDING", response.generalMissions[0].todayStatus?.name)
+        assertEquals(false, response.generalMissions[0].rewardClaimable)
+        assertEquals(false, response.generalMissions[0].rewardClaimed)
         assertNull(response.generalMissions[1].todayStatus)
         assertEquals("플로깅 인증", response.specialMission?.title)
     }
@@ -106,6 +108,8 @@ class MissionQueryServiceTest {
 
         assertEquals(1L, response.id)
         assertEquals("APPROVED", response.todayStatus?.name)
+        assertEquals(false, response.rewardClaimable)
+        assertEquals(false, response.rewardClaimed)
     }
 
     @Test
@@ -129,6 +133,9 @@ class MissionQueryServiceTest {
         assertEquals(55L, response[0].completionId)
         assertEquals("텀블러 사용하기", response[0].missionTitle)
         assertEquals(5L, response[0].rewardedIngredient?.id)
+        assertEquals(true, response[0].rewardClaimable)
+        assertEquals(false, response[0].rewardClaimed)
+        assertEquals(null, response[0].rewardClaimedAt)
     }
 
     @Test
