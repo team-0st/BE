@@ -68,6 +68,9 @@ class MissionQueryService(
             description = mission.description,
             imageUrl = mission.imageUrl,
             todayStatus = todayCompletion?.status?.toTodayStatus(),
+            rewardClaimable = todayCompletion?.isRewardClaimable() ?: false,
+            rewardClaimed = todayCompletion?.isRewardClaimed() ?: false,
+            rewardClaimedAt = todayCompletion?.rewardClaimedAt?.toString(),
         )
     }
 
@@ -83,6 +86,8 @@ class MissionQueryService(
                     missionId = requireNotNull(completion.mission.id),
                     missionTitle = completion.mission.title,
                     status = completion.status.name,
+                    rewardClaimable = completion.isRewardClaimable(),
+                    rewardClaimed = completion.isRewardClaimed(),
                     rewardedIngredient = completion.rewardedIngredient?.let { ingredient ->
                         MissionRewardedIngredientResponse(
                             id = requireNotNull(ingredient.id),
@@ -92,6 +97,7 @@ class MissionQueryService(
                     },
                     submittedAt = completion.submittedAt.toString(),
                     reviewedAt = completion.reviewedAt?.toString(),
+                    rewardClaimedAt = completion.rewardClaimedAt?.toString(),
                 )
             }
     }
@@ -119,6 +125,9 @@ class MissionQueryService(
             description = description,
             imageUrl = imageUrl,
             todayStatus = todayCompletion?.status?.toTodayStatus(),
+            rewardClaimable = todayCompletion?.isRewardClaimable() ?: false,
+            rewardClaimed = todayCompletion?.isRewardClaimed() ?: false,
+            rewardClaimedAt = todayCompletion?.rewardClaimedAt?.toString(),
         )
     }
 

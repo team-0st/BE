@@ -50,6 +50,9 @@ class MissionCompletion(
 
     @Column(name = "reviewed_at")
     var reviewedAt: LocalDateTime? = null,
+
+    @Column(name = "reward_claimed_at")
+    var rewardClaimedAt: LocalDateTime? = null,
 ) : BaseEntity() {
     companion object {
         fun submit(
@@ -83,6 +86,27 @@ class MissionCompletion(
     fun assignRewardedIngredient(ingredient: Ingredient) {
         this.rewardedIngredient = ingredient
     }
+
+    fun validateClaimable() {
+        if (this.status != MissionCompletionStatus.APPROVED || this.rewardedIngredient == null) {
+            throw BusinessException(ErrorCode.MISSION_REWARD_CLAIM_NOT_AVAILABLE)
+        }
+        if (this.rewardClaimedAt != null) {
+            throw BusinessException(ErrorCode.MISSION_REWARD_ALREADY_CLAIMED)
+        }
+    }
+
+    fun markRewardClaimed(claimedAt: LocalDateTime) {
+        validateClaimable()
+        this.rewardClaimedAt = claimedAt
+    }
+
+    fun isRewardClaimed(): Boolean = rewardClaimedAt != null
+
+    fun isRewardClaimable(): Boolean =
+        this.status == MissionCompletionStatus.APPROVED &&
+            this.rewardedIngredient != null &&
+            this.rewardClaimedAt == null
 
     fun validateEditable() {
         validateEditableStatus()

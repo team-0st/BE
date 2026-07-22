@@ -36,7 +36,7 @@ class AdminMissionReviewConcurrencyTest(
 ) {
 
     @Test
-    fun `같은 미션 인증을 동시에 승인해도 한 번만 보상이 지급된다`() {
+    fun `같은 미션 인증을 동시에 승인해도 한 번만 보상이 확정된다`() {
         val user = userRepository.save(createUser(id = null))
         val ingredient = ingredientRepository.save(
             Ingredient(
@@ -92,9 +92,7 @@ class AdminMissionReviewConcurrencyTest(
         val reviewedCompletion = missionCompletionRepository.findById(requireNotNull(completion.id)).orElseThrow()
         assertEquals(MissionCompletionStatus.APPROVED, reviewedCompletion.status)
         assertEquals(requireNotNull(ingredient.id), reviewedCompletion.rewardedIngredient?.id)
-
-        val userIngredient = userIngredientRepository.findByUserAndIngredient(user, ingredient).orElseThrow()
-        assertEquals(1, userIngredient.quantity)
+        assertEquals(false, userIngredientRepository.findByUserAndIngredient(user, ingredient).isPresent)
     }
 
     private fun submitTask(

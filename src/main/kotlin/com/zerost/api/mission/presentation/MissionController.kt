@@ -3,7 +3,9 @@ package com.zerost.api.mission.presentation
 import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.MissionQueryService
+import com.zerost.api.mission.application.MissionRewardClaimService
 import com.zerost.api.mission.domain.MissionVerificationService
+import com.zerost.api.mission.presentation.dto.ClaimMissionRewardResponse
 import com.zerost.api.mission.presentation.dto.DailyMissionSectionsResponse
 import com.zerost.api.mission.presentation.dto.DeleteMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
@@ -31,7 +33,8 @@ import org.springframework.web.bind.annotation.DeleteMapping
 @RequestMapping("/api/v1/missions")
 class MissionController(
     private val missionQueryService: MissionQueryService,
-    private val missionVerificationService: MissionVerificationService
+    private val missionVerificationService: MissionVerificationService,
+    private val missionRewardClaimService: MissionRewardClaimService,
 ) {
 
     @Operation(
@@ -148,6 +151,27 @@ class MissionController(
             userId = userId,
             completionId = completionId,
         )
+        return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "미션 보상 수령",
+        description = "승인된 미션 인증의 보상을 직접 수령합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "수령 성공"),
+            SwaggerApiResponse(responseCode = "404", description = "등록된 유저 또는 미션 인증을 찾을 수 없음"),
+            SwaggerApiResponse(responseCode = "409", description = "아직 수령할 수 없거나 이미 수령한 보상입니다."),
+        ],
+    )
+    @PostMapping("/completions/{completionId}/claim")
+    fun claimReward(
+        @PathVariable completionId: Long,
+        httpServletRequest: HttpServletRequest,
+    ): ApiResponse<ClaimMissionRewardResponse> {
+        val userId = httpServletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
+        val response = missionRewardClaimService.claimReward(userId, completionId)
         return ApiResponse.success(response)
     }
 

@@ -3,7 +3,9 @@ package com.zerost.api.mission.presentation
 import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mission.application.MissionQueryService
+import com.zerost.api.mission.application.MissionRewardClaimService
 import com.zerost.api.mission.domain.MissionVerificationService
+import com.zerost.api.mission.presentation.dto.ClaimMissionRewardResponse
 import com.zerost.api.mission.presentation.dto.DailyMissionSectionsResponse
 import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
@@ -35,13 +37,14 @@ class MissionControllerTest {
 
     private val missionQueryService = mock(MissionQueryService::class.java)
     private val missionVerificationService = mock(MissionVerificationService::class.java)
+    private val missionRewardClaimService = mock(MissionRewardClaimService::class.java)
     private lateinit var mockMvc: MockMvc
 
     @BeforeEach
     fun setUp() {
         val validator = LocalValidatorFactoryBean().apply { afterPropertiesSet() }
         mockMvc = MockMvcBuilders.standaloneSetup(
-            MissionController(missionQueryService, missionVerificationService),
+            MissionController(missionQueryService, missionVerificationService, missionRewardClaimService),
         )
             .setControllerAdvice(GlobalExceptionHandler())
             .setValidator(validator)
@@ -60,6 +63,9 @@ class MissionControllerTest {
                         description = "설명",
                         imageUrl = "image-1",
                         todayStatus = MissionTodayStatus.PENDING,
+                        rewardClaimable = false,
+                        rewardClaimed = false,
+                        rewardClaimedAt = null,
                     ),
                 ),
                 specialMission = MissionSummaryResponse(
@@ -68,6 +74,9 @@ class MissionControllerTest {
                     description = "설명",
                     imageUrl = "image-1",
                     todayStatus = null,
+                    rewardClaimable = false,
+                    rewardClaimed = false,
+                    rewardClaimedAt = null,
                 ),
             ),
         )
@@ -94,6 +103,9 @@ class MissionControllerTest {
                 description = "설명",
                 imageUrl = "image-1",
                 todayStatus = MissionTodayStatus.APPROVED,
+                rewardClaimable = true,
+                rewardClaimed = false,
+                rewardClaimedAt = null,
             ),
         )
 
@@ -214,6 +226,8 @@ class MissionControllerTest {
                     missionId = 1L,
                     missionTitle = "텀블러 사용하기",
                     status = "APPROVED",
+                    rewardClaimable = true,
+                    rewardClaimed = false,
                     rewardedIngredient = MissionRewardedIngredientResponse(
                         id = 5L,
                         name = "낡은 밧줄",
@@ -221,6 +235,7 @@ class MissionControllerTest {
                     ),
                     submittedAt = "2026-07-17T10:00:00",
                     reviewedAt = "2026-07-17T14:00:00",
+                    rewardClaimedAt = null,
                 ),
             ),
         )
@@ -232,7 +247,34 @@ class MissionControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data[0].completionId").value(55))
             .andExpect(jsonPath("$.data[0].rewardedIngredient.id").value(5))
+            .andExpect(jsonPath("$.data[0].rewardClaimable").value(true))
 
         verify(missionQueryService).getMissionCompletions(1L)
+    }
+
+    @Test
+    fun `인증된 사용자는 승인된 미션 보상을 수령할 수 있다`() {
+        `when`(missionRewardClaimService.claimReward(1L, 55L)).thenReturn(
+            ClaimMissionRewardResponse(
+                completionId = 55L,
+                missionId = 1L,
+                rewardedIngredient = MissionRewardedIngredientResponse(
+                    id = 5L,
+                    name = "낡은 밧줄",
+                    imageUrl = "image-5",
+                ),
+                rewardClaimedAt = "2026-07-22T19:30:00",
+            ),
+        )
+
+        mockMvc.perform(
+            post("/api/v1/missions/completions/55/claim")
+                .header("Authorization", "Bearer access-token"),
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.data.completionId").value(55))
+            .andExpect(jsonPath("$.data.rewardedIngredient.id").value(5))
+
+        verify(missionRewardClaimService).claimReward(1L, 55L)
     }
 }
