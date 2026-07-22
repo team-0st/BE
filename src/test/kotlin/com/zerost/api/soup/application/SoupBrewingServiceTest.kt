@@ -18,6 +18,9 @@ import com.zerost.api.soup.domain.SoupRewardIngredientRepository
 import com.zerost.api.soup.domain.SoupRewardPolicyIngredientRepository
 import com.zerost.api.soup.domain.SoupRewardPolicyRepository
 import com.zerost.api.soup.domain.SoupRewardIngredientSelectionType
+import com.zerost.api.soup.domain.SoupRerollPolicyCandidateRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyGroupRepository
+import com.zerost.api.soup.domain.SoupRerollPolicyIngredientRepository
 import com.zerost.api.support.createSoupRewardPolicy
 import com.zerost.api.support.createSoupRewardPolicyIngredient
 import com.zerost.api.support.createIngredient
@@ -45,6 +48,9 @@ class SoupBrewingServiceTest {
     private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
     private val soupRewardPolicyRepository = mock(SoupRewardPolicyRepository::class.java)
     private val soupRewardPolicyIngredientRepository = mock(SoupRewardPolicyIngredientRepository::class.java)
+    private val soupRerollPolicyGroupRepository = mock(SoupRerollPolicyGroupRepository::class.java)
+    private val soupRerollPolicyCandidateRepository = mock(SoupRerollPolicyCandidateRepository::class.java)
+    private val soupRerollPolicyIngredientRepository = mock(SoupRerollPolicyIngredientRepository::class.java)
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
@@ -58,6 +64,9 @@ class SoupBrewingServiceTest {
         pointHistoryRepository = pointHistoryRepository,
         soupRewardPolicyRepository = soupRewardPolicyRepository,
         soupRewardPolicyIngredientRepository = soupRewardPolicyIngredientRepository,
+        soupRerollPolicyGroupRepository = soupRerollPolicyGroupRepository,
+        soupRerollPolicyCandidateRepository = soupRerollPolicyCandidateRepository,
+        soupRerollPolicyIngredientRepository = soupRerollPolicyIngredientRepository,
         randomProvider = randomProvider,
     )
     private val soupBrewingService = SoupBrewingService(

@@ -32,6 +32,9 @@ import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.soup.domain.SoupRewardIngredientSelectionType
 import com.zerost.api.soup.domain.SoupRewardPolicy
 import com.zerost.api.soup.domain.SoupRewardPolicyIngredient
+import com.zerost.api.soup.domain.SoupRerollPolicyCandidate
+import com.zerost.api.soup.domain.SoupRerollPolicyGroup
+import com.zerost.api.soup.domain.SoupRerollPolicyIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.User
@@ -406,6 +409,54 @@ fun createSoupRewardPolicyIngredient(
 ): SoupRewardPolicyIngredient = SoupRewardPolicyIngredient(
     id = id,
     soupRewardPolicy = soupRewardPolicy,
+    selectionType = selectionType,
+    ingredient = ingredient,
+    ingredientType = ingredientType,
+    quantity = quantity,
+)
+
+fun createSoupRerollPolicyGroup(
+    id: Long = 1L,
+    recipeType: RecipeType = RecipeType.COMMON,
+    currentRewardGrade: SoupRewardGrade = SoupRewardGrade.CONSOLATION,
+    rerollCostEcoJam: Int = 30,
+    active: Boolean = true,
+): SoupRerollPolicyGroup = SoupRerollPolicyGroup(
+    id = id,
+    recipeType = recipeType,
+    currentRewardGrade = currentRewardGrade,
+    rerollCostEcoJam = rerollCostEcoJam,
+    active = active,
+)
+
+fun createSoupRerollPolicyCandidate(
+    id: Long = 1L,
+    soupRerollPolicyGroup: SoupRerollPolicyGroup = createSoupRerollPolicyGroup(),
+    nextRewardGrade: SoupRewardGrade = SoupRewardGrade.SMALL,
+    probability: BigDecimal = BigDecimal("100.00"),
+    pointAmount: Int = 0,
+    ecoJamAmount: Int = 0,
+    active: Boolean = true,
+): SoupRerollPolicyCandidate = SoupRerollPolicyCandidate(
+    id = id,
+    soupRerollPolicyGroup = soupRerollPolicyGroup,
+    nextRewardGrade = nextRewardGrade,
+    probability = probability,
+    pointAmount = pointAmount,
+    ecoJamAmount = ecoJamAmount,
+    active = active,
+)
+
+fun createSoupRerollPolicyIngredient(
+    id: Long = 1L,
+    soupRerollPolicyCandidate: SoupRerollPolicyCandidate = createSoupRerollPolicyCandidate(),
+    selectionType: SoupRewardIngredientSelectionType = SoupRewardIngredientSelectionType.RANDOM_BY_TYPE,
+    ingredient: Ingredient? = null,
+    ingredientType: IngredientType? = IngredientType.COMMON,
+    quantity: Int = 1,
+): SoupRerollPolicyIngredient = SoupRerollPolicyIngredient(
+    id = id,
+    soupRerollPolicyCandidate = soupRerollPolicyCandidate,
     selectionType = selectionType,
     ingredient = ingredient,
     ingredientType = ingredientType,
