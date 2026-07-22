@@ -11,6 +11,7 @@ import com.zerost.api.mission.presentation.dto.DeleteMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.SubmitMissionVerificationResponse
 import com.zerost.api.mission.presentation.dto.UpdateMissionVerificationResponse
 import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.TransactionSynchronization
@@ -64,6 +65,14 @@ class MissionVerificationService(
             )
         )
 
+        log.info(
+            "mission_verification_submitted userId={} completionId={} missionId={} submittedAt={}",
+            user.id,
+            completion.id,
+            mission.id,
+            completion.submittedAt,
+        )
+
         return SubmitMissionVerificationResponse(
             completionId = requireNotNull(completion.id),
             status = completion.status.name,
@@ -100,6 +109,15 @@ class MissionVerificationService(
             deleteFileAfterCommit(previousPhotoKey)
         }
 
+        log.info(
+            "mission_verification_updated userId={} completionId={} missionId={} status={} photoChanged={}",
+            user.id,
+            completion.id,
+            completion.mission.id,
+            completion.status.name,
+            updated,
+        )
+
         return UpdateMissionVerificationResponse(
             completionId = requireNotNull(completion.id),
             missionId = requireNotNull(completion.mission.id),
@@ -125,6 +143,12 @@ class MissionVerificationService(
         completion.validateDeletable()
         missionCompletionRepository.delete(completion)
         deleteFileAfterCommit(completion.photoKey)
+        log.info(
+            "mission_verification_deleted userId={} completionId={} missionId={}",
+            user.id,
+            completionId,
+            completion.mission.id,
+        )
 
         return DeleteMissionVerificationResponse(
             completionId = completionId,
@@ -149,5 +173,9 @@ class MissionVerificationService(
     private fun todayRange(): Pair<LocalDateTime, LocalDateTime> {
         val today = LocalDate.now()
         return today.atStartOfDay() to today.plusDays(1).atStartOfDay()
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(MissionVerificationService::class.java)
     }
 }

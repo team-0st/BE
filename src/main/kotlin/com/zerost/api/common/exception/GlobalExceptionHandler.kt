@@ -3,6 +3,7 @@ package com.zerost.api.common.exception
 import com.zerost.api.common.response.ApiErrorResponse
 import com.zerost.api.common.response.ApiResponse
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
@@ -17,8 +18,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(BusinessException::class)
-    fun handleBusinessException(ex: BusinessException): ResponseEntity<ApiResponse<Nothing>> {
+    fun handleBusinessException(
+        ex: BusinessException,
+        request: jakarta.servlet.http.HttpServletRequest,
+    ): ResponseEntity<ApiResponse<Nothing>> {
         val errorCode = ex.errorCode
+        log.warn(
+            "business_exception traceId={} method={} path={} code={} message={}",
+            request.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            request.method,
+            request.requestURI,
+            errorCode.code,
+            errorCode.message,
+        )
         return ResponseEntity
             .status(errorCode.httpStatus)
             .body(
@@ -39,6 +51,15 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
     ): ResponseEntity<Any> {
         val errorCode = ErrorCode.INVALID_INPUT_VALUE
         val message = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: errorCode.message
+        val servletRequest = (request as? ServletWebRequest)?.request
+        log.warn(
+            "validation_exception traceId={} method={} path={} code={} message={}",
+            servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            servletRequest?.method,
+            servletRequest?.requestURI,
+            errorCode.code,
+            message,
+        )
 
         return ResponseEntity
             .status(errorCode.httpStatus)
@@ -74,6 +95,28 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
             HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE -> ErrorCode.UNSUPPORTED_MEDIA_TYPE
             else -> ErrorCode.INTERNAL_SERVER_ERROR
         }
+        val servletRequest = (request as? ServletWebRequest)?.request
+        val logMessage = "internal_exception traceId={} method={} path={} status={} code={}"
+        if (statusCode.value() >= 500) {
+            log.error(
+                logMessage,
+                servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+                servletRequest?.method,
+                servletRequest?.requestURI,
+                statusCode.value(),
+                errorCode.code,
+                ex,
+            )
+        } else {
+            log.warn(
+                logMessage,
+                servletRequest?.getAttribute(com.zerost.api.common.auth.AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+                servletRequest?.method,
+                servletRequest?.requestURI,
+                statusCode.value(),
+                errorCode.code,
+            )
+        }
 
         return ResponseEntity
             .status(statusCode)
@@ -86,5 +129,9 @@ class GlobalExceptionHandler : ResponseEntityExceptionHandler() {
                     )
                 )
             )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
     }
 }

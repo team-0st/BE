@@ -12,6 +12,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class AdminCommunityMissionReviewServiceTest {
+    private val reviewerId = 99L
 
     private val communityMissionProofRepository = mock(CommunityMissionProofRepository::class.java)
     private val adminCommunityMissionReviewService = AdminCommunityMissionReviewService(
@@ -23,7 +24,7 @@ class AdminCommunityMissionReviewServiceTest {
         val proof = createCommunityMissionProof(status = CommunityMissionProofStatus.PENDING)
         `when`(communityMissionProofRepository.findByIdForUpdate(1L)).thenReturn(proof)
 
-        val response = adminCommunityMissionReviewService.reviewProof(1L, "APPROVED")
+        val response = adminCommunityMissionReviewService.reviewProof(reviewerId, 1L, "APPROVED")
 
         assertEquals("APPROVED", response.status)
         assertEquals(CommunityMissionProofStatus.APPROVED, proof.status)
@@ -35,7 +36,7 @@ class AdminCommunityMissionReviewServiceTest {
         `when`(communityMissionProofRepository.findByIdForUpdate(1L)).thenReturn(proof)
 
         val exception = assertFailsWith<BusinessException> {
-            adminCommunityMissionReviewService.reviewProof(1L, "REJECTED")
+            adminCommunityMissionReviewService.reviewProof(reviewerId, 1L, "REJECTED")
         }
 
         assertEquals(ErrorCode.INVALID_COMMUNITY_MISSION_PROOF_REVIEW_STATUS, exception.errorCode)

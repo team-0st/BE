@@ -8,8 +8,11 @@ import com.zerost.api.auth.domain.RefreshTokenRepository
 import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
 import com.zerost.api.user.presentation.RegisterUserResponse
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -38,8 +41,18 @@ class UserRegistrationService(
             ),
         )
 
+        val userId = requireNotNull(user.id)
+        registerAfterCommitLog {
+            log.info(
+                "user_registered userId={} role={} onboardingCompleted={}",
+                userId,
+                user.role,
+                user.onboardingCompleted,
+            )
+        }
+
         return RegisterUserResponse(
-            userId = requireNotNull(user.id),
+            userId = userId,
             onboardingCompleted = user.onboardingCompleted,
             accessToken = accessToken,
             refreshToken = refreshToken,
@@ -47,5 +60,23 @@ class UserRegistrationService(
             accessTokenExpiresIn = authTokenProperties.accessTokenExpirationSeconds,
             refreshTokenExpiresIn = authTokenProperties.refreshTokenExpirationSeconds,
         )
+    }
+
+    private fun registerAfterCommitLog(action: () -> Unit) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            action()
+            return
+        }
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCommit() {
+                    action()
+                }
+            },
+        )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(UserRegistrationService::class.java)
     }
 }

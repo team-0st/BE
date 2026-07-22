@@ -24,6 +24,7 @@ import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -76,6 +77,18 @@ class GachaExecutionService(
 
         applyReward(user, gacha, requireNotNull(gacha.id))
         saveHistories(user, gacha)
+
+        log.info(
+            "gacha_executed userId={} gachaId={} resultType={} resultPoint={} resultEcoJam={} resultIngredientId={} resultIngredientQuantity={} remainingEcoJam={}",
+            user.id,
+            gacha.id,
+            gacha.resultType.name,
+            gacha.resultPoint,
+            gacha.resultEcoJam,
+            gacha.resultIngredient?.id,
+            gacha.resultIngredientQuantity,
+            user.ecoJam,
+        )
 
         return ExecuteGachaResponse(
             gachaId = requireNotNull(gacha.id),
@@ -219,6 +232,7 @@ class GachaExecutionService(
     companion object {
         private const val GACHA_COST_ECO_JAM = 100
         private val PROBABILITY_SCALE = BigDecimal("100")
+        private val log = LoggerFactory.getLogger(GachaExecutionService::class.java)
     }
 
     private data class ResolvedReward(

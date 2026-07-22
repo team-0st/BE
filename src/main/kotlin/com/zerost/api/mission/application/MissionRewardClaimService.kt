@@ -12,6 +12,7 @@ import com.zerost.api.mission.presentation.dto.ClaimMissionRewardResponse
 import com.zerost.api.mission.presentation.dto.MissionRewardedIngredientResponse
 import com.zerost.api.user.domain.UserRepository
 import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -66,6 +67,14 @@ class MissionRewardClaimService(
 
         val claimedAt = LocalDateTime.now()
         completion.markRewardClaimed(claimedAt)
+        log.info(
+            "mission_reward_claimed userId={} completionId={} missionId={} ingredientId={} claimedAt={}",
+            userId,
+            completion.id,
+            completion.mission.id,
+            ingredient.id,
+            claimedAt,
+        )
 
         return ClaimMissionRewardResponse(
             completionId = requireNotNull(completion.id),
@@ -77,5 +86,9 @@ class MissionRewardClaimService(
             ),
             rewardClaimedAt = claimedAt.toString(),
         )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(MissionRewardClaimService::class.java)
     }
 }

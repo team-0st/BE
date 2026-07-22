@@ -12,6 +12,7 @@ import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.presentation.dto.SubmitCommunityMissionProofResponse
 import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -100,6 +101,17 @@ class CommunityMissionProofService(
             status = CommunityMissionProofStatus.APPROVED,
         )
 
+        log.info(
+            "community_mission_proof_submitted userId={} communityMissionId={} requirementId={} proofId={} submittedAt={} imageCount={} readyToComplete={}",
+            resolvedUserId,
+            communityMissionId,
+            requirementId,
+            savedProof.id,
+            submittedAt,
+            photoKeys.size,
+            approvedProofCount == requiredProofCount.toLong(),
+        )
+
         return SubmitCommunityMissionProofResponse(
             proofId = requireNotNull(savedProof.id),
             communityMissionId = communityMissionId,
@@ -108,5 +120,9 @@ class CommunityMissionProofService(
             submittedAt = submittedAt.toString(),
             readyToComplete = approvedProofCount == requiredProofCount.toLong(),
         )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(CommunityMissionProofService::class.java)
     }
 }

@@ -1,5 +1,6 @@
 package com.zerost.api.mission.presentation
 
+import com.zerost.api.common.auth.AuthRequestConstants
 import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.AdminMissionReviewQueryService
 import com.zerost.api.mission.application.AdminMissionReviewService
@@ -10,7 +11,9 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse as SwaggerApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -37,7 +40,12 @@ class AdminMissionReviewController(
         ],
     )
     @GetMapping("/completions/pending")
-    fun getPendingMissionCompletions(): ApiResponse<List<AdminMissionReviewItemResponse>> {
+    fun getPendingMissionCompletions(request: HttpServletRequest): ApiResponse<List<AdminMissionReviewItemResponse>> {
+        log.info(
+            "admin_pending_mission_completions_requested traceId={} adminUserId={}",
+            request.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            request.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE),
+        )
         val response = adminMissionReviewQueryService.getPendingMissionCompletions()
         return ApiResponse.success(response)
     }
@@ -59,11 +67,25 @@ class AdminMissionReviewController(
     fun reviewMissionCompletion(
         @PathVariable completionId: Long,
         @Valid @RequestBody request: ReviewMissionCompletionRequest,
+        servletRequest: HttpServletRequest,
     ): ApiResponse<ReviewMissionCompletionResponse> {
+        log.info(
+            "admin_mission_review_requested traceId={} adminUserId={} completionId={} status={}",
+            servletRequest.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            servletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE),
+            completionId,
+            request.status,
+        )
+        val reviewerId = servletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
         val response = adminMissionReviewService.reviewMissionCompletion(
+            reviewerId = reviewerId,
             completionId = completionId,
             status = request.status,
         )
         return ApiResponse.success(response)
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AdminMissionReviewController::class.java)
     }
 }

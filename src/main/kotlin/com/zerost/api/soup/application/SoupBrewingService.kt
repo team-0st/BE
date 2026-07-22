@@ -11,6 +11,7 @@ import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRepository
 import com.zerost.api.soup.presentation.dto.BrewSoupResponse
 import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -42,6 +43,18 @@ class SoupBrewingService(
             ),
         )
         val reward = soupRewardService.reward(soup)
+
+        log.info(
+            "soup_brew_completed userId={} soupId={} recipeId={} recipeType={} rewardGrade={} rewardEcoJam={} rewardPoint={} rewardedIngredientCount={}",
+            user.id,
+            soup.id,
+            recipe.id,
+            recipe.type.name,
+            reward.rewardGrade,
+            reward.ecoJam,
+            reward.point,
+            reward.rewardedIngredients.size,
+        )
 
         return BrewSoupResponse(
             soupId = requireNotNull(soup.id),
@@ -89,5 +102,9 @@ class SoupBrewingService(
                 ?: throw BusinessException(ErrorCode.INSUFFICIENT_INGREDIENT_QUANTITY)
             userIngredient.decreaseQuantity()
         }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(SoupBrewingService::class.java)
     }
 }
