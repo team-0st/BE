@@ -29,4 +29,7 @@ data class MissionSummaryResponse(
 
     @Schema(description = "오늘 승인된 미션 보상 수령 여부", example = "false")
     val rewardClaimed: Boolean = false,
+
+    @Schema(description = "오늘 미션 보상 수령 시각", example = "2026-07-22T19:30:00", nullable = true)
+    val rewardClaimedAt: String? = null,
 )

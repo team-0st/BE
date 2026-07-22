@@ -80,6 +80,7 @@ class MissionQueryServiceTest {
         assertEquals("PENDING", response.generalMissions[0].todayStatus?.name)
         assertEquals(false, response.generalMissions[0].rewardClaimable)
         assertEquals(false, response.generalMissions[0].rewardClaimed)
+        assertEquals(null, response.generalMissions[0].rewardClaimedAt)
         assertNull(response.generalMissions[1].todayStatus)
         assertEquals("플로깅 인증", response.specialMission?.title)
     }
@@ -110,6 +111,7 @@ class MissionQueryServiceTest {
         assertEquals("APPROVED", response.todayStatus?.name)
         assertEquals(false, response.rewardClaimable)
         assertEquals(false, response.rewardClaimed)
+        assertEquals(null, response.rewardClaimedAt)
     }
 
     @Test

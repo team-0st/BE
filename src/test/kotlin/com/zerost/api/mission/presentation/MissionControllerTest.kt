@@ -65,6 +65,7 @@ class MissionControllerTest {
                         todayStatus = MissionTodayStatus.PENDING,
                         rewardClaimable = false,
                         rewardClaimed = false,
+                        rewardClaimedAt = null,
                     ),
                 ),
                 specialMission = MissionSummaryResponse(
@@ -75,6 +76,7 @@ class MissionControllerTest {
                     todayStatus = null,
                     rewardClaimable = false,
                     rewardClaimed = false,
+                    rewardClaimedAt = null,
                 ),
             ),
         )
@@ -103,6 +105,7 @@ class MissionControllerTest {
                 todayStatus = MissionTodayStatus.APPROVED,
                 rewardClaimable = true,
                 rewardClaimed = false,
+                rewardClaimedAt = null,
             ),
         )
 

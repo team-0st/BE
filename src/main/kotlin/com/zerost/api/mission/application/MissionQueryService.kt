@@ -70,6 +70,7 @@ class MissionQueryService(
             todayStatus = todayCompletion?.status?.toTodayStatus(),
             rewardClaimable = todayCompletion?.isRewardClaimable() ?: false,
             rewardClaimed = todayCompletion?.isRewardClaimed() ?: false,
+            rewardClaimedAt = todayCompletion?.rewardClaimedAt?.toString(),
         )
     }
 
@@ -126,6 +127,7 @@ class MissionQueryService(
             todayStatus = todayCompletion?.status?.toTodayStatus(),
             rewardClaimable = todayCompletion?.isRewardClaimable() ?: false,
             rewardClaimed = todayCompletion?.isRewardClaimed() ?: false,
+            rewardClaimedAt = todayCompletion?.rewardClaimedAt?.toString(),
         )
     }
 
