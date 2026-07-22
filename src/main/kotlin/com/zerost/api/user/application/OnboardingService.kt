@@ -5,6 +5,7 @@ import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.shop.domain.ShopRepository
 import com.zerost.api.user.domain.UserRepository
 import com.zerost.api.user.presentation.dto.CompleteOnboardingResponse
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.transaction.annotation.Transactional
@@ -21,6 +22,13 @@ class OnboardingService(
         val user = userRepository.findById(command.userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
+        log.info(
+            "onboarding_started userId={} nickname={} shopId={}",
+            requireNotNull(user.id),
+            command.nickname,
+            command.shopId,
+        )
+
         val shop = shopRepository.findById(command.shopId)
             .orElseThrow { BusinessException(ErrorCode.SHOP_NOT_FOUND) }
 
@@ -36,6 +44,14 @@ class OnboardingService(
             shop = shop,
         )
 
+        log.info(
+            "onboarding_completed userId={} nickname={} shopId={} phoneNumber={}",
+            requireNotNull(user.id),
+            requireNotNull(user.nickname),
+            requireNotNull(user.shop?.id),
+            maskPhoneNumber(requireNotNull(user.phoneNumber)),
+        )
+
         return CompleteOnboardingResponse(
             userId = requireNotNull(user.id),
             nickname = requireNotNull(user.nickname),
@@ -47,6 +63,12 @@ class OnboardingService(
     private fun validateNickname(userId: Long, nickname: String) {
         val existingUser = userRepository.findByNickname(nickname).orElse(null) ?: return
         if (existingUser.id != userId) {
+            log.warn(
+                "onboarding_failed reason=duplicate_nickname userId={} nickname={} existingUserId={}",
+                userId,
+                nickname,
+                requireNotNull(existingUser.id),
+            )
             throw BusinessException(ErrorCode.DUPLICATE_NICKNAME)
         }
     }
@@ -54,7 +76,24 @@ class OnboardingService(
     private fun validatePhoneNumber(userId: Long, phoneNumber: String) {
         val existingUser = userRepository.findByPhoneNumber(phoneNumber).orElse(null) ?: return
         if (existingUser.id != userId) {
+            log.warn(
+                "onboarding_failed reason=duplicate_phone_number userId={} phoneNumber={} existingUserId={}",
+                userId,
+                maskPhoneNumber(phoneNumber),
+                requireNotNull(existingUser.id),
+            )
             throw BusinessException(ErrorCode.DUPLICATE_PHONE_NUMBER)
         }
+    }
+
+    private fun maskPhoneNumber(phoneNumber: String): String {
+        if (phoneNumber.length < 4) {
+            return "***"
+        }
+        return "${phoneNumber.take(3)}-****-${phoneNumber.takeLast(4)}"
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(OnboardingService::class.java)
     }
 }

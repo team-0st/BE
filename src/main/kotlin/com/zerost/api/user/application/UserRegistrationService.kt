@@ -8,6 +8,7 @@ import com.zerost.api.auth.domain.RefreshTokenRepository
 import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
 import com.zerost.api.user.presentation.RegisterUserResponse
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -38,6 +39,13 @@ class UserRegistrationService(
             ),
         )
 
+        log.info(
+            "user_registered userId={} role={} onboardingCompleted={}",
+            requireNotNull(user.id),
+            user.role,
+            user.onboardingCompleted,
+        )
+
         return RegisterUserResponse(
             userId = requireNotNull(user.id),
             onboardingCompleted = user.onboardingCompleted,
@@ -47,5 +55,9 @@ class UserRegistrationService(
             accessTokenExpiresIn = authTokenProperties.accessTokenExpirationSeconds,
             refreshTokenExpiresIn = authTokenProperties.refreshTokenExpirationSeconds,
         )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(UserRegistrationService::class.java)
     }
 }
