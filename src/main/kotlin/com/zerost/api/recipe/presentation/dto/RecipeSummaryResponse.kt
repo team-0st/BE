@@ -19,7 +19,4 @@ data class RecipeSummaryResponse(
 
     @Schema(description = "재료 조합 공개 여부", example = "true")
     val recipeVisible: Boolean,
-
-    @Schema(description = "레시피 힌트 목록")
-    val hints: List<RecipeHintResponse>,
 )
