@@ -39,8 +39,8 @@ class HomeQueryService(
 
         return HomeResponse(
             nickname = user.nickname,
-            profileCharacterCode = user.profileCharacterCode?.name,
-            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolveOrNull(user.profileCharacterCode),
+            profileCharacterCode = user.getEffectiveProfileCharacterCode().name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolve(user.getEffectiveProfileCharacterCode()),
             ecoJam = user.ecoJam,
             point = user.point,
             checkedInToday = checkInRepository.existsByUserIdAndCheckedDate(resolvedUserId, today),

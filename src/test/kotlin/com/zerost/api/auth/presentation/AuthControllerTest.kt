@@ -61,6 +61,8 @@ class AuthControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.userId").value(1))
+            .andExpect(jsonPath("$.data.profileCharacterCode").value("TOMATO"))
+            .andExpect(jsonPath("$.data.profileCharacterImageUrl").value("https://assets.zero-st.com/profile-characters/tomato.png"))
             .andExpect(jsonPath("$.data.accessToken").value("access-token"))
             .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
 

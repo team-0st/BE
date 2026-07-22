@@ -40,8 +40,8 @@ class MyPageQueryService(
 
         return MyPageResponse(
             nickname = user.nickname,
-            profileCharacterCode = user.profileCharacterCode?.name,
-            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolveOrNull(user.profileCharacterCode),
+            profileCharacterCode = user.getEffectiveProfileCharacterCode().name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolve(user.getEffectiveProfileCharacterCode()),
             shopName = user.shop?.name,
             ecoJam = user.ecoJam,
             point = user.point,
