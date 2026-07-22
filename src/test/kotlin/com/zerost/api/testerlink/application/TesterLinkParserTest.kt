@@ -5,6 +5,8 @@ import com.zerost.api.common.exception.ErrorCode
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class TesterLinkParserTest {
 
@@ -19,9 +21,28 @@ class TesterLinkParserTest {
     }
 
     @Test
-    fun `형식이 아니면 INVALID_INPUT_VALUE`() {
+    fun `다른 쿼리와 함께 있어도 _deploymentId 키만 읽는다`() {
+        val parsed = TesterLinkParser.parse(
+            "intoss-private://0st?x=1&_deploymentId=abc-123&y=2",
+        )
+
+        assertThat(parsed.deploymentId).isEqualTo("abc-123")
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = [
+            "https://example.com/open",
+            "intoss-private://0st?_deploymentId=abc junk",
+            "intoss-private://0st?x=_deploymentId=abc",
+            "intoss-private://0st",
+            "intoss-private://0st?foo=bar",
+            "intoss-private://0st?_deploymentId=",
+        ],
+    )
+    fun `형식이 아니면 INVALID_INPUT_VALUE`(raw: String) {
         assertThatThrownBy {
-            TesterLinkParser.parse("https://example.com/open")
+            TesterLinkParser.parse(raw)
         }
             .isInstanceOf(BusinessException::class.java)
             .extracting("errorCode")
