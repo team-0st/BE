@@ -166,6 +166,69 @@ class SoupBrewingServiceTest {
     }
 
     @Test
+    fun `같은 레시피를 여러 번 반복 제작할 수 있다`() {
+        val user = createUser()
+        val ingredient1 = createIngredient(id = 1L, name = "양배추")
+        val ingredient2 = createIngredient(id = 2L, name = "토마토")
+        val ingredient3 = createIngredient(id = 3L, name = "양파")
+        val recipe = Recipe(
+            id = 1L,
+            name = "오리지널 스프",
+            type = RecipeType.COMMON,
+            slotCount = 3,
+            hidden = false,
+        )
+        val userIngredients = listOf(
+            createUserIngredient(user = user, ingredient = ingredient1, quantity = 2),
+            createUserIngredient(user = user, ingredient = ingredient2, quantity = 2),
+            createUserIngredient(user = user, ingredient = ingredient3, quantity = 2),
+        )
+        val policy = createSoupRewardPolicy(
+            id = 1L,
+            recipeType = RecipeType.COMMON,
+            introOnly = false,
+            rewardGrade = SoupRewardGrade.CONSOLATION,
+            probability = java.math.BigDecimal("100.00"),
+            ecoJamAmount = 30,
+        )
+
+        `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
+        `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(3)).thenReturn(listOf(recipe))
+        `when`(soupRewardPolicyRepository.findAllByRecipeTypeAndIntroOnlyAndActiveTrueOrderByIdAsc(RecipeType.COMMON, false))
+            .thenReturn(listOf(policy))
+        `when`(soupRewardPolicyIngredientRepository.findAllBySoupRewardPolicyIdInOrderByIdAsc(listOf(1L)))
+            .thenReturn(emptyList())
+        `when`(soupBonusRewardPolicyRepository.findAllByRecipeTypeAndActiveTrueOrderByIdAsc(RecipeType.COMMON))
+            .thenReturn(emptyList())
+        `when`(randomProvider.nextInt(10000)).thenReturn(0)
+        `when`(
+            recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(1L)),
+        ).thenReturn(
+            listOf(
+                RecipeIngredient(id = 1L, recipe = recipe, ingredient = ingredient1, slotOrder = 1),
+                RecipeIngredient(id = 2L, recipe = recipe, ingredient = ingredient2, slotOrder = 2),
+                RecipeIngredient(id = 3L, recipe = recipe, ingredient = ingredient3, slotOrder = 3),
+            ),
+        )
+        `when`(userIngredientRepository.findAllByUserIdAndIngredientIdIn(1L, listOf(1L, 2L, 3L))).thenReturn(userIngredients)
+        `when`(soupRepository.save(any(Soup::class.java)))
+            .thenReturn(
+                Soup(id = 10L, user = user, recipe = recipe, rewardGrade = SoupRewardGrade.CONSOLATION),
+                Soup(id = 11L, user = user, recipe = recipe, rewardGrade = SoupRewardGrade.CONSOLATION),
+            )
+
+        val firstResponse = soupBrewingService.brew(1L, listOf(1L, 2L, 3L))
+        val secondResponse = soupBrewingService.brew(1L, listOf(1L, 2L, 3L))
+
+        assertEquals(10L, firstResponse.soupId)
+        assertEquals(11L, secondResponse.soupId)
+        assertEquals(0, userIngredients[0].quantity)
+        assertEquals(0, userIngredients[1].quantity)
+        assertEquals(0, userIngredients[2].quantity)
+        verify(soupRepository, org.mockito.Mockito.times(2)).save(any(Soup::class.java))
+    }
+
+    @Test
     fun `2슬롯 입문 스프도 제작할 수 있다`() {
         val user = createUser()
         val ingredient1 = createIngredient(id = 1L, name = "토마토")
