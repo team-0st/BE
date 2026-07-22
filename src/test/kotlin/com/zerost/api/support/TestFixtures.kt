@@ -312,12 +312,16 @@ fun createRecipe(
     name: String = "오리지널 스프",
     type: RecipeType = RecipeType.COMMON,
     slotCount: Int = 3,
+    intro: Boolean = false,
+    weekly: Boolean = false,
     hidden: Boolean = false,
 ): Recipe = Recipe(
     id = id,
     name = name,
     type = type,
     slotCount = slotCount,
+    intro = intro,
+    weekly = weekly,
     hidden = hidden,
 )
 
