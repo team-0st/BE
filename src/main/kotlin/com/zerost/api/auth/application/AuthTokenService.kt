@@ -4,6 +4,7 @@ import com.zerost.api.auth.domain.RefreshTokenRepository
 import com.zerost.api.auth.presentation.dto.RefreshTokenResponse
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -20,9 +21,16 @@ class AuthTokenService(
     @Transactional
     fun refresh(refreshToken: String): RefreshTokenResponse {
         val storedRefreshToken = refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash(refreshToken))
-            .orElseThrow { BusinessException(ErrorCode.INVALID_REFRESH_TOKEN) }
+            .orElseThrow {
+                log.warn("refresh_failed reason=refresh_token_not_found")
+                BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
+            }
 
         if (storedRefreshToken.expiresAt.isBefore(LocalDateTime.now())) {
+            log.warn(
+                "refresh_failed reason=refresh_token_expired userId={}",
+                storedRefreshToken.user.id,
+            )
             refreshTokenRepository.delete(storedRefreshToken)
             throw BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
         }
@@ -38,6 +46,12 @@ class AuthTokenService(
             expiresAt = newRefreshTokenExpiresAt,
         )
 
+        log.info(
+            "refresh_succeeded userId={} role={}",
+            user.id,
+            user.role.name,
+        )
+
         return RefreshTokenResponse(
             accessToken = newAccessToken,
             refreshToken = newRefreshToken,
@@ -50,7 +64,18 @@ class AuthTokenService(
     @Transactional
     fun logout(refreshToken: String) {
         val storedRefreshToken = refreshTokenRepository.findByTokenHashForUpdate(refreshTokenHasher.hash(refreshToken))
-            .orElseThrow { BusinessException(ErrorCode.INVALID_REFRESH_TOKEN) }
+            .orElseThrow {
+                log.warn("logout_failed reason=refresh_token_not_found")
+                BusinessException(ErrorCode.INVALID_REFRESH_TOKEN)
+            }
+        log.info(
+            "logout_succeeded userId={}",
+            storedRefreshToken.user.id,
+        )
         refreshTokenRepository.delete(storedRefreshToken)
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AuthTokenService::class.java)
     }
 }

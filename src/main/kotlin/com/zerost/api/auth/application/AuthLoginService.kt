@@ -7,6 +7,7 @@ import com.zerost.api.auth.presentation.dto.LoginResponse
 import com.zerost.api.auth.domain.RefreshToken
 import com.zerost.api.auth.domain.RefreshTokenRepository
 import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -27,10 +28,18 @@ class AuthLoginService(
     @Transactional
     fun login(phoneNumber: String, password: String): LoginResponse {
         val user = userRepository.findByPhoneNumber(phoneNumber)
-            .orElseThrow { BusinessException(ErrorCode.INVALID_LOGIN_CREDENTIALS) }
+            .orElseThrow {
+                log.warn("login_failed reason=user_not_found phoneNumber={}", maskPhoneNumber(phoneNumber))
+                BusinessException(ErrorCode.INVALID_LOGIN_CREDENTIALS)
+            }
 
         val passwordHash = user.passwordHash
         if (!user.onboardingCompleted || passwordHash.isNullOrBlank() || !passwordEncoder.matches(password, passwordHash)) {
+            log.warn(
+                "login_failed reason=invalid_credentials userId={} phoneNumber={}",
+                user.id,
+                maskPhoneNumber(phoneNumber),
+            )
             throw BusinessException(ErrorCode.INVALID_LOGIN_CREDENTIALS)
         }
 
@@ -49,6 +58,13 @@ class AuthLoginService(
             ),
         )
 
+        log.info(
+            "login_succeeded userId={} role={} onboardingCompleted={}",
+            user.id,
+            user.role.name,
+            user.onboardingCompleted,
+        )
+
         return LoginResponse(
             userId = requireNotNull(user.id),
             nickname = requireNotNull(user.nickname),
@@ -62,5 +78,17 @@ class AuthLoginService(
             accessTokenExpiresIn = authTokenProperties.accessTokenExpirationSeconds,
             refreshTokenExpiresIn = authTokenProperties.refreshTokenExpirationSeconds,
         )
+    }
+
+    private fun maskPhoneNumber(phoneNumber: String): String {
+        return if (phoneNumber.length >= 8) {
+            "${phoneNumber.take(3)}-****-${phoneNumber.takeLast(4)}"
+        } else {
+            "***"
+        }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AuthLoginService::class.java)
     }
 }
