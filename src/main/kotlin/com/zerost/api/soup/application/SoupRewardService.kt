@@ -23,8 +23,14 @@ import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.soup.domain.SoupRewardIngredientRepository
+import com.zerost.api.soup.domain.SoupRewardIngredientSelectionType
+import com.zerost.api.soup.domain.SoupRewardPolicy
+import com.zerost.api.soup.domain.SoupRewardPolicyIngredient
+import com.zerost.api.soup.domain.SoupRewardPolicyIngredientRepository
+import com.zerost.api.soup.domain.SoupRewardPolicyRepository
 import com.zerost.api.soup.presentation.dto.SoupRewardIngredientResponse
 import com.zerost.api.soup.presentation.dto.SoupRewardSummary
+import java.math.BigDecimal
 import org.springframework.stereotype.Service
 
 @Service
@@ -35,15 +41,17 @@ class SoupRewardService(
     private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
     private val pointHistoryRepository: PointHistoryRepository,
+    private val soupRewardPolicyRepository: SoupRewardPolicyRepository,
+    private val soupRewardPolicyIngredientRepository: SoupRewardPolicyIngredientRepository,
     private val randomProvider: RandomProvider,
 ) {
 
+    companion object {
+        private val PROBABILITY_SCALE = BigDecimal("100")
+    }
+
     fun reward(soup: Soup): SoupRewardSummary {
-        val reward = when (soup.recipe.type) {
-            RecipeType.COMMON -> rewardCommonSoup()
-            RecipeType.HIDDEN -> rewardHiddenSoup()
-            RecipeType.LEGENDARY -> rewardLegendarySoup()
-        }
+        val reward = loadPolicyBasedReward(soup)
 
         applyReward(soup, reward)
 
@@ -108,117 +116,30 @@ class SoupRewardService(
         }
     }
 
-    private fun rewardCommonSoup(): RewardResult {
-        return selectReward(
-            rewardCandidate(weight = 5) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    point = 2_000,
-                )
-            },
-            rewardCandidate(weight = 10) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    point = 1_000,
-                )
-            },
-            rewardCandidate(weight = 20) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    point = 500,
-                )
-            },
-            rewardCandidate(weight = 25) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.INGREDIENT,
-                    ecoJam = 50,
-                    rewardedIngredients = listOf(IngredientReward(randomCommonIngredient(), 1)),
-                )
-            },
-            rewardCandidate(weight = 40) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.CONSOLATION,
-                    ecoJam = 30,
-                )
-            },
+    private fun loadPolicyBasedReward(soup: Soup): RewardResult {
+        val policies = soupRewardPolicyRepository.findAllByRecipeTypeAndIntroOnlyAndActiveTrueOrderByIdAsc(
+            recipeType = soup.recipe.type,
+            introOnly = soup.recipe.intro,
         )
-    }
+        if (policies.isEmpty()) {
+            throw BusinessException(ErrorCode.SOUP_REWARD_POLICY_NOT_FOUND)
+        }
 
-    private fun rewardHiddenSoup(): RewardResult {
-        val baseEcoJam = 300
-        val basePoint = 500
+        val policyIds = policies.map { requireNotNull(it.id) }
+        val ingredientsByPolicyId = soupRewardPolicyIngredientRepository
+            .findAllBySoupRewardPolicyIdInOrderByIdAsc(policyIds)
+            .groupBy { requireNotNull(it.soupRewardPolicy.id) }
 
-        return selectReward(
-            rewardCandidate(weight = 5) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 2_000,
-                )
-            },
-            rewardCandidate(weight = 20) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 1_000,
-                )
-            },
-            rewardCandidate(weight = 65) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    ecoJam = baseEcoJam + 50,
-                    point = basePoint + 500,
-                )
-            },
-            rewardCandidate(weight = 10) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.INGREDIENT,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint,
-                    rewardedIngredients = listOf(IngredientReward(randomHiddenIngredient(), 1)),
-                )
-            },
+        val selectedPolicy = selectPolicy(policies)
+        val rewardedIngredients = resolveRewardedIngredients(
+            ingredients = ingredientsByPolicyId[requireNotNull(selectedPolicy.id)].orEmpty(),
         )
-    }
 
-    private fun rewardLegendarySoup(): RewardResult {
-        val baseEcoJam = 500
-        val basePoint = 1_500
-
-        return selectReward(
-            rewardCandidate(weight = 5) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.JACKPOT,
-                    ecoJam = baseEcoJam + 300,
-                    point = basePoint + 4_000,
-                )
-            },
-            rewardCandidate(weight = 20) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.MIDDLE,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint + 3_000,
-                )
-            },
-            rewardCandidate(weight = 65) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.SMALL,
-                    ecoJam = baseEcoJam + 100,
-                    point = basePoint + 2_000,
-                )
-            },
-            rewardCandidate(weight = 10) {
-                RewardResult(
-                    rewardGrade = SoupRewardGrade.INGREDIENT,
-                    ecoJam = baseEcoJam + 200,
-                    point = basePoint,
-                    rewardedIngredients = listOf(
-                        IngredientReward(randomHiddenIngredient(), 1),
-                        IngredientReward(randomCommonIngredient(), 1),
-                        IngredientReward(randomCommonIngredient(), 1),
-                    ),
-                )
-            },
+        return RewardResult(
+            rewardGrade = selectedPolicy.rewardGrade,
+            ecoJam = selectedPolicy.ecoJamAmount,
+            point = selectedPolicy.pointAmount,
+            rewardedIngredients = rewardedIngredients,
         )
     }
 
@@ -626,6 +547,55 @@ class SoupRewardService(
         ?.let { ingredients -> ingredients[randomProvider.nextInt(ingredients.size)] }
         ?: throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
 
+    private fun randomIngredientByType(ingredientType: IngredientType): Ingredient = ingredientRepository.findAllByType(ingredientType)
+        .takeIf { it.isNotEmpty() }
+        ?.let { ingredients -> ingredients[randomProvider.nextInt(ingredients.size)] }
+        ?: throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
+
+    private fun resolveRewardedIngredients(ingredients: List<SoupRewardPolicyIngredient>): List<IngredientReward> {
+        if (ingredients.isEmpty()) {
+            return emptyList()
+        }
+
+        val rewardedIngredientMap = linkedMapOf<Long, IngredientReward>()
+
+        ingredients.forEach { ingredientPolicy ->
+            when (ingredientPolicy.selectionType) {
+                SoupRewardIngredientSelectionType.FIXED -> {
+                    val ingredient = ingredientPolicy.ingredient
+                        ?: throw BusinessException(ErrorCode.INVALID_SOUP_REWARD_POLICY)
+                    accumulateIngredientReward(rewardedIngredientMap, ingredient, ingredientPolicy.quantity)
+                }
+
+                SoupRewardIngredientSelectionType.RANDOM_BY_TYPE -> {
+                    val ingredientType = ingredientPolicy.ingredientType
+                        ?: throw BusinessException(ErrorCode.INVALID_SOUP_REWARD_POLICY)
+                    repeat(ingredientPolicy.quantity) {
+                        val ingredient = randomIngredientByType(ingredientType)
+                        accumulateIngredientReward(rewardedIngredientMap, ingredient, 1)
+                    }
+                }
+            }
+        }
+
+        return rewardedIngredientMap.values.toList()
+    }
+
+    private fun accumulateIngredientReward(
+        rewardedIngredientMap: MutableMap<Long, IngredientReward>,
+        ingredient: Ingredient,
+        quantity: Int,
+    ) {
+        val ingredientId = requireNotNull(ingredient.id)
+        val existingReward = rewardedIngredientMap[ingredientId]
+        if (existingReward == null) {
+            rewardedIngredientMap[ingredientId] = IngredientReward(ingredient = ingredient, quantity = quantity)
+            return
+        }
+
+        rewardedIngredientMap[ingredientId] = existingReward.copy(quantity = existingReward.quantity + quantity)
+    }
+
     private fun rewardCandidate(
         weight: Int,
         reward: () -> RewardResult,
@@ -638,6 +608,20 @@ class SoupRewardService(
         WeightedRandomSelector.select(candidates.toList()) { totalWeight ->
             randomProvider.nextInt(totalWeight)
         }.invoke()
+
+    private fun selectPolicy(policies: List<SoupRewardPolicy>): SoupRewardPolicy {
+        val weightedPolicies = policies.map { policy ->
+            val weight = policy.probability.multiply(PROBABILITY_SCALE).toInt()
+            if (weight <= 0) {
+                throw BusinessException(ErrorCode.INVALID_SOUP_REWARD_POLICY)
+            }
+            WeightedCandidate(value = policy, weight = weight)
+        }
+
+        return WeightedRandomSelector.select(weightedPolicies) { totalWeight ->
+            randomProvider.nextInt(totalWeight)
+        }
+    }
 
     private data class RewardResult(
         val rewardGrade: SoupRewardGrade,

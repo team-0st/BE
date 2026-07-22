@@ -15,6 +15,11 @@ import com.zerost.api.soup.domain.Soup
 import com.zerost.api.soup.domain.SoupRepository
 import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRewardIngredientRepository
+import com.zerost.api.soup.domain.SoupRewardPolicyIngredientRepository
+import com.zerost.api.soup.domain.SoupRewardPolicyRepository
+import com.zerost.api.soup.domain.SoupRewardIngredientSelectionType
+import com.zerost.api.support.createSoupRewardPolicy
+import com.zerost.api.support.createSoupRewardPolicyIngredient
 import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createUser
 import com.zerost.api.support.createUserIngredient
@@ -38,6 +43,8 @@ class SoupBrewingServiceTest {
     private val soupRepository = mock(SoupRepository::class.java)
     private val ingredientRepository = mock(com.zerost.api.ingredient.domain.IngredientRepository::class.java)
     private val soupRewardIngredientRepository = mock(SoupRewardIngredientRepository::class.java)
+    private val soupRewardPolicyRepository = mock(SoupRewardPolicyRepository::class.java)
+    private val soupRewardPolicyIngredientRepository = mock(SoupRewardPolicyIngredientRepository::class.java)
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
@@ -49,6 +56,8 @@ class SoupBrewingServiceTest {
         ingredientHistoryRepository = ingredientHistoryRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
         pointHistoryRepository = pointHistoryRepository,
+        soupRewardPolicyRepository = soupRewardPolicyRepository,
+        soupRewardPolicyIngredientRepository = soupRewardPolicyIngredientRepository,
         randomProvider = randomProvider,
     )
     private val soupBrewingService = SoupBrewingService(
@@ -78,10 +87,22 @@ class SoupBrewingServiceTest {
             createUserIngredient(user = user, ingredient = ingredient2, quantity = 1),
             createUserIngredient(user = user, ingredient = ingredient3, quantity = 1),
         )
+        val policy = createSoupRewardPolicy(
+            id = 1L,
+            recipeType = RecipeType.COMMON,
+            introOnly = false,
+            rewardGrade = SoupRewardGrade.JACKPOT,
+            probability = java.math.BigDecimal("100.00"),
+            pointAmount = 2_000,
+        )
 
         `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(3)).thenReturn(listOf(recipe))
-        `when`(randomProvider.nextInt(100)).thenReturn(0)
+        `when`(soupRewardPolicyRepository.findAllByRecipeTypeAndIntroOnlyAndActiveTrueOrderByIdAsc(RecipeType.COMMON, false))
+            .thenReturn(listOf(policy))
+        `when`(soupRewardPolicyIngredientRepository.findAllBySoupRewardPolicyIdInOrderByIdAsc(listOf(1L)))
+            .thenReturn(emptyList())
+        `when`(randomProvider.nextInt(10000)).thenReturn(0)
         `when`(
             recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(1L)),
         ).thenReturn(
@@ -133,16 +154,40 @@ class SoupBrewingServiceTest {
             name = "따뜻한 입문 스프",
             type = RecipeType.COMMON,
             slotCount = 2,
+            intro = true,
             hidden = false,
         )
         val userIngredients = listOf(
             createUserIngredient(user = user, ingredient = ingredient1, quantity = 1),
             createUserIngredient(user = user, ingredient = ingredient2, quantity = 1),
         )
+        val policy = createSoupRewardPolicy(
+            id = 10L,
+            recipeType = RecipeType.COMMON,
+            introOnly = true,
+            rewardGrade = SoupRewardGrade.INGREDIENT,
+            probability = java.math.BigDecimal("100.00"),
+            ecoJamAmount = 100,
+        )
+        val policyIngredient = createSoupRewardPolicyIngredient(
+            id = 11L,
+            soupRewardPolicy = policy,
+            selectionType = SoupRewardIngredientSelectionType.RANDOM_BY_TYPE,
+            ingredientType = com.zerost.api.ingredient.domain.IngredientType.COMMON,
+            quantity = 1,
+        )
 
         `when`(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user))
         `when`(recipeRepository.findAllBySlotCountOrderByIdAsc(2)).thenReturn(listOf(recipe))
-        `when`(randomProvider.nextInt(100)).thenReturn(99)
+        `when`(soupRewardPolicyRepository.findAllByRecipeTypeAndIntroOnlyAndActiveTrueOrderByIdAsc(RecipeType.COMMON, true))
+            .thenReturn(listOf(policy))
+        `when`(soupRewardPolicyIngredientRepository.findAllBySoupRewardPolicyIdInOrderByIdAsc(listOf(10L)))
+            .thenReturn(listOf(policyIngredient))
+        `when`(ingredientRepository.findAllByType(com.zerost.api.ingredient.domain.IngredientType.COMMON))
+            .thenReturn(listOf(ingredient1))
+        `when`(userIngredientRepository.findByUserAndIngredient(user, ingredient1)).thenReturn(Optional.of(userIngredients[0]))
+        `when`(randomProvider.nextInt(10000)).thenReturn(0)
+        `when`(randomProvider.nextInt(1)).thenReturn(0)
         `when`(
             recipeIngredientRepository.findAllByRecipeIdInOrderByRecipeIdAscSlotOrderAsc(listOf(10L)),
         ).thenReturn(
@@ -169,7 +214,10 @@ class SoupBrewingServiceTest {
         assertEquals(20L, response.soupId)
         assertEquals(10L, response.recipeId)
         assertEquals("따뜻한 입문 스프", response.recipeName)
-        assertEquals(0, userIngredients[0].quantity)
+        assertEquals("INGREDIENT", response.rewardGrade)
+        assertEquals(100, response.rewardEcoJam)
+        assertEquals(1, response.rewardedIngredients.first().quantity)
+        assertEquals(1, userIngredients[0].quantity)
         assertEquals(0, userIngredients[1].quantity)
     }
 
