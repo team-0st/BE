@@ -36,7 +36,8 @@ class WebMvcConfig(
         registry.addMapping("/api/v1/**")
             .allowedOrigins(*corsProperties.allowedOrigins.toTypedArray())
             .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            .allowedHeaders("Content-Type", "Authorization")
+            .allowedHeaders("Content-Type", "Authorization", "X-Request-Id")
+            .exposedHeaders("X-Request-Id")
             .allowCredentials(true)
             .maxAge(3600)
     }

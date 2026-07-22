@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 
 @Service
 class OnboardingService(
@@ -44,19 +46,25 @@ class OnboardingService(
             shop = shop,
         )
 
-        log.info(
-            "onboarding_completed userId={} nickname={} shopId={} phoneNumber={}",
-            requireNotNull(user.id),
-            requireNotNull(user.nickname),
-            requireNotNull(user.shop?.id),
-            maskPhoneNumber(requireNotNull(user.phoneNumber)),
-        )
+        val userId = requireNotNull(user.id)
+        val nickname = requireNotNull(user.nickname)
+        val shopId = requireNotNull(user.shop?.id)
+        val phoneNumber = maskPhoneNumber(requireNotNull(user.phoneNumber))
+        registerAfterCommitLog {
+            log.info(
+                "onboarding_completed userId={} nickname={} shopId={} phoneNumber={}",
+                userId,
+                nickname,
+                shopId,
+                phoneNumber,
+            )
+        }
 
         return CompleteOnboardingResponse(
-            userId = requireNotNull(user.id),
-            nickname = requireNotNull(user.nickname),
+            userId = userId,
+            nickname = nickname,
             phoneNumber = requireNotNull(user.phoneNumber),
-            shopId = requireNotNull(user.shop?.id),
+            shopId = shopId,
         )
     }
 
@@ -91,6 +99,16 @@ class OnboardingService(
             return "***"
         }
         return "${phoneNumber.take(3)}-****-${phoneNumber.takeLast(4)}"
+    }
+
+    private fun registerAfterCommitLog(action: () -> Unit) {
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCommit() {
+                    action()
+                }
+            },
+        )
     }
 
     companion object {

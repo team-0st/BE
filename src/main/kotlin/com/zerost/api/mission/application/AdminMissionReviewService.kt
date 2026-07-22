@@ -19,6 +19,7 @@ class AdminMissionReviewService(
 
     @Transactional
     fun reviewMissionCompletion(
+        reviewerId: Long,
         completionId: Long,
         status: String,
     ): ReviewMissionCompletionResponse {
@@ -37,7 +38,8 @@ class AdminMissionReviewService(
         }
 
         log.info(
-            "mission_review_completed completionId={} missionId={} userId={} status={} reviewedAt={}",
+            "mission_review_completed reviewerId={} completionId={} missionId={} userId={} status={} reviewedAt={}",
+            reviewerId,
             completion.id,
             completion.mission.id,
             completion.user.id,

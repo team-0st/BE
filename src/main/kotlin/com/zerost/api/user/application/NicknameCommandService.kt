@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 
 @Service
 class NicknameCommandService(
@@ -41,15 +43,19 @@ class NicknameCommandService(
             throw BusinessException(ErrorCode.DUPLICATE_NICKNAME)
         }
 
-        log.info(
-            "nickname_updated userId={} nickname={}",
-            requireNotNull(user.id),
-            requireNotNull(user.nickname),
-        )
+        val updatedUserId = requireNotNull(user.id)
+        val updatedNickname = requireNotNull(user.nickname)
+        registerAfterCommitLog {
+            log.info(
+                "nickname_updated userId={} nickname={}",
+                updatedUserId,
+                updatedNickname,
+            )
+        }
 
         return UpdateNicknameResponse(
-            userId = requireNotNull(user.id),
-            nickname = requireNotNull(user.nickname),
+            userId = updatedUserId,
+            nickname = updatedNickname,
         )
     }
 
@@ -64,6 +70,16 @@ class NicknameCommandService(
             )
             throw BusinessException(ErrorCode.DUPLICATE_NICKNAME)
         }
+    }
+
+    private fun registerAfterCommitLog(action: () -> Unit) {
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCommit() {
+                    action()
+                }
+            },
+        )
     }
 
     companion object {

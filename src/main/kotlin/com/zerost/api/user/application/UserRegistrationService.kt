@@ -11,6 +11,8 @@ import com.zerost.api.user.presentation.RegisterUserResponse
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -39,21 +41,34 @@ class UserRegistrationService(
             ),
         )
 
-        log.info(
-            "user_registered userId={} role={} onboardingCompleted={}",
-            requireNotNull(user.id),
-            user.role,
-            user.onboardingCompleted,
-        )
+        val userId = requireNotNull(user.id)
+        registerAfterCommitLog {
+            log.info(
+                "user_registered userId={} role={} onboardingCompleted={}",
+                userId,
+                user.role,
+                user.onboardingCompleted,
+            )
+        }
 
         return RegisterUserResponse(
-            userId = requireNotNull(user.id),
+            userId = userId,
             onboardingCompleted = user.onboardingCompleted,
             accessToken = accessToken,
             refreshToken = refreshToken,
             tokenType = "Bearer",
             accessTokenExpiresIn = authTokenProperties.accessTokenExpirationSeconds,
             refreshTokenExpiresIn = authTokenProperties.refreshTokenExpirationSeconds,
+        )
+    }
+
+    private fun registerAfterCommitLog(action: () -> Unit) {
+        TransactionSynchronizationManager.registerSynchronization(
+            object : TransactionSynchronization {
+                override fun afterCommit() {
+                    action()
+                }
+            },
         )
     }
 

@@ -76,7 +76,9 @@ class AdminMissionReviewController(
             completionId,
             request.status,
         )
+        val reviewerId = servletRequest.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE) as Long
         val response = adminMissionReviewService.reviewMissionCompletion(
+            reviewerId = reviewerId,
             completionId = completionId,
             status = request.status,
         )

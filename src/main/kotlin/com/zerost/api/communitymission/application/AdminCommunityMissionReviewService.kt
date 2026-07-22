@@ -16,6 +16,7 @@ class AdminCommunityMissionReviewService(
 
     @Transactional
     fun reviewProof(
+        reviewerId: Long,
         proofId: Long,
         status: String,
     ): ReviewCommunityMissionProofResponse {
@@ -30,7 +31,8 @@ class AdminCommunityMissionReviewService(
         }
 
         log.info(
-            "community_mission_proof_review_completed proofId={} communityMissionId={} requirementId={} userId={} status={} reviewedAt={}",
+            "community_mission_proof_review_completed reviewerId={} proofId={} communityMissionId={} requirementId={} userId={} status={} reviewedAt={}",
+            reviewerId,
             proof.id,
             proof.communityMission.id,
             proof.proofRequirement.id,
