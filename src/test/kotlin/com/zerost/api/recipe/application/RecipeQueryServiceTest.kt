@@ -28,21 +28,25 @@ class RecipeQueryServiceTest {
     private val recipeRepository = mock(RecipeRepository::class.java)
     private val recipeIngredientRepository = mock(RecipeIngredientRepository::class.java)
     private val userUnlockedRecipeRepository = mock(UserUnlockedRecipeRepository::class.java)
+    private val weeklyRecipeSelectionService = mock(WeeklyRecipeSelectionService::class.java)
     private val recipeQueryService = RecipeQueryService(
         userRepository = userRepository,
         recipeRepository = recipeRepository,
         recipeIngredientRepository = recipeIngredientRepository,
         userUnlockedRecipeRepository = userUnlockedRecipeRepository,
+        weeklyRecipeSelectionService = weeklyRecipeSelectionService,
     )
 
     @Test
     fun `레시피 목록 조회 시 비공개 레시피 이름은 마스킹된다`() {
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(emptyList())
+        `when`(weeklyRecipeSelectionService.getCurrentWeeklyRecipe()).thenReturn(
+            createRecipe(id = 2L, name = "오리지널 스프", type = RecipeType.COMMON),
+        )
         `when`(recipeRepository.findAllByOrderByIdAsc()).thenReturn(
             listOf(
                 createRecipe(id = 1L, name = "따뜻한 입문 스프", type = RecipeType.COMMON, intro = true),
-                createRecipe(id = 2L, name = "오리지널 스프", type = RecipeType.COMMON, weekly = true),
                 createRecipe(id = 3L, name = "크리스탈 스프", type = RecipeType.HIDDEN, hidden = true),
             ),
         )
@@ -62,10 +66,12 @@ class RecipeQueryServiceTest {
     fun `레시피 목록 조회 시 입문과 이번주에 해당하지 않는 일반 레시피는 목록에서 제외된다`() {
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(emptyList())
+        `when`(weeklyRecipeSelectionService.getCurrentWeeklyRecipe()).thenReturn(
+            createRecipe(id = 2L, name = "오리지널 스프", type = RecipeType.COMMON),
+        )
         `when`(recipeRepository.findAllByOrderByIdAsc()).thenReturn(
             listOf(
                 createRecipe(id = 1L, name = "따뜻한 입문 스프", type = RecipeType.COMMON, intro = true),
-                createRecipe(id = 2L, name = "오리지널 스프", type = RecipeType.COMMON, weekly = true),
                 createRecipe(id = 3L, name = "크리스탈 스프", type = RecipeType.HIDDEN, hidden = true),
                 createRecipe(id = 4L, name = "숨은 일반 스프", type = RecipeType.COMMON),
             ),
@@ -138,6 +144,7 @@ class RecipeQueryServiceTest {
 
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(createUser()))
         `when`(userUnlockedRecipeRepository.findRecipeIdsByUserId(1L)).thenReturn(listOf(2L))
+        `when`(weeklyRecipeSelectionService.getCurrentWeeklyRecipe()).thenReturn(null)
         `when`(recipeRepository.findAllByOrderByIdAsc()).thenReturn(listOf(recipe))
         `when`(recipeRepository.findById(2L)).thenReturn(Optional.of(recipe))
         `when`(recipeIngredientRepository.findAllByRecipeIdOrderBySlotOrderAsc(2L)).thenReturn(

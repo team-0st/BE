@@ -5,6 +5,8 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -26,6 +28,10 @@ class Mission(
 
     @Column(name = "image_url", length = 255)
     var imageUrl: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mission_category", nullable = false, length = 20)
+    var missionCategory: MissionCategory = MissionCategory.GENERAL,
 
     @Column(name = "reward_ingredient_pool", nullable = false, columnDefinition = "json")
     var rewardIngredientPool: String,

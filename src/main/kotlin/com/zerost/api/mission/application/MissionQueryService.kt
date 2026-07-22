@@ -7,6 +7,7 @@ import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.mission.domain.MissionRepository
+import com.zerost.api.mission.presentation.dto.DailyMissionSectionsResponse
 import com.zerost.api.mission.presentation.dto.MissionCompletionHistoryResponse
 import com.zerost.api.mission.presentation.dto.MissionDetailResponse
 import com.zerost.api.mission.presentation.dto.MissionRewardedIngredientResponse
@@ -15,6 +16,7 @@ import com.zerost.api.mission.presentation.dto.MissionTodayStatus
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -23,33 +25,24 @@ class MissionQueryService(
     private val userRepository: UserRepository,
     private val missionRepository: MissionRepository,
     private val missionCompletionRepository: MissionCompletionRepository,
+    private val dailyMissionSelectionService: DailyMissionSelectionService,
+    private val clock: Clock,
 ) {
 
     @Transactional(readOnly = true)
-    fun getMissions(userId: Long): List<MissionSummaryResponse> {
+    fun getMissions(userId: Long): DailyMissionSectionsResponse {
         val user = userRepository.findById(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
         val todayRange = getTodayRange()
+        val selections = dailyMissionSelectionService.getTodaySelections()
 
-        return missionRepository.findAll()
-            .map { mission ->
-                val todayCompletion = missionCompletionRepository
-                    .findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
-                        userId = requireNotNull(user.id),
-                        missionId = requireNotNull(mission.id),
-                        start = todayRange.first,
-                        end = todayRange.second,
-                    )
-
-                MissionSummaryResponse(
-                    id = requireNotNull(mission.id),
-                    title = mission.title,
-                    description = mission.description,
-                    imageUrl = mission.imageUrl,
-                    todayStatus = todayCompletion?.status?.toTodayStatus(),
-                )
-            }
+        return DailyMissionSectionsResponse(
+            generalMissions = selections.generalMissions.map { mission ->
+                mission.toSummaryResponse(requireNotNull(user.id), todayRange)
+            },
+            specialMission = selections.specialMission.toSummaryResponse(requireNotNull(user.id), todayRange),
+        )
     }
 
     @Transactional(readOnly = true)
@@ -104,8 +97,29 @@ class MissionQueryService(
     }
 
     private fun getTodayRange(): Pair<LocalDateTime, LocalDateTime> {
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         return today.atStartOfDay() to today.plusDays(1).atStartOfDay()
+    }
+
+    private fun Mission.toSummaryResponse(
+        userId: Long,
+        todayRange: Pair<LocalDateTime, LocalDateTime>,
+    ): MissionSummaryResponse {
+        val todayCompletion = missionCompletionRepository
+            .findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+                userId = userId,
+                missionId = requireNotNull(id),
+                start = todayRange.first,
+                end = todayRange.second,
+            )
+
+        return MissionSummaryResponse(
+            id = requireNotNull(id),
+            title = title,
+            description = description,
+            imageUrl = imageUrl,
+            todayStatus = todayCompletion?.status?.toTodayStatus(),
+        )
     }
 
     private fun MissionCompletionStatus.toTodayStatus(): MissionTodayStatus =
