@@ -3,6 +3,7 @@ package com.zerost.api.auth.application
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.user.domain.User
+import com.zerost.api.user.domain.UserRole
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
@@ -27,6 +28,7 @@ class AuthTokenProvider(
 
         return Jwts.builder()
             .subject(requireNotNull(user.id).toString())
+            .claim(ROLE_CLAIM_NAME, user.role.name)
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiresAt))
             .signWith(signingKey)
@@ -46,6 +48,7 @@ class AuthTokenProvider(
 
         return AccessTokenClaims(
             userId = claims.extractUserId(),
+            role = claims.extractUserRole(),
         )
     }
 
@@ -53,8 +56,20 @@ class AuthTokenProvider(
         return subject?.toLongOrNull()
             ?: throw BusinessException(ErrorCode.INVALID_ACCESS_TOKEN)
     }
+
+    private fun Claims.extractUserRole(): UserRole {
+        val rawRole = get(ROLE_CLAIM_NAME, String::class.java)
+        return rawRole?.let {
+            runCatching { UserRole.valueOf(it) }.getOrNull()
+        } ?: throw BusinessException(ErrorCode.INVALID_ACCESS_TOKEN)
+    }
+
+    companion object {
+        private const val ROLE_CLAIM_NAME = "role"
+    }
 }
 
 data class AccessTokenClaims(
     val userId: Long,
+    val role: UserRole,
 )
