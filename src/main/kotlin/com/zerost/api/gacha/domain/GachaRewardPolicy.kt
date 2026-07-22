@@ -2,6 +2,7 @@ package com.zerost.api.gacha.domain
 
 import com.zerost.api.common.entity.BaseEntity
 import com.zerost.api.ingredient.domain.Ingredient
+import com.zerost.api.ingredient.domain.IngredientType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -43,6 +44,10 @@ class GachaRewardPolicy(
     @JoinColumn(name = "ingredient_id")
     val ingredient: Ingredient? = null,
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ingredient_type", length = 20)
+    val ingredientType: IngredientType? = null,
+
     @Column(name = "ingredient_quantity", nullable = false)
     val ingredientQuantity: Int = 0,
 
@@ -58,6 +63,7 @@ class GachaRewardPolicy(
                 require(pointAmount == 0) { "FAIL 보상은 포인트를 지급할 수 없습니다." }
                 require(ecoJamAmount == 0) { "FAIL 보상은 에코잼을 지급할 수 없습니다." }
                 require(ingredient == null) { "FAIL 보상은 재료를 지급할 수 없습니다." }
+                require(ingredientType == null) { "FAIL 보상은 재료 타입을 가질 수 없습니다." }
                 require(ingredientQuantity == 0) { "FAIL 보상은 재료 수량을 가질 수 없습니다." }
             }
 
@@ -65,6 +71,7 @@ class GachaRewardPolicy(
                 require(pointAmount == 0) { "ECO_JAM 보상은 포인트를 함께 지급할 수 없습니다." }
                 require(ecoJamAmount > 0) { "ECO_JAM 보상은 에코잼 수량이 0보다 커야 합니다." }
                 require(ingredient == null) { "ECO_JAM 보상은 재료를 함께 지급할 수 없습니다." }
+                require(ingredientType == null) { "ECO_JAM 보상은 재료 타입을 함께 가질 수 없습니다." }
                 require(ingredientQuantity == 0) { "ECO_JAM 보상은 재료 수량을 가질 수 없습니다." }
             }
 
@@ -72,13 +79,14 @@ class GachaRewardPolicy(
                 require(pointAmount > 0) { "POINT 보상은 포인트 수량이 0보다 커야 합니다." }
                 require(ecoJamAmount == 0) { "POINT 보상은 에코잼을 함께 지급할 수 없습니다." }
                 require(ingredient == null) { "POINT 보상은 재료를 함께 지급할 수 없습니다." }
+                require(ingredientType == null) { "POINT 보상은 재료 타입을 함께 가질 수 없습니다." }
                 require(ingredientQuantity == 0) { "POINT 보상은 재료 수량을 가질 수 없습니다." }
             }
 
             GachaRewardType.INGREDIENT -> {
                 require(pointAmount == 0) { "INGREDIENT 보상은 포인트를 함께 지급할 수 없습니다." }
                 require(ecoJamAmount == 0) { "INGREDIENT 보상은 에코잼을 함께 지급할 수 없습니다." }
-                require(ingredient != null) { "INGREDIENT 보상은 재료가 필수입니다." }
+                require(ingredient != null || ingredientType != null) { "INGREDIENT 보상은 재료 또는 재료 타입이 필수입니다." }
                 require(ingredientQuantity > 0) { "INGREDIENT 보상은 재료 수량이 0보다 커야 합니다." }
             }
         }

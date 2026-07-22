@@ -12,8 +12,10 @@ import com.zerost.api.gacha.domain.GachaRepository
 import com.zerost.api.gacha.domain.GachaRewardPolicy
 import com.zerost.api.gacha.domain.GachaRewardPolicyRepository
 import com.zerost.api.gacha.presentation.dto.ExecuteGachaResponse
+import com.zerost.api.ingredient.domain.Ingredient
 import com.zerost.api.ingredient.domain.IngredientHistory
 import com.zerost.api.ingredient.domain.IngredientHistoryRepository
+import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
@@ -31,6 +33,7 @@ class GachaExecutionService(
     private val userRepository: UserRepository,
     private val gachaRewardPolicyRepository: GachaRewardPolicyRepository,
     private val gachaRepository: GachaRepository,
+    private val ingredientRepository: IngredientRepository,
     private val userIngredientRepository: UserIngredientRepository,
     private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
@@ -54,6 +57,7 @@ class GachaExecutionService(
         }
 
         val selectedPolicy = selectPolicy(activePolicies)
+        val resolvedReward = resolveReward(selectedPolicy)
 
         user.decreaseEcoJam(costEcoJam)
 
@@ -65,12 +69,12 @@ class GachaExecutionService(
                 resultType = selectedPolicy.rewardType,
                 resultPoint = selectedPolicy.pointAmount,
                 resultEcoJam = selectedPolicy.ecoJamAmount,
-                resultIngredient = selectedPolicy.ingredient,
-                resultIngredientQuantity = selectedPolicy.ingredientQuantity,
+                resultIngredient = resolvedReward.ingredient,
+                resultIngredientQuantity = resolvedReward.ingredientQuantity,
             ),
         )
 
-        applyReward(user, selectedPolicy, requireNotNull(gacha.id))
+        applyReward(user, gacha, requireNotNull(gacha.id))
         saveHistories(user, gacha)
 
         return ExecuteGachaResponse(
@@ -104,21 +108,53 @@ class GachaExecutionService(
         }
     }
 
+    private fun resolveReward(selectedPolicy: GachaRewardPolicy): ResolvedReward {
+        if (selectedPolicy.rewardType != com.zerost.api.gacha.domain.GachaRewardType.INGREDIENT) {
+            return ResolvedReward()
+        }
+
+        val ingredientType = selectedPolicy.ingredientType
+        if (ingredientType != null) {
+            val candidates = ingredientRepository.findAllByType(ingredientType)
+            if (candidates.isEmpty()) {
+                throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
+            }
+
+            val selectedIngredient = if (candidates.size == 1) {
+                candidates.first()
+            } else {
+                candidates[gachaRandomProvider.nextInt(candidates.size)]
+            }
+
+            return ResolvedReward(
+                ingredient = selectedIngredient,
+                ingredientQuantity = selectedPolicy.ingredientQuantity,
+            )
+        }
+
+        val fixedIngredient = selectedPolicy.ingredient
+            ?: throw BusinessException(ErrorCode.INVALID_GACHA_REWARD_POLICY)
+        return ResolvedReward(
+            ingredient = fixedIngredient,
+            ingredientQuantity = selectedPolicy.ingredientQuantity,
+        )
+    }
+
     private fun applyReward(
         user: User,
-        selectedPolicy: GachaRewardPolicy,
+        gacha: Gacha,
         gachaId: Long,
     ) {
-        if (selectedPolicy.pointAmount > 0) {
-            user.increasePoint(selectedPolicy.pointAmount)
+        if (gacha.resultPoint > 0) {
+            user.increasePoint(gacha.resultPoint)
         }
 
-        if (selectedPolicy.ecoJamAmount > 0) {
-            user.increaseEcoJam(selectedPolicy.ecoJamAmount)
+        if (gacha.resultEcoJam > 0) {
+            user.increaseEcoJam(gacha.resultEcoJam)
         }
 
-        val ingredient = selectedPolicy.ingredient
-        if (ingredient != null && selectedPolicy.ingredientQuantity > 0) {
+        val ingredient = gacha.resultIngredient
+        if (ingredient != null && gacha.resultIngredientQuantity > 0) {
             val userIngredient = userIngredientRepository.findByUserAndIngredient(user, ingredient)
                 .orElseGet {
                     UserIngredient(
@@ -128,13 +164,13 @@ class GachaExecutionService(
                     )
                 }
 
-            userIngredient.increaseQuantity(selectedPolicy.ingredientQuantity)
+            userIngredient.increaseQuantity(gacha.resultIngredientQuantity)
             userIngredientRepository.save(userIngredient)
             ingredientHistoryRepository.save(
                 IngredientHistory.earn(
                     user = user,
                     ingredient = ingredient,
-                    amount = selectedPolicy.ingredientQuantity,
+                    amount = gacha.resultIngredientQuantity,
                     sourceType = IngredientHistorySourceType.GACHA,
                     sourceId = gachaId,
                 ),
@@ -184,4 +220,9 @@ class GachaExecutionService(
         private const val GACHA_COST_ECO_JAM = 100
         private val PROBABILITY_SCALE = BigDecimal("100")
     }
+
+    private data class ResolvedReward(
+        val ingredient: Ingredient? = null,
+        val ingredientQuantity: Int = 0,
+    )
 }
