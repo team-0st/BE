@@ -9,6 +9,7 @@
   - `zerost_prod` 애플리케이션 -> `8080`
   - `zerost_dev` 애플리케이션 -> `8081`
   - RDS 내부 데이터베이스 -> `zerost_prod`, `zerost_dev`
+- 외부에서 접근하는 포트는 Nginx 기준 `80`, `443`이며, Cloudflare를 통한 HTTPS 연결을 위해 EC2 보안그룹에 `443` 인바운드가 반드시 열려 있어야 합니다.
 - Terraform으로 RDS를 만들 때는 초기 데이터베이스를 하나만 생성합니다.
 - 현재 Terraform 기본값은 `zerost`를 생성하도록 두고, 이후 필요하면 직접 접속해서 `zerost_dev`, `zerost_prod` 등으로 나누는 흐름을 기준으로 합니다.
 
