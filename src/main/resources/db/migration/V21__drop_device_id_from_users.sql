@@ -1,2 +1,2 @@
 alter table users
-    drop column if exists device_id;
+    drop column device_id;
