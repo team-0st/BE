@@ -21,6 +21,7 @@ class RecipeQueryService(
     private val recipeRepository: RecipeRepository,
     private val recipeIngredientRepository: RecipeIngredientRepository,
     private val userUnlockedRecipeRepository: UserUnlockedRecipeRepository,
+    private val weeklyRecipeSelectionService: WeeklyRecipeSelectionService,
 ) {
 
     @Transactional(readOnly = true)
@@ -33,8 +34,7 @@ class RecipeQueryService(
             introRecipes = recipes
                 .filter { it.intro }
                 .map { it.toSummaryResponse(unlockedRecipeIds) },
-            weeklyRecipe = recipes
-                .firstOrNull { it.weekly }
+            weeklyRecipe = weeklyRecipeSelectionService.getCurrentWeeklyRecipe()
                 ?.toSummaryResponse(unlockedRecipeIds),
             hiddenRecipes = recipes
                 .filter { it.hidden }

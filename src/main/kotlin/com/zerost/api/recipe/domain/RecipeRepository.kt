@@ -6,4 +6,5 @@ interface RecipeRepository : JpaRepository<Recipe, Long> {
     fun findAllByOrderByIdAsc(): List<Recipe>
     fun findAllByTypeOrderByIdAsc(type: RecipeType): List<Recipe>
     fun findAllBySlotCountOrderByIdAsc(slotCount: Int): List<Recipe>
+    fun findAllByTypeAndIntroFalseAndHiddenFalseOrderByIdAsc(type: RecipeType): List<Recipe>
 }
