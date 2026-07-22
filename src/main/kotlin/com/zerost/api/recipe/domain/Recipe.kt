@@ -28,6 +28,12 @@ class Recipe(
     @Column(name = "slot_count", nullable = false)
     var slotCount: Int,
 
+    @Column(name = "is_intro", nullable = false)
+    var intro: Boolean = false,
+
+    @Column(name = "is_weekly", nullable = false)
+    var weekly: Boolean = false,
+
     @Column(name = "is_hidden", nullable = false)
     var hidden: Boolean = false,
 ) : BaseEntity()
