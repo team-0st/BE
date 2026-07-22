@@ -1,6 +1,6 @@
 package com.zerost.api.recipe.presentation
 
-import com.zerost.api.common.device.DeviceIdInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.recipe.application.RecipeQueryService
 import com.zerost.api.recipe.application.RecipeUnlockService
@@ -32,7 +32,7 @@ class RecipeControllerTest {
     fun setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(RecipeController(recipeQueryService, recipeUnlockService))
             .setControllerAdvice(GlobalExceptionHandler())
-            .addInterceptors(DeviceIdInterceptor(createAuthTokenProvider()))
+            .addInterceptors(AuthenticationInterceptor(createAuthTokenProvider()))
             .build()
     }
 
@@ -47,25 +47,33 @@ class RecipeControllerTest {
                         type = "COMMON",
                         slotCount = 2,
                         recipeVisible = true,
-                        hints = emptyList(),
                     ),
                 ),
-                weeklyRecipe = RecipeSummaryResponse(
-                    recipeId = 2L,
-                    name = "오리지널 스프",
-                    type = "COMMON",
-                    slotCount = 3,
-                    recipeVisible = true,
-                    hints = emptyList(),
+                generalRecipes = listOf(
+                    RecipeSummaryResponse(
+                        recipeId = 2L,
+                        name = "오리지널 스프",
+                        type = "COMMON",
+                        slotCount = 3,
+                        recipeVisible = true,
+                    ),
                 ),
                 hiddenRecipes = listOf(
                     RecipeSummaryResponse(
-                        recipeId = 3L,
+                        recipeId = 2L,
                         name = "???",
                         type = "HIDDEN",
                         slotCount = 4,
                         recipeVisible = false,
-                        hints = emptyList(),
+                    ),
+                ),
+                legendaryRecipes = listOf(
+                    RecipeSummaryResponse(
+                        recipeId = 3L,
+                        name = "???",
+                        type = "LEGENDARY",
+                        slotCount = 5,
+                        recipeVisible = false,
                     ),
                 ),
             ),
@@ -78,9 +86,11 @@ class RecipeControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.introRecipes[0].name").value("따뜻한 입문 스프"))
-            .andExpect(jsonPath("$.data.weeklyRecipe.name").value("오리지널 스프"))
+            .andExpect(jsonPath("$.data.generalRecipes[0].name").value("오리지널 스프"))
             .andExpect(jsonPath("$.data.hiddenRecipes[0].name").value("???"))
             .andExpect(jsonPath("$.data.hiddenRecipes[0].recipeVisible").value(false))
+            .andExpect(jsonPath("$.data.legendaryRecipes[0].name").value("???"))
+            .andExpect(jsonPath("$.data.legendaryRecipes[0].recipeVisible").value(false))
 
         verify(recipeQueryService).getRecipes(1L)
     }
@@ -94,7 +104,6 @@ class RecipeControllerTest {
                 type = "COMMON",
                 slotCount = 3,
                 recipeVisible = true,
-                hints = emptyList(),
                 ingredients = listOf(
                     RecipeDetailIngredientResponse(
                         ingredientId = 1L,

@@ -28,7 +28,7 @@ class RecipeController(
 
     @Operation(
         summary = "레시피 목록 조회",
-        description = "입문 레시피, 이번 주 레시피, 히든 레시피를 구분해 조회합니다. 비공개 레시피는 이름이 ???로 마스킹되어 반환됩니다.",
+        description = "입문 레시피, 보통 레시피, 히든 레시피, 전설의 레시피를 구분해 조회합니다. 비공개 레시피는 이름이 ???로 마스킹되어 반환됩니다.",
     )
     @ApiResponses(
         value = [
@@ -47,7 +47,7 @@ class RecipeController(
 
     @Operation(
         summary = "레시피 상세 조회",
-        description = "선택한 레시피의 상세 정보를 조회합니다. 비공개 레시피는 재료 조합을 반환하지 않습니다.",
+        description = "선택한 레시피의 상세 정보를 조회합니다. 비공개 히든/전설 레시피는 재료 조합을 반환하지 않습니다.",
     )
     @ApiResponses(
         value = [

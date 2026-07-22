@@ -10,6 +10,9 @@ import java.util.Optional
 interface SoupRepository : JpaRepository<Soup, Long> {
     fun countByUserId(userId: Long): Long
 
+    @Query("select distinct s.recipe.id from Soup s where s.user.id = :userId")
+    fun findDistinctRecipeIdsByUserId(@Param("userId") userId: Long): List<Long>
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Soup s where s.id = :soupId")
     fun findByIdForUpdate(@Param("soupId") soupId: Long): Optional<Soup>
