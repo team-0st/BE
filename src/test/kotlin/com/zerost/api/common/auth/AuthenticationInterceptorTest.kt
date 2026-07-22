@@ -4,6 +4,7 @@ import com.zerost.api.auth.application.AccessTokenClaims
 import com.zerost.api.auth.application.AuthTokenProvider
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.user.domain.UserRole
 import jakarta.servlet.http.HttpServletResponse
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -27,13 +28,14 @@ class AuthenticationInterceptorTest {
         val response = mock(HttpServletResponse::class.java)
 
         `when`(authTokenProvider.parseAccessToken("access-token")).thenReturn(
-            AccessTokenClaims(userId = 1L),
+            AccessTokenClaims(userId = 1L, role = UserRole.ADMIN),
         )
 
         val result = interceptor.preHandle(request, response, Any())
 
         assertTrue(result)
         assertEquals(1L, request.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE))
+        assertEquals(UserRole.ADMIN, request.getAttribute(AuthRequestConstants.USER_ROLE_ATTRIBUTE))
         verify(authTokenProvider).parseAccessToken("access-token")
     }
 

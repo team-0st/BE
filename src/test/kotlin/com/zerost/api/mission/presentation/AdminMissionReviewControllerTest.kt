@@ -1,9 +1,13 @@
 package com.zerost.api.mission.presentation
 
+import com.zerost.api.common.auth.AdminAuthorizationInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.mission.application.AdminMissionReviewQueryService
 import com.zerost.api.mission.application.AdminMissionReviewService
 import com.zerost.api.mission.presentation.dto.AdminMissionReviewItemResponse
+import com.zerost.api.support.createAuthTokenProvider
+import com.zerost.api.user.domain.UserRole
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -30,6 +34,10 @@ class AdminMissionReviewControllerTest {
             ),
         )
             .setControllerAdvice(GlobalExceptionHandler())
+            .addInterceptors(
+                AuthenticationInterceptor(createAuthTokenProvider(role = UserRole.ADMIN)),
+                AdminAuthorizationInterceptor(),
+            )
             .build()
     }
 
@@ -49,12 +57,32 @@ class AdminMissionReviewControllerTest {
             ),
         )
 
-        mockMvc.perform(get("/api/v1/admin/missions/completions/pending"))
+        mockMvc.perform(get("/api/v1/admin/missions/completions/pending").header("Authorization", "Bearer access-token"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].completionId").value(12))
             .andExpect(jsonPath("$.data[0].missionTitle").value("텀블러 사용하기"))
 
         verify(adminMissionReviewQueryService).getPendingMissionCompletions()
+    }
+
+    @Test
+    fun `일반 유저는 관리자 미션 검수 목록을 조회할 수 없다`() {
+        mockMvc = MockMvcBuilders.standaloneSetup(
+            AdminMissionReviewController(
+                adminMissionReviewQueryService,
+                adminMissionReviewService,
+            ),
+        )
+            .setControllerAdvice(GlobalExceptionHandler())
+            .addInterceptors(
+                AuthenticationInterceptor(createAuthTokenProvider(role = UserRole.USER)),
+                AdminAuthorizationInterceptor(),
+            )
+            .build()
+
+        mockMvc.perform(get("/api/v1/admin/missions/completions/pending").header("Authorization", "Bearer access-token"))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.error.code").value("ADMIN_ACCESS_DENIED"))
     }
 }

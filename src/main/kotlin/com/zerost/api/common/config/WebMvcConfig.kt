@@ -1,5 +1,6 @@
 package com.zerost.api.common.config
 
+import com.zerost.api.common.auth.AdminAuthorizationInterceptor
 import com.zerost.api.common.auth.AuthenticationInterceptor
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.CorsRegistry
@@ -9,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @Configuration
 class WebMvcConfig(
     private val authenticationInterceptor: AuthenticationInterceptor,
+    private val adminAuthorizationInterceptor: AdminAuthorizationInterceptor,
     private val corsProperties: CorsProperties,
 ) : WebMvcConfigurer {
 
@@ -16,6 +18,9 @@ class WebMvcConfig(
         registry.addInterceptor(authenticationInterceptor)
             .addPathPatterns("/api/v1/**")
             .excludePathPatterns("/api/v1/users/register", "/api/v1/auth/**")
+
+        registry.addInterceptor(adminAuthorizationInterceptor)
+            .addPathPatterns("/api/v1/admin/**")
     }
 
     override fun addCorsMappings(registry: CorsRegistry) {

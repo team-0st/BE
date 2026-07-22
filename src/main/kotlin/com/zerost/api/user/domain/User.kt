@@ -34,6 +34,10 @@ class User(
     var passwordHash: String? = null,
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var role: UserRole = UserRole.USER,
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "profile_character_code", length = 50)
     var profileCharacterCode: ProfileCharacterCode? = null,
 
@@ -71,6 +75,8 @@ class User(
     fun changeNickname(nickname: String) {
         this.nickname = nickname
     }
+
+    fun isAdmin(): Boolean = role == UserRole.ADMIN
 
     fun increaseEcoJam(amount: Int) {
         this.ecoJam += amount

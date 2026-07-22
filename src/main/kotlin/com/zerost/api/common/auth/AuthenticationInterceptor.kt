@@ -23,6 +23,7 @@ class AuthenticationInterceptor(
             val accessToken = authorization.removePrefix("Bearer ").trim()
             val claims = authTokenProvider.parseAccessToken(accessToken)
             request.setAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE, claims.userId)
+            request.setAttribute(AuthRequestConstants.USER_ROLE_ATTRIBUTE, claims.role)
             return true
         }
 

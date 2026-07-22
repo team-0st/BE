@@ -1,12 +1,16 @@
 package com.zerost.api.communitymission.presentation
 
+import com.zerost.api.common.auth.AdminAuthorizationInterceptor
+import com.zerost.api.common.auth.AuthenticationInterceptor
 import com.zerost.api.common.exception.GlobalExceptionHandler
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewQueryService
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewService
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewItemResponse
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewPageResponse
 import com.zerost.api.communitymission.presentation.dto.ReviewCommunityMissionProofResponse
+import com.zerost.api.support.createAuthTokenProvider
 import com.zerost.api.support.createReviewCommunityMissionProofRequestBody
+import com.zerost.api.user.domain.UserRole
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -35,6 +39,10 @@ class AdminCommunityMissionReviewControllerTest {
             ),
         )
             .setControllerAdvice(GlobalExceptionHandler())
+            .addInterceptors(
+                AuthenticationInterceptor(createAuthTokenProvider(role = UserRole.ADMIN)),
+                AdminAuthorizationInterceptor(),
+            )
             .build()
     }
 
@@ -64,7 +72,7 @@ class AdminCommunityMissionReviewControllerTest {
             ),
         )
 
-        mockMvc.perform(get("/api/v1/admin/community-missions/proofs/pending"))
+        mockMvc.perform(get("/api/v1/admin/community-missions/proofs/pending").header("Authorization", "Bearer access-token"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.data.items[0].proofId").value(101))
             .andExpect(jsonPath("$.data.items[0].communityMissionId").value(3))
@@ -90,6 +98,7 @@ class AdminCommunityMissionReviewControllerTest {
 
         mockMvc.perform(
             post("/api/v1/admin/community-missions/proofs/101/review")
+                .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(createReviewCommunityMissionProofRequestBody("APPROVED")),
         )
@@ -98,5 +107,25 @@ class AdminCommunityMissionReviewControllerTest {
             .andExpect(jsonPath("$.data.status").value("APPROVED"))
 
         verify(adminCommunityMissionReviewService).reviewProof(101L, "APPROVED")
+    }
+
+    @Test
+    fun `일반 유저는 공동 미션 관리자 검수 목록을 조회할 수 없다`() {
+        mockMvc = MockMvcBuilders.standaloneSetup(
+            AdminCommunityMissionReviewController(
+                adminCommunityMissionReviewQueryService = adminCommunityMissionReviewQueryService,
+                adminCommunityMissionReviewService = adminCommunityMissionReviewService,
+            ),
+        )
+            .setControllerAdvice(GlobalExceptionHandler())
+            .addInterceptors(
+                AuthenticationInterceptor(createAuthTokenProvider(role = UserRole.USER)),
+                AdminAuthorizationInterceptor(),
+            )
+            .build()
+
+        mockMvc.perform(get("/api/v1/admin/community-missions/proofs/pending").header("Authorization", "Bearer access-token"))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.error.code").value("ADMIN_ACCESS_DENIED"))
     }
 }
