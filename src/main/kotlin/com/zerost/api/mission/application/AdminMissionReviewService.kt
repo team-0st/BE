@@ -2,27 +2,18 @@ package com.zerost.api.mission.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
-import com.zerost.api.ingredient.domain.IngredientHistory
-import com.zerost.api.ingredient.domain.IngredientHistoryRepository
-import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.IngredientRepository
-import com.zerost.api.ingredient.domain.UserIngredient
-import com.zerost.api.ingredient.domain.UserIngredientRepository
 import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.presentation.dto.ReviewMissionCompletionResponse
-import com.zerost.api.user.domain.UserRepository
+import java.time.LocalDateTime
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @Service
 class AdminMissionReviewService(
     private val missionCompletionRepository: MissionCompletionRepository,
     private val ingredientRepository: IngredientRepository,
-    private val userIngredientRepository: UserIngredientRepository,
-    private val ingredientHistoryRepository: IngredientHistoryRepository,
-    private val userRepository: UserRepository,
 ) {
 
     @Transactional
@@ -38,7 +29,7 @@ class AdminMissionReviewService(
         when (status) {
             "APPROVED" -> {
                 completion.approve(reviewedAt)
-                rewardIngredient(completion)
+                assignRewardIngredient(completion)
             }
             "REJECTED" -> completion.reject(reviewedAt)
             else -> throw BusinessException(ErrorCode.INVALID_INPUT_VALUE)
@@ -51,34 +42,11 @@ class AdminMissionReviewService(
         )
     }
 
-    private fun rewardIngredient(completion: MissionCompletion) {
-        val lockedUser = userRepository.findByIdForUpdate(requireNotNull(completion.user.id))
-            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
+    private fun assignRewardIngredient(completion: MissionCompletion) {
         val rewardIngredientId = completion.mission.pickRewardIngredientId()
 
         val ingredient = ingredientRepository.findById(rewardIngredientId)
             .orElseThrow { BusinessException(ErrorCode.INGREDIENT_NOT_FOUND) }
-
-        val userIngredient = userIngredientRepository.findByUserAndIngredient(lockedUser, ingredient)
-            .orElseGet {
-                UserIngredient(
-                    user = lockedUser,
-                    ingredient = ingredient,
-                    quantity = 0,
-                )
-            }
-
-        userIngredient.increaseQuantity()
-        userIngredientRepository.save(userIngredient)
-        ingredientHistoryRepository.save(
-            IngredientHistory.earn(
-                user = lockedUser,
-                ingredient = ingredient,
-                amount = 1,
-                sourceType = IngredientHistorySourceType.MISSION,
-                sourceId = requireNotNull(completion.id),
-            ),
-        )
         completion.assignRewardedIngredient(ingredient)
     }
 }
