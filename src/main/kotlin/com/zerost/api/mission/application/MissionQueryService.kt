@@ -16,6 +16,7 @@ import com.zerost.api.mission.presentation.dto.MissionTodayStatus
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -25,6 +26,7 @@ class MissionQueryService(
     private val missionRepository: MissionRepository,
     private val missionCompletionRepository: MissionCompletionRepository,
     private val dailyMissionSelectionService: DailyMissionSelectionService,
+    private val clock: Clock,
 ) {
 
     @Transactional(readOnly = true)
@@ -95,7 +97,7 @@ class MissionQueryService(
     }
 
     private fun getTodayRange(): Pair<LocalDateTime, LocalDateTime> {
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         return today.atStartOfDay() to today.plusDays(1).atStartOfDay()
     }
 

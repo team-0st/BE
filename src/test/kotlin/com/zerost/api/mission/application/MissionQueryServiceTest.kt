@@ -15,8 +15,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Optional
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -27,11 +30,13 @@ class MissionQueryServiceTest {
     private val missionRepository = mock(MissionRepository::class.java)
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
     private val dailyMissionSelectionService = mock(DailyMissionSelectionService::class.java)
+    private val clock = Clock.fixed(Instant.parse("2026-07-22T00:00:00Z"), ZoneId.of("Asia/Seoul"))
     private val missionQueryService = MissionQueryService(
         userRepository = userRepository,
         missionRepository = missionRepository,
         missionCompletionRepository = missionCompletionRepository,
         dailyMissionSelectionService = dailyMissionSelectionService,
+        clock = clock,
     )
 
     @Test
@@ -139,7 +144,7 @@ class MissionQueryServiceTest {
     }
 
     private fun todayRange(): Pair<LocalDateTime, LocalDateTime> {
-        val today = LocalDate.now()
+        val today = LocalDate.now(clock)
         return today.atStartOfDay() to today.plusDays(1).atStartOfDay()
     }
 }

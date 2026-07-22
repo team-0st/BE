@@ -2,32 +2,33 @@ package com.zerost.api.recipe.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
-import com.zerost.api.recipe.domain.RecipeRepository
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.recipe.domain.WeeklyRecipeSelection
 import com.zerost.api.recipe.domain.WeeklyRecipeSelectionRepository
 import com.zerost.api.support.createRecipe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
+import java.time.Clock
+import java.time.Instant
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import kotlin.test.assertEquals
 
 class WeeklyRecipeSelectionServiceTest {
 
-    private val recipeRepository = mock(RecipeRepository::class.java)
     private val weeklyRecipeSelectionRepository = mock(WeeklyRecipeSelectionRepository::class.java)
-    private val weeklyRecipeSelectionRandomProvider = mock(WeeklyRecipeSelectionRandomProvider::class.java)
+    private val weeklyRecipeSelectionProvisionService = mock(WeeklyRecipeSelectionProvisionService::class.java)
+    private val clock = Clock.fixed(Instant.parse("2026-07-22T00:00:00Z"), ZoneId.of("Asia/Seoul"))
     private val weeklyRecipeSelectionService = WeeklyRecipeSelectionService(
-        recipeRepository = recipeRepository,
         weeklyRecipeSelectionRepository = weeklyRecipeSelectionRepository,
-        weeklyRecipeSelectionRandomProvider = weeklyRecipeSelectionRandomProvider,
+        weeklyRecipeSelectionProvisionService = weeklyRecipeSelectionProvisionService,
+        clock = clock,
     )
 
     @Test
@@ -45,31 +46,29 @@ class WeeklyRecipeSelectionServiceTest {
         val response = weeklyRecipeSelectionService.getCurrentWeeklyRecipe()
 
         assertEquals("오리지널 스프", response?.name)
-        verifyNoInteractions(recipeRepository)
+        verifyNoInteractions(weeklyRecipeSelectionProvisionService)
     }
 
     @Test
     fun `이번 주 레시피가 없으면 일반 레시피 중 하나를 선택해 저장한다`() {
-        val recipe1 = createRecipe(id = 1L, name = "오리지널 스프", type = RecipeType.COMMON)
         val recipe2 = createRecipe(id = 2L, name = "채소 스프", type = RecipeType.COMMON)
         val weekStartDate = currentWeekStartDate()
         `when`(weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)).thenReturn(null)
-        `when`(recipeRepository.findAllByTypeAndIntroFalseAndHiddenFalseOrderByIdAsc(RecipeType.COMMON)).thenReturn(
-            listOf(recipe1, recipe2),
-        )
-        `when`(weeklyRecipeSelectionRandomProvider.nextInt(2)).thenReturn(1)
+        `when`(weeklyRecipeSelectionProvisionService.createOrLoad(weekStartDate)).thenReturn(recipe2)
 
         val response = weeklyRecipeSelectionService.getCurrentWeeklyRecipe()
 
         assertEquals("채소 스프", response?.name)
-        verify(weeklyRecipeSelectionRepository).save(any(WeeklyRecipeSelection::class.java))
+        verify(weeklyRecipeSelectionProvisionService).createOrLoad(weekStartDate)
     }
 
     @Test
     fun `편성 가능한 일반 레시피가 없으면 예외가 발생한다`() {
         val weekStartDate = currentWeekStartDate()
         `when`(weeklyRecipeSelectionRepository.findByWeekStartDate(weekStartDate)).thenReturn(null)
-        `when`(recipeRepository.findAllByTypeAndIntroFalseAndHiddenFalseOrderByIdAsc(RecipeType.COMMON)).thenReturn(emptyList())
+        `when`(weeklyRecipeSelectionProvisionService.createOrLoad(weekStartDate)).thenThrow(
+            BusinessException(ErrorCode.INVALID_WEEKLY_RECIPE_SELECTION),
+        )
 
         val exception = assertThrows<BusinessException> {
             weeklyRecipeSelectionService.getCurrentWeeklyRecipe()
@@ -79,5 +78,5 @@ class WeeklyRecipeSelectionServiceTest {
     }
 
     private fun currentWeekStartDate(): LocalDate =
-        LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        LocalDate.now(clock).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 }
