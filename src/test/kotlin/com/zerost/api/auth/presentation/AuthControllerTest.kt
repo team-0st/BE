@@ -43,6 +43,8 @@ class AuthControllerTest {
                 nickname = "펭귄탐험가",
                 phoneNumber = "010-1234-5678",
                 onboardingCompleted = true,
+                profileCharacterCode = "TOMATO",
+                profileCharacterImageUrl = "https://assets.zero-st.com/profile-characters/tomato.png",
                 accessToken = "access-token",
                 refreshToken = "refresh-token",
                 tokenType = "Bearer",
@@ -59,6 +61,8 @@ class AuthControllerTest {
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.userId").value(1))
+            .andExpect(jsonPath("$.data.profileCharacterCode").value("TOMATO"))
+            .andExpect(jsonPath("$.data.profileCharacterImageUrl").value("https://assets.zero-st.com/profile-characters/tomato.png"))
             .andExpect(jsonPath("$.data.accessToken").value("access-token"))
             .andExpect(jsonPath("$.data.refreshToken").value("refresh-token"))
 

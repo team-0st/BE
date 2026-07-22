@@ -17,6 +17,16 @@ data class LoginResponse(
     @Schema(description = "온보딩 완료 여부", example = "true")
     val onboardingCompleted: Boolean,
 
+    @Schema(description = "선택한 프로필 캐릭터 코드", example = "BROCCOLI", nullable = true)
+    val profileCharacterCode: String?,
+
+    @Schema(
+        description = "선택한 프로필 캐릭터 이미지 URL",
+        example = "https://assets.zero-st.com/profile-characters/broccoli.png",
+        nullable = true,
+    )
+    val profileCharacterImageUrl: String?,
+
     @Schema(description = "access token", example = "eyJhbGciOiJIUzI1NiJ9...")
     val accessToken: String,
 

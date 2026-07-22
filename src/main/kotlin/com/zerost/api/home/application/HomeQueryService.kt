@@ -3,6 +3,7 @@ package com.zerost.api.home.application
 import com.zerost.api.checkin.domain.CheckInRepository
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
 import com.zerost.api.home.presentation.dto.HomeMissionProgressResponse
 import com.zerost.api.home.presentation.dto.HomeResponse
 import com.zerost.api.mission.domain.MissionCompletionStatus
@@ -20,6 +21,7 @@ class HomeQueryService(
     private val checkInRepository: CheckInRepository,
     private val missionRepository: MissionRepository,
     private val missionCompletionRepository: MissionCompletionRepository,
+    private val profileCharacterImageUrlResolver: ProfileCharacterImageUrlResolver,
 ) {
 
     @Transactional(readOnly = true)
@@ -37,7 +39,8 @@ class HomeQueryService(
 
         return HomeResponse(
             nickname = user.nickname,
-            profileCharacterCode = user.profileCharacterCode?.name,
+            profileCharacterCode = user.getEffectiveProfileCharacterCode().name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolve(user.getEffectiveProfileCharacterCode()),
             ecoJam = user.ecoJam,
             point = user.point,
             checkedInToday = checkInRepository.existsByUserIdAndCheckedDate(resolvedUserId, today),

@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class ProfileCharacterQueryService {
+class ProfileCharacterQueryService(
+    private val profileCharacterImageUrlResolver: ProfileCharacterImageUrlResolver,
+) {
 
     @Transactional(readOnly = true)
     fun getProfileCharacters(): List<ProfileCharacterResponse> {
@@ -15,6 +17,7 @@ class ProfileCharacterQueryService {
                 code = profileCharacter.name,
                 name = profileCharacter.displayName,
                 description = profileCharacter.description,
+                imageUrl = profileCharacterImageUrlResolver.resolve(profileCharacter),
             )
         }
     }

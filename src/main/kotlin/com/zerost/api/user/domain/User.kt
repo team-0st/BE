@@ -39,7 +39,7 @@ class User(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "profile_character_code", length = 50)
-    var profileCharacterCode: ProfileCharacterCode? = null,
+    var profileCharacterCode: ProfileCharacterCode? = ProfileCharacterCode.CARROT,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id")
@@ -70,6 +70,10 @@ class User(
 
     fun changeProfileCharacter(profileCharacterCode: ProfileCharacterCode) {
         this.profileCharacterCode = profileCharacterCode
+    }
+
+    fun getEffectiveProfileCharacterCode(): ProfileCharacterCode {
+        return profileCharacterCode ?: ProfileCharacterCode.CARROT
     }
 
     fun changeNickname(nickname: String) {

@@ -2,6 +2,7 @@ package com.zerost.api.auth.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
 import com.zerost.api.auth.presentation.dto.LoginResponse
 import com.zerost.api.auth.domain.RefreshToken
 import com.zerost.api.auth.domain.RefreshTokenRepository
@@ -20,6 +21,7 @@ class AuthLoginService(
     private val authTokenProvider: AuthTokenProvider,
     private val authTokenProperties: AuthTokenProperties,
     private val refreshTokenHasher: RefreshTokenHasher,
+    private val profileCharacterImageUrlResolver: ProfileCharacterImageUrlResolver,
 ) {
 
     @Transactional
@@ -52,6 +54,8 @@ class AuthLoginService(
             nickname = requireNotNull(user.nickname),
             phoneNumber = requireNotNull(user.phoneNumber),
             onboardingCompleted = user.onboardingCompleted,
+            profileCharacterCode = user.getEffectiveProfileCharacterCode().name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolve(user.getEffectiveProfileCharacterCode()),
             accessToken = accessToken,
             refreshToken = refreshToken,
             tokenType = "Bearer",

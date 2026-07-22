@@ -2,9 +2,12 @@ package com.zerost.api.auth.application
 
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.common.config.PublicAssetsProperties
 import com.zerost.api.auth.domain.RefreshToken
 import com.zerost.api.auth.domain.RefreshTokenRepository
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
 import com.zerost.api.support.createUser
+import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.UserRepository
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
@@ -30,6 +33,11 @@ class AuthLoginServiceTest {
     )
     private val authTokenProvider = AuthTokenProvider(authTokenProperties)
     private val refreshTokenHasher = RefreshTokenHasher()
+    private val profileCharacterImageUrlResolver = ProfileCharacterImageUrlResolver(
+        PublicAssetsProperties(
+            baseUrl = "https://assets.zero-st.com",
+        ),
+    )
     private val authLoginService = AuthLoginService(
         userRepository = userRepository,
         refreshTokenRepository = refreshTokenRepository,
@@ -37,6 +45,7 @@ class AuthLoginServiceTest {
         authTokenProvider = authTokenProvider,
         authTokenProperties = authTokenProperties,
         refreshTokenHasher = refreshTokenHasher,
+        profileCharacterImageUrlResolver = profileCharacterImageUrlResolver,
     )
 
     @Test
@@ -45,6 +54,7 @@ class AuthLoginServiceTest {
             onboardingCompleted = true,
             nickname = "펭귄탐험가",
             phoneNumber = "010-1234-5678",
+            profileCharacterCode = ProfileCharacterCode.TOMATO,
             passwordHash = passwordEncoder.encode("zerost1234"),
         )
         `when`(userRepository.findByPhoneNumber("010-1234-5678")).thenReturn(Optional.of(user))
@@ -54,6 +64,8 @@ class AuthLoginServiceTest {
 
         assertEquals(1L, response.userId)
         assertEquals("펭귄탐험가", response.nickname)
+        assertEquals("TOMATO", response.profileCharacterCode)
+        assertEquals("https://assets.zero-st.com/profile-characters/tomato.png", response.profileCharacterImageUrl)
         assertEquals("Bearer", response.tokenType)
         assertTrue(response.accessToken.isNotBlank())
         assertTrue(response.refreshToken.isNotBlank())

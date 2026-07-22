@@ -1,5 +1,6 @@
 package com.zerost.api.profile.application
 
+import com.zerost.api.common.config.PublicAssetsProperties
 import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.support.createUser
@@ -15,18 +16,26 @@ import kotlin.test.assertEquals
 class ProfileCharacterCommandServiceTest {
 
     private val userRepository = mock(UserRepository::class.java)
-    private val profileCharacterCommandService = ProfileCharacterCommandService(userRepository)
+    private val profileCharacterCommandService = ProfileCharacterCommandService(
+        userRepository,
+        ProfileCharacterImageUrlResolver(
+            PublicAssetsProperties(
+                baseUrl = "https://assets.zero-st.com",
+            ),
+        ),
+    )
 
     @Test
     fun `프로필 캐릭터를 선택할 수 있다`() {
         val user = createUser()
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
 
-        val response = profileCharacterCommandService.updateProfileCharacter(1L, "BASIC_3")
+        val response = profileCharacterCommandService.updateProfileCharacter(1L, "CARROT")
 
         assertEquals(1L, response.userId)
-        assertEquals("BASIC_3", response.profileCharacterCode)
-        assertEquals(ProfileCharacterCode.BASIC_3, user.profileCharacterCode)
+        assertEquals("CARROT", response.profileCharacterCode)
+        assertEquals("https://assets.zero-st.com/profile-characters/carrot.png", response.profileCharacterImageUrl)
+        assertEquals(ProfileCharacterCode.CARROT, user.profileCharacterCode)
     }
 
     @Test

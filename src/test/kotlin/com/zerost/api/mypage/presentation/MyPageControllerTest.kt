@@ -35,7 +35,8 @@ class MyPageControllerTest {
         `when`(myPageQueryService.getMyPage(1L)).thenReturn(
             MyPageResponse(
                 nickname = "펭귄탐험가",
-                profileCharacterCode = "BASIC_2",
+                profileCharacterCode = "CABBAGE",
+                profileCharacterImageUrl = "https://assets.zero-st.com/profile-characters/cabbage.png",
                 shopName = "알맹상점",
                 ecoJam = 410,
                 point = 2200,
@@ -60,7 +61,8 @@ class MyPageControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.profileCharacterCode").value("BASIC_2"))
+            .andExpect(jsonPath("$.data.profileCharacterCode").value("CABBAGE"))
+            .andExpect(jsonPath("$.data.profileCharacterImageUrl").value("https://assets.zero-st.com/profile-characters/cabbage.png"))
             .andExpect(jsonPath("$.data.shopName").value("알맹상점"))
             .andExpect(jsonPath("$.data.brewedSoupCount").value(4))
             .andExpect(jsonPath("$.data.ingredients[0].name").value("양배추"))

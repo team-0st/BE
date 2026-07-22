@@ -44,9 +44,10 @@ class ProfileCharacterControllerTest {
         `when`(profileCharacterQueryService.getProfileCharacters()).thenReturn(
             listOf(
                 ProfileCharacterResponse(
-                    code = "BASIC_1",
-                    name = "기본 캐릭터 1",
-                    description = "선택형 프로필 기본 캐릭터 1",
+                    code = "BROCCOLI",
+                    name = "브로콜리",
+                    description = "브로콜리 프로필 캐릭터",
+                    imageUrl = "https://assets.zero-st.com/profile-characters/broccoli.png",
                 ),
             ),
         )
@@ -57,18 +58,20 @@ class ProfileCharacterControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data[0].code").value("BASIC_1"))
-            .andExpect(jsonPath("$.data[0].name").value("기본 캐릭터 1"))
+            .andExpect(jsonPath("$.data[0].code").value("BROCCOLI"))
+            .andExpect(jsonPath("$.data[0].name").value("브로콜리"))
+            .andExpect(jsonPath("$.data[0].imageUrl").value("https://assets.zero-st.com/profile-characters/broccoli.png"))
 
         verify(profileCharacterQueryService).getProfileCharacters()
     }
 
     @Test
     fun `프로필 캐릭터를 선택할 수 있다`() {
-        `when`(profileCharacterCommandService.updateProfileCharacter(1L, "BASIC_2")).thenReturn(
+        `when`(profileCharacterCommandService.updateProfileCharacter(1L, "CARROT")).thenReturn(
             UpdateProfileCharacterResponse(
                 userId = 1L,
-                profileCharacterCode = "BASIC_2",
+                profileCharacterCode = "CARROT",
+                profileCharacterImageUrl = "https://assets.zero-st.com/profile-characters/carrot.png",
             ),
         )
 
@@ -76,13 +79,14 @@ class ProfileCharacterControllerTest {
             patch("/api/v1/profile-characters/me")
                 .header("Authorization", "Bearer access-token")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"profileCharacterCode":"BASIC_2"}"""),
+                .content("""{"profileCharacterCode":"CARROT"}"""),
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.userId").value(1))
-            .andExpect(jsonPath("$.data.profileCharacterCode").value("BASIC_2"))
+            .andExpect(jsonPath("$.data.profileCharacterCode").value("CARROT"))
+            .andExpect(jsonPath("$.data.profileCharacterImageUrl").value("https://assets.zero-st.com/profile-characters/carrot.png"))
 
-        verify(profileCharacterCommandService).updateProfileCharacter(1L, "BASIC_2")
+        verify(profileCharacterCommandService).updateProfileCharacter(1L, "CARROT")
     }
 }

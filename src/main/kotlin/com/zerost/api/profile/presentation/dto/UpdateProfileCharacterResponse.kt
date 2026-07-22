@@ -8,6 +8,12 @@ data class UpdateProfileCharacterResponse(
     @Schema(description = "유저 식별자", example = "1")
     val userId: Long,
 
-    @Schema(description = "선택된 프로필 캐릭터 코드", example = "BASIC_1")
+    @Schema(description = "선택된 프로필 캐릭터 코드", example = "BROCCOLI")
     val profileCharacterCode: String,
+
+    @Schema(
+        description = "선택된 프로필 캐릭터 이미지 URL",
+        example = "https://assets.zero-st.com/profile-characters/broccoli.png",
+    )
+    val profileCharacterImageUrl: String,
 )

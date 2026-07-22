@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class ProfileCharacterCommandService(
     private val userRepository: UserRepository,
+    private val profileCharacterImageUrlResolver: ProfileCharacterImageUrlResolver,
 ) {
 
     @Transactional
@@ -28,6 +29,7 @@ class ProfileCharacterCommandService(
         return UpdateProfileCharacterResponse(
             userId = requireNotNull(user.id),
             profileCharacterCode = character.name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolve(character),
         )
     }
 }

@@ -29,6 +29,8 @@ app:
   cors:
     allowed-origins:
       - http://localhost:3000
+  public-assets:
+    base-url: https://assets.zero-st.com
   storage:
     s3:
       bucket: test-bucket
