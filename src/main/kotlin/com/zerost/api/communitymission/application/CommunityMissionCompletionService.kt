@@ -11,6 +11,7 @@ import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
 import com.zerost.api.communitymission.presentation.dto.CompleteCommunityMissionResponse
 import com.zerost.api.user.domain.UserRepository
 import org.springframework.context.ApplicationEventPublisher
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -106,6 +107,18 @@ class CommunityMissionCompletionService(
             null
         }
 
+        log.info(
+            "community_mission_completed userId={} communityMissionId={} completionId={} succeeded={} rewardGranted={} rewardedEcoJam={} rewardedIngredientCount={} completedAt={}",
+            resolvedUserId,
+            communityMissionId,
+            completion.id,
+            succeededNow,
+            currentCompletionReward != null,
+            currentCompletionReward?.rewardedEcoJam ?: 0,
+            currentCompletionReward?.rewardedIngredients?.size ?: 0,
+            completedAt,
+        )
+
         return CompleteCommunityMissionResponse(
             completionId = requireNotNull(completion.id),
             communityMissionId = requireNotNull(communityMission.id),
@@ -129,5 +142,9 @@ class CommunityMissionCompletionService(
         return BigDecimal.valueOf(participantCount)
             .multiply(BigDecimal("100"))
             .divide(BigDecimal.valueOf(totalUserCount), scale, RoundingMode.HALF_UP)
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(CommunityMissionCompletionService::class.java)
     }
 }

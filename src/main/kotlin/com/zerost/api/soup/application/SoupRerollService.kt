@@ -11,6 +11,7 @@ import com.zerost.api.soup.domain.SoupRewardGrade
 import com.zerost.api.soup.domain.SoupRerollPolicyGroupRepository
 import com.zerost.api.soup.presentation.dto.RerollSoupResponse
 import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -59,6 +60,18 @@ class SoupRerollService(
         val reward = soupRewardService.reroll(soup)
         soup.markRerolled()
 
+        log.info(
+            "soup_reroll_completed userId={} soupId={} recipeType={} rerollCostEcoJam={} rewardGrade={} rewardEcoJam={} rewardPoint={} rewardedIngredientCount={}",
+            user.id,
+            soup.id,
+            soup.recipe.type.name,
+            rerollCost,
+            reward.rewardGrade,
+            reward.ecoJam,
+            reward.point,
+            reward.rewardedIngredients.size,
+        )
+
         return RerollSoupResponse(
             soupId = requireNotNull(soup.id),
             rerollCostEcoJam = rerollCost,
@@ -76,4 +89,8 @@ class SoupRerollService(
             currentRewardGrade = rewardGrade,
         ).map { it.rerollCostEcoJam }
             .orElseThrow { BusinessException(ErrorCode.SOUP_REROLL_NOT_AVAILABLE) }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(SoupRerollService::class.java)
+    }
 }

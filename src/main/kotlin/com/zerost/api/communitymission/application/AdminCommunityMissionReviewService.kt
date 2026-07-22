@@ -4,6 +4,7 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
 import com.zerost.api.communitymission.presentation.dto.ReviewCommunityMissionProofResponse
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
@@ -28,10 +29,24 @@ class AdminCommunityMissionReviewService(
             else -> throw BusinessException(ErrorCode.INVALID_INPUT_VALUE)
         }
 
+        log.info(
+            "community_mission_proof_review_completed proofId={} communityMissionId={} requirementId={} userId={} status={} reviewedAt={}",
+            proof.id,
+            proof.communityMission.id,
+            proof.proofRequirement.id,
+            proof.user.id,
+            proof.status.name,
+            proof.reviewedAt,
+        )
+
         return ReviewCommunityMissionProofResponse(
             proofId = requireNotNull(proof.id),
             status = proof.status.name,
             reviewedAt = requireNotNull(proof.reviewedAt).toString(),
         )
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AdminCommunityMissionReviewService::class.java)
     }
 }

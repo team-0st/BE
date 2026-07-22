@@ -7,6 +7,7 @@ import com.zerost.api.mission.domain.MissionCompletion
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.presentation.dto.ReviewMissionCompletionResponse
 import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -35,6 +36,15 @@ class AdminMissionReviewService(
             else -> throw BusinessException(ErrorCode.INVALID_INPUT_VALUE)
         }
 
+        log.info(
+            "mission_review_completed completionId={} missionId={} userId={} status={} reviewedAt={}",
+            completion.id,
+            completion.mission.id,
+            completion.user.id,
+            completion.status.name,
+            completion.reviewedAt,
+        )
+
         return ReviewMissionCompletionResponse(
             completionId = requireNotNull(completion.id),
             status = completion.status.name,
@@ -48,5 +58,9 @@ class AdminMissionReviewService(
         val ingredient = ingredientRepository.findById(rewardIngredientId)
             .orElseThrow { BusinessException(ErrorCode.INGREDIENT_NOT_FOUND) }
         completion.assignRewardedIngredient(ingredient)
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AdminMissionReviewService::class.java)
     }
 }
