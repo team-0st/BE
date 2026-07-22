@@ -100,7 +100,7 @@ output "public_assets_cloudfront_domain_name" {
 
 output "public_assets_base_url" {
   description = "Base URL to use for public asset delivery."
-  value       = var.public_assets_attach_custom_domain ? "https://${var.public_assets_domain}" : "https://${aws_cloudfront_distribution.public_assets.domain_name}"
+  value       = local.public_assets_has_certificate ? "https://${var.public_assets_domain}" : "https://${aws_cloudfront_distribution.public_assets.domain_name}"
 }
 
 output "public_assets_acm_certificate_arn" {
