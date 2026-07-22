@@ -32,6 +32,7 @@ import com.zerost.api.soup.domain.SoupRewardIngredient
 import com.zerost.api.user.application.CompleteOnboardingCommand
 import com.zerost.api.user.domain.ProfileCharacterCode
 import com.zerost.api.user.domain.User
+import com.zerost.api.user.domain.UserRole
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import org.mockito.Mockito.mock
@@ -44,6 +45,7 @@ fun createUser(
     nickname: String? = null,
     phoneNumber: String? = null,
     passwordHash: String? = null,
+    role: UserRole = UserRole.USER,
     profileCharacterCode: ProfileCharacterCode? = null,
     shop: Shop? = null,
     ecoJam: Int = 0,
@@ -54,6 +56,7 @@ fun createUser(
     nickname = nickname,
     phoneNumber = phoneNumber,
     passwordHash = passwordHash,
+    role = role,
     profileCharacterCode = profileCharacterCode,
     shop = shop,
     ecoJam = ecoJam,
@@ -161,11 +164,13 @@ fun createSubmitCommunityMissionProofRequestBody(
 
 fun createAuthTokenProvider(
     userId: Long = 1L,
+    role: UserRole = UserRole.USER,
 ): AuthTokenProvider {
     val authTokenProvider = mock(AuthTokenProvider::class.java)
     `when`(authTokenProvider.parseAccessToken("access-token")).thenReturn(
         AccessTokenClaims(
             userId = userId,
+            role = role,
         ),
     )
     return authTokenProvider
