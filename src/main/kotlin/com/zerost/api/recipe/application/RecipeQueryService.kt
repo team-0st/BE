@@ -40,10 +40,10 @@ class RecipeQueryService(
                 .filter { it.type == RecipeType.COMMON && !it.intro }
                 .map { it.toSummaryResponse(unlockedRecipeIds, brewedRecipeIds) },
             hiddenRecipes = recipes
-                .filter { it.type == RecipeType.HIDDEN }
+                .filter { it.type == RecipeType.HIDDEN && !it.intro }
                 .map { it.toSummaryResponse(unlockedRecipeIds, brewedRecipeIds) },
             legendaryRecipes = recipes
-                .filter { it.type == RecipeType.LEGENDARY }
+                .filter { it.type == RecipeType.LEGENDARY && !it.intro }
                 .map { it.toSummaryResponse(unlockedRecipeIds, brewedRecipeIds) },
         )
     }
