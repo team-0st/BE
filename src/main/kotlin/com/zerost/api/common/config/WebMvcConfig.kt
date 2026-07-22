@@ -22,7 +22,11 @@ class WebMvcConfig(
 
         registry.addInterceptor(authenticationInterceptor)
             .addPathPatterns("/api/v1/**")
-            .excludePathPatterns("/api/v1/users/register", "/api/v1/auth/**")
+            .excludePathPatterns(
+                "/api/v1/users/register",
+                "/api/v1/auth/**",
+                "/api/v1/tester-link/current",
+            )
 
         registry.addInterceptor(adminAuthorizationInterceptor)
             .addPathPatterns("/api/v1/admin/**")
