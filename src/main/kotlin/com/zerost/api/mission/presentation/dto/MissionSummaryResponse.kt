@@ -23,4 +23,10 @@ data class MissionSummaryResponse(
         nullable = true,
     )
     val todayStatus: MissionTodayStatus?,
+
+    @Schema(description = "오늘 승인된 미션 보상 수령 가능 여부", example = "false")
+    val rewardClaimable: Boolean = false,
+
+    @Schema(description = "오늘 승인된 미션 보상 수령 여부", example = "false")
+    val rewardClaimed: Boolean = false,
 )
