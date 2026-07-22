@@ -113,29 +113,29 @@ class GachaExecutionService(
             return ResolvedReward()
         }
 
-        val fixedIngredient = selectedPolicy.ingredient
-        if (fixedIngredient != null) {
+        val ingredientType = selectedPolicy.ingredientType
+        if (ingredientType != null) {
+            val candidates = ingredientRepository.findAllByType(ingredientType)
+            if (candidates.isEmpty()) {
+                throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
+            }
+
+            val selectedIngredient = if (candidates.size == 1) {
+                candidates.first()
+            } else {
+                candidates[gachaRandomProvider.nextInt(candidates.size)]
+            }
+
             return ResolvedReward(
-                ingredient = fixedIngredient,
+                ingredient = selectedIngredient,
                 ingredientQuantity = selectedPolicy.ingredientQuantity,
             )
         }
 
-        val ingredientType = selectedPolicy.ingredientType
+        val fixedIngredient = selectedPolicy.ingredient
             ?: throw BusinessException(ErrorCode.INVALID_GACHA_REWARD_POLICY)
-        val candidates = ingredientRepository.findAllByType(ingredientType)
-        if (candidates.isEmpty()) {
-            throw BusinessException(ErrorCode.INGREDIENT_NOT_FOUND)
-        }
-
-        val selectedIngredient = if (candidates.size == 1) {
-            candidates.first()
-        } else {
-            candidates[gachaRandomProvider.nextInt(candidates.size)]
-        }
-
         return ResolvedReward(
-            ingredient = selectedIngredient,
+            ingredient = fixedIngredient,
             ingredientQuantity = selectedPolicy.ingredientQuantity,
         )
     }

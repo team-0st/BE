@@ -152,6 +152,7 @@ class GachaExecutionServiceTest {
             name = "랜덤 일반 재료 2개",
             rewardType = GachaRewardType.INGREDIENT,
             probability = BigDecimal("10.00"),
+            ingredient = firstIngredient,
             ingredientType = IngredientType.COMMON,
             ingredientQuantity = 2,
         )
