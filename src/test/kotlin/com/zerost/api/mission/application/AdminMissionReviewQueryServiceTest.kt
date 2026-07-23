@@ -1,5 +1,6 @@
 package com.zerost.api.mission.application
 
+import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.mission.domain.MissionCompletionRepository
 import com.zerost.api.mission.domain.MissionCompletionStatus
 import com.zerost.api.support.createMission
@@ -13,7 +14,11 @@ import kotlin.test.assertEquals
 class AdminMissionReviewQueryServiceTest {
 
     private val missionCompletionRepository = mock(MissionCompletionRepository::class.java)
-    private val adminMissionReviewQueryService = AdminMissionReviewQueryService(missionCompletionRepository)
+    private val fileUploadService = mock(FileUploadService::class.java)
+    private val adminMissionReviewQueryService = AdminMissionReviewQueryService(
+        missionCompletionRepository,
+        fileUploadService,
+    )
 
     @Test
     fun `검수 대기 미션 인증 목록을 관리자 응답으로 변환한다`() {
@@ -25,8 +30,11 @@ class AdminMissionReviewQueryServiceTest {
             mission = mission,
             status = MissionCompletionStatus.PENDING,
         )
+        val photoKey = "missions/1/1/2026/07/18/mission-1.jpg"
+        val photoUrl = "https://example.com/$photoKey?signed=1"
         `when`(missionCompletionRepository.findAllByStatusOrderBySubmittedAtAsc(MissionCompletionStatus.PENDING))
             .thenReturn(listOf(completion))
+        `when`(fileUploadService.createPresignedGetUrl(photoKey)).thenReturn(photoUrl)
 
         val response = adminMissionReviewQueryService.getPendingMissionCompletions()
 
@@ -36,6 +44,7 @@ class AdminMissionReviewQueryServiceTest {
         assertEquals("펭귄탐험가", response[0].userNickname)
         assertEquals(1L, response[0].missionId)
         assertEquals("텀블러 사용하기", response[0].missionTitle)
-        assertEquals("missions/1/1/2026/07/18/mission-1.jpg", response[0].photoKey)
+        assertEquals(photoKey, response[0].photoKey)
+        assertEquals(photoUrl, response[0].photoUrl)
     }
 }

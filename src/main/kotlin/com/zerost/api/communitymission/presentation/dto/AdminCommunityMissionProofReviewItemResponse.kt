@@ -24,4 +24,6 @@ data class AdminCommunityMissionProofReviewItemResponse(
     val submittedAt: String,
     @Schema(description = "제출 이미지 파일 키 목록")
     val imageKeys: List<String>,
+    @Schema(description = "검수 미리보기용 S3 presigned GET URL 목록")
+    val imageUrls: List<String>,
 )

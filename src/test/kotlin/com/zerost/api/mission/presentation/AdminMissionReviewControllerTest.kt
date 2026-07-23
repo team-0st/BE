@@ -52,6 +52,7 @@ class AdminMissionReviewControllerTest {
                     missionId = 1L,
                     missionTitle = "텀블러 사용하기",
                     photoKey = "missions/1/1/2026/07/18/file.jpg",
+                    photoUrl = "https://example.com/missions/1/1/2026/07/18/file.jpg?X-Amz-Signature=demo",
                     submittedAt = "2026-07-18T10:00:00",
                 ),
             ),
@@ -62,6 +63,7 @@ class AdminMissionReviewControllerTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data[0].completionId").value(12))
             .andExpect(jsonPath("$.data[0].missionTitle").value("텀블러 사용하기"))
+            .andExpect(jsonPath("$.data[0].photoUrl").value("https://example.com/missions/1/1/2026/07/18/file.jpg?X-Amz-Signature=demo"))
 
         verify(adminMissionReviewQueryService).getPendingMissionCompletions()
     }

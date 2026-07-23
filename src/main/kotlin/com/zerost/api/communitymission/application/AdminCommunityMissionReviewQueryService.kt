@@ -6,6 +6,7 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewItemResponse
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewPageResponse
+import com.zerost.api.file.application.FileUploadService
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class AdminCommunityMissionReviewQueryService(
     private val communityMissionProofRepository: CommunityMissionProofRepository,
+    private val fileUploadService: FileUploadService,
 ) {
     companion object {
         private const val MAX_PAGE_SIZE = 100
@@ -38,6 +40,7 @@ class AdminCommunityMissionReviewQueryService(
 
         return AdminCommunityMissionProofReviewPageResponse(
             items = proofPage.content.map { proof ->
+                val imageKeys = proof.images.sortedBy { it.imageOrder }.map { it.imageKey }
                 AdminCommunityMissionProofReviewItemResponse(
                     proofId = requireNotNull(proof.id),
                     communityMissionId = requireNotNull(proof.communityMission.id),
@@ -48,7 +51,8 @@ class AdminCommunityMissionReviewQueryService(
                     userId = requireNotNull(proof.user.id),
                     nickname = proof.user.nickname,
                     submittedAt = proof.submittedAt.toString(),
-                    imageKeys = proof.images.sortedBy { it.imageOrder }.map { it.imageKey },
+                    imageKeys = imageKeys,
+                    imageUrls = imageKeys.map { fileUploadService.createPresignedGetUrl(it) },
                 )
             },
             page = proofPage.number,
