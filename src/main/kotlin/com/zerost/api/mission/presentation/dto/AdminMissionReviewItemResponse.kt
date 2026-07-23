@@ -26,6 +26,12 @@ data class AdminMissionReviewItemResponse(
     )
     val photoKey: String,
 
+    @field:Schema(
+        description = "검수 미리보기용 S3 presigned GET URL",
+        example = "https://bucket.s3.ap-northeast-2.amazonaws.com/missions/1/1/2026/07/18/uuid.jpg?X-Amz-...",
+    )
+    val photoUrl: String,
+
     @field:Schema(description = "제출 시각", example = "2026-07-18T10:00:00")
     val submittedAt: String,
 )

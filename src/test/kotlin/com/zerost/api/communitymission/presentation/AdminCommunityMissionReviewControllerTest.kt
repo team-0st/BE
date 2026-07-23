@@ -65,6 +65,9 @@ class AdminCommunityMissionReviewControllerTest {
                         nickname = "펭귄탐험가",
                         submittedAt = "2026-07-21T15:30:00",
                         imageKeys = listOf("community-missions/1/3/2026/07/21/proof-1.jpg"),
+                        imageUrls = listOf(
+                            "https://example.com/community-missions/1/3/2026/07/21/proof-1.jpg?X-Amz-Signature=demo",
+                        ),
                     ),
                 ),
                 page = 0,
@@ -80,6 +83,10 @@ class AdminCommunityMissionReviewControllerTest {
             .andExpect(jsonPath("$.data.items[0].proofId").value(101))
             .andExpect(jsonPath("$.data.items[0].communityMissionId").value(3))
             .andExpect(jsonPath("$.data.items[0].requirementId").value(11))
+            .andExpect(
+                jsonPath("$.data.items[0].imageUrls[0]")
+                    .value("https://example.com/community-missions/1/3/2026/07/21/proof-1.jpg?X-Amz-Signature=demo"),
+            )
             .andExpect(jsonPath("$.data.page").value(0))
             .andExpect(jsonPath("$.data.size").value(20))
             .andExpect(jsonPath("$.data.totalElements").value(1))

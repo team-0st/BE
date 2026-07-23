@@ -4,6 +4,7 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.domain.CommunityMissionProofRepository
 import com.zerost.api.communitymission.domain.CommunityMissionProofStatus
+import com.zerost.api.file.application.FileUploadService
 import com.zerost.api.support.createCommunityMissionProof
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -17,8 +18,10 @@ import kotlin.test.assertFailsWith
 class AdminCommunityMissionReviewQueryServiceTest {
 
     private val communityMissionProofRepository = mock(CommunityMissionProofRepository::class.java)
+    private val fileUploadService = mock(FileUploadService::class.java)
     private val adminCommunityMissionReviewQueryService = AdminCommunityMissionReviewQueryService(
         communityMissionProofRepository = communityMissionProofRepository,
+        fileUploadService = fileUploadService,
     )
 
     @Test
@@ -34,6 +37,10 @@ class AdminCommunityMissionReviewQueryServiceTest {
         )
         `when`(communityMissionProofRepository.findAllByStatus(CommunityMissionProofStatus.PENDING, pageable))
             .thenReturn(PageImpl(listOf(proof), pageable, 1))
+        proof.images.forEach { image ->
+            `when`(fileUploadService.createPresignedGetUrl(image.imageKey))
+                .thenReturn("https://example.com/${image.imageKey}?signed=1")
+        }
 
         val response = adminCommunityMissionReviewQueryService.getPendingProofs(page = 0, size = 20)
 
@@ -43,6 +50,11 @@ class AdminCommunityMissionReviewQueryServiceTest {
         assertEquals(1, response.totalElements)
         assertEquals(1, response.totalPages)
         assertEquals(false, response.hasNext)
+        assertEquals(response.items[0].imageKeys.size, response.items[0].imageUrls.size)
+        assertEquals(
+            response.items[0].imageKeys.map { "https://example.com/$it?signed=1" },
+            response.items[0].imageUrls,
+        )
     }
 
     @Test

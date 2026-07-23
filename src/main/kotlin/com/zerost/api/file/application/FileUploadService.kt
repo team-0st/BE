@@ -141,6 +141,9 @@ class FileUploadService(
         }
     }
 
+    /** 검수 미리보기 등 — S3 객체에 대한 임시 GET URL */
+    fun createPresignedGetUrl(fileKey: String): String = createPresignedUrl(fileKey)
+
     private fun createPresignedUrl(fileKey: String): String {
         val getObjectRequest = GetObjectRequest.builder()
             .bucket(s3Properties.bucket)
