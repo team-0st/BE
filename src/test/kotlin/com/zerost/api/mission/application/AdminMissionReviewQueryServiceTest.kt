@@ -30,7 +30,7 @@ class AdminMissionReviewQueryServiceTest {
             mission = mission,
             status = MissionCompletionStatus.PENDING,
         )
-        val photoKey = "missions/1/1/2026/07/18/mission-1.jpg"
+        val photoKey = completion.photoKey
         val photoUrl = "https://example.com/$photoKey?signed=1"
         `when`(missionCompletionRepository.findAllByStatusOrderBySubmittedAtAsc(MissionCompletionStatus.PENDING))
             .thenReturn(listOf(completion))
