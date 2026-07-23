@@ -30,6 +30,12 @@ interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
     @EntityGraph(attributePaths = ["user", "mission"])
     fun findAllByStatusOrderBySubmittedAtAsc(status: MissionCompletionStatus): List<MissionCompletion>
 
+    @EntityGraph(attributePaths = ["mission", "rewardedIngredient"])
+    fun findAllByUserIdAndStatusAndRewardClaimedAtIsNullOrderByReviewedAtAscSubmittedAtAsc(
+        userId: Long,
+        status: MissionCompletionStatus,
+    ): List<MissionCompletion>
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select mc from MissionCompletion mc where mc.id = :completionId")
     fun findByIdForUpdate(@Param("completionId") completionId: Long): Optional<MissionCompletion>
