@@ -51,6 +51,7 @@ class RewardQueryServiceTest {
         assertEquals(0, response.summary.pendingHiddenIngredientCount)
         assertEquals(1, response.items.size)
         assertEquals(55L, response.items[0].rewardId)
+        assertEquals(1L, response.items[0].sourceId)
         assertEquals("MISSION", response.items[0].rewardSourceType)
         assertEquals("텀블러 사용 인증", response.items[0].sourceTitle)
         assertEquals("INGREDIENT", response.items[0].rewards[0].rewardType)

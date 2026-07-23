@@ -41,6 +41,9 @@ class RewardQueryService(
     }
 
     fun listClaimableMissionCompletions(userId: Long): List<MissionCompletion> {
+        if (!userRepository.existsById(userId)) {
+            throw BusinessException(ErrorCode.USER_NOT_FOUND)
+        }
         return missionCompletionRepository
             .findAllByUserIdAndStatusAndRewardClaimedAtIsNullOrderByReviewedAtAscSubmittedAtAsc(
                 userId,
@@ -55,7 +58,7 @@ class RewardQueryService(
         return RewardBundleResponse(
             rewardId = requireNotNull(completion.id),
             rewardSourceType = SOURCE_MISSION,
-            sourceId = requireNotNull(completion.id),
+            sourceId = requireNotNull(completion.mission.id),
             sourceTitle = completion.mission.title,
             rewardStatus = STATUS_CLAIMABLE,
             earnedAt = earnedAt,
