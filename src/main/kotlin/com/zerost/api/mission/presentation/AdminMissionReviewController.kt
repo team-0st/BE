@@ -5,6 +5,7 @@ import com.zerost.api.common.response.ApiResponse
 import com.zerost.api.mission.application.AdminMissionReviewQueryService
 import com.zerost.api.mission.application.AdminMissionReviewService
 import com.zerost.api.mission.presentation.dto.AdminMissionReviewItemResponse
+import com.zerost.api.mission.presentation.dto.AdminMissionReviewedItemResponse
 import com.zerost.api.mission.presentation.dto.ReviewMissionCompletionRequest
 import com.zerost.api.mission.presentation.dto.ReviewMissionCompletionResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -48,6 +49,26 @@ class AdminMissionReviewController(
         )
         val response = adminMissionReviewQueryService.getPendingMissionCompletions()
         return ApiResponse.success(response)
+    }
+
+    @Operation(
+        summary = "검수 완료 미션 인증 목록 조회",
+        description = "승인·반려된 일일 미션 인증을 검수 시각 내림차순으로 최대 50건 조회합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+            SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
+        ],
+    )
+    @GetMapping("/completions/reviewed")
+    fun getReviewedMissionCompletions(request: HttpServletRequest): ApiResponse<List<AdminMissionReviewedItemResponse>> {
+        log.info(
+            "admin_reviewed_mission_completions_requested traceId={} adminUserId={}",
+            request.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            request.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE),
+        )
+        return ApiResponse.success(adminMissionReviewQueryService.getReviewedMissionCompletions())
     }
 
     @Operation(

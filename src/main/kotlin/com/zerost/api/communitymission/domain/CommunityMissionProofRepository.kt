@@ -31,6 +31,9 @@ interface CommunityMissionProofRepository : JpaRepository<CommunityMissionProof,
     @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user"])
     fun findAllByStatus(status: CommunityMissionProofStatus, pageable: Pageable): Page<CommunityMissionProof>
 
+    @EntityGraph(attributePaths = ["communityMission", "proofRequirement", "user", "images"])
+    fun findAllByStatusIn(statuses: Collection<CommunityMissionProofStatus>, pageable: Pageable): Page<CommunityMissionProof>
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select cmp from CommunityMissionProof cmp where cmp.id = :proofId")
     fun findByIdForUpdate(@Param("proofId") proofId: Long): CommunityMissionProof?

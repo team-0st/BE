@@ -6,6 +6,7 @@ import com.zerost.api.communitymission.application.AdminCommunityMissionReviewQu
 import com.zerost.api.communitymission.application.AdminCommunityMissionReviewService
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewItemResponse
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewPageResponse
+import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewedPageResponse
 import com.zerost.api.communitymission.presentation.dto.ReviewCommunityMissionProofRequest
 import com.zerost.api.communitymission.presentation.dto.ReviewCommunityMissionProofResponse
 import io.swagger.v3.oas.annotations.Operation
@@ -61,6 +62,37 @@ class AdminCommunityMissionReviewController(
             size,
         )
         return ApiResponse.success(adminCommunityMissionReviewQueryService.getPendingProofs(page, size))
+    }
+
+    @Operation(
+        summary = "검수 완료 공동 미션 인증 목록 조회",
+        description = "승인·반려된 공동 미션 인증을 검수 시각 내림차순으로 페이지 조회합니다.",
+    )
+    @ApiResponses(
+        value = [
+            SwaggerApiResponse(responseCode = "200", description = "조회 성공"),
+            SwaggerApiResponse(responseCode = "400", description = "유효하지 않은 page 또는 size 값"),
+            SwaggerApiResponse(responseCode = "403", description = "관리자 권한이 없는 요청"),
+        ],
+    )
+    @GetMapping("/proofs/reviewed")
+    fun getReviewedProofs(
+        request: HttpServletRequest,
+        @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+        @RequestParam(defaultValue = "0")
+        page: Int,
+        @Parameter(description = "페이지 크기(최대 100)", example = "20")
+        @RequestParam(defaultValue = "20")
+        size: Int,
+    ): ApiResponse<AdminCommunityMissionProofReviewedPageResponse> {
+        log.info(
+            "admin_reviewed_community_mission_proofs_requested traceId={} adminUserId={} page={} size={}",
+            request.getAttribute(AuthRequestConstants.TRACE_ID_ATTRIBUTE),
+            request.getAttribute(AuthRequestConstants.USER_ID_ATTRIBUTE),
+            page,
+            size,
+        )
+        return ApiResponse.success(adminCommunityMissionReviewQueryService.getReviewedProofs(page, size))
     }
 
     @Operation(

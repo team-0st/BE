@@ -30,6 +30,11 @@ interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
     @EntityGraph(attributePaths = ["user", "mission"])
     fun findAllByStatusOrderBySubmittedAtAsc(status: MissionCompletionStatus): List<MissionCompletion>
 
+    @EntityGraph(attributePaths = ["user", "mission"])
+    fun findTop50ByStatusInOrderByReviewedAtDescIdDesc(
+        statuses: Collection<MissionCompletionStatus>,
+    ): List<MissionCompletion>
+
     @EntityGraph(attributePaths = ["mission", "rewardedIngredient"])
     fun findAllByUserIdAndStatusAndRewardClaimedAtIsNullOrderByReviewedAtAscSubmittedAtAsc(
         userId: Long,
