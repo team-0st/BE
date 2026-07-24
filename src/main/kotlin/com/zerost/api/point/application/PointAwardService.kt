@@ -12,6 +12,17 @@ class PointAwardService(
     private val pointPolicyProperties: PointPolicyProperties,
 ) {
 
+    private val maxCumulativeEarnAmountPerUser: Int? by lazy {
+        pointPolicyProperties.maxCumulativeEarnAmountPerUser
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+            ?.toIntOrNull()
+            ?: pointPolicyProperties.maxCumulativeEarnAmountPerUser
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { throw IllegalArgumentException("포인트 누적 지급 상한 설정값은 정수여야 합니다. value=$it") }
+    }
+
     fun award(
         user: User,
         requestedAmount: Int,
@@ -46,7 +57,7 @@ class PointAwardService(
         userId: Long,
         requestedAmount: Int,
     ): Int {
-        val maxCumulativeEarnAmountPerUser = pointPolicyProperties.maxCumulativeEarnAmountPerUser
+        val maxCumulativeEarnAmountPerUser = maxCumulativeEarnAmountPerUser
             ?: return requestedAmount
 
         val currentEarnedAmount = pointHistoryRepository.sumEarnedAmountByUserId(userId)

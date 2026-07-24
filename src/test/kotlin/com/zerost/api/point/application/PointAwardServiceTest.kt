@@ -40,7 +40,7 @@ class PointAwardServiceTest {
         val user = createUser(id = 1L, point = 0)
         val service = PointAwardService(
             pointHistoryRepository = pointHistoryRepository,
-            pointPolicyProperties = PointPolicyProperties(maxCumulativeEarnAmountPerUser = 5_000),
+            pointPolicyProperties = PointPolicyProperties(maxCumulativeEarnAmountPerUser = "5000"),
         )
         `when`(pointHistoryRepository.sumEarnedAmountByUserId(1L)).thenReturn(4_900)
 
@@ -61,7 +61,7 @@ class PointAwardServiceTest {
         val user = createUser(id = 1L, point = 0)
         val service = PointAwardService(
             pointHistoryRepository = pointHistoryRepository,
-            pointPolicyProperties = PointPolicyProperties(maxCumulativeEarnAmountPerUser = 5_000),
+            pointPolicyProperties = PointPolicyProperties(maxCumulativeEarnAmountPerUser = "5000"),
         )
         `when`(pointHistoryRepository.sumEarnedAmountByUserId(1L)).thenReturn(5_000)
 
