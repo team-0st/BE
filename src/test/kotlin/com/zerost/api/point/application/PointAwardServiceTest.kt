@@ -9,6 +9,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
 class PointAwardServiceTest {
@@ -42,7 +43,7 @@ class PointAwardServiceTest {
             pointHistoryRepository = pointHistoryRepository,
             pointPolicyProperties = PointPolicyProperties(maxCumulativeEarnAmountPerUser = "5000"),
         )
-        `when`(pointHistoryRepository.sumEarnedAmountByUserId(1L)).thenReturn(4_900)
+        `when`(pointHistoryRepository.sumEarnedAmountByUserId(1L)).thenReturn(4_900L)
 
         val grantedAmount = service.award(
             user = user,
@@ -63,7 +64,7 @@ class PointAwardServiceTest {
             pointHistoryRepository = pointHistoryRepository,
             pointPolicyProperties = PointPolicyProperties(maxCumulativeEarnAmountPerUser = "5000"),
         )
-        `when`(pointHistoryRepository.sumEarnedAmountByUserId(1L)).thenReturn(5_000)
+        `when`(pointHistoryRepository.sumEarnedAmountByUserId(1L)).thenReturn(5_000L)
 
         val grantedAmount = service.award(
             user = user,
@@ -75,5 +76,19 @@ class PointAwardServiceTest {
         assertEquals(0, grantedAmount)
         assertEquals(0, user.point)
         verify(pointHistoryRepository, never()).save(any())
+    }
+
+    @Test
+    fun `상한 설정값이 정수가 아니면 즉시 예외가 발생한다`() {
+        assertThrows<IllegalArgumentException> {
+            PointPolicyProperties(maxCumulativeEarnAmountPerUser = "abc")
+        }
+    }
+
+    @Test
+    fun `상한 설정값이 음수면 즉시 예외가 발생한다`() {
+        assertThrows<IllegalArgumentException> {
+            PointPolicyProperties(maxCumulativeEarnAmountPerUser = "-1")
+        }
     }
 }

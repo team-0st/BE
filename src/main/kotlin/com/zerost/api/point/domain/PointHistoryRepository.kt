@@ -15,5 +15,5 @@ interface PointHistoryRepository : JpaRepository<PointHistory, Long> {
           and ph.amount > 0
         """,
     )
-    fun sumEarnedAmountByUserId(@Param("userId") userId: Long): Int
+    fun sumEarnedAmountByUserId(@Param("userId") userId: Long): Long
 }
