@@ -15,6 +15,7 @@ import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.point.application.PointAwardService
 import com.zerost.api.point.domain.PointHistory
 import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.point.domain.PointHistorySourceType
@@ -52,6 +53,7 @@ class SoupRewardService(
     private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
     private val pointHistoryRepository: PointHistoryRepository,
+    private val pointAwardService: PointAwardService,
     private val soupRewardPolicyRepository: SoupRewardPolicyRepository,
     private val soupRewardPolicyIngredientRepository: SoupRewardPolicyIngredientRepository,
     private val soupBonusRewardPolicyRepository: SoupBonusRewardPolicyRepository,
@@ -79,19 +81,11 @@ class SoupRewardService(
             bonusReward = bonusReward,
         )
 
-        return SoupRewardSummary(
-            rewardGrade = reward.rewardGrade.name,
-            ecoJam = reward.ecoJam,
-            point = reward.point,
-            rewardedIngredients = reward.rewardedIngredients.map { ingredientReward ->
-                SoupRewardIngredientResponse(
-                    ingredientId = requireNotNull(ingredientReward.ingredient.id),
-                    ingredientName = ingredientReward.ingredient.name,
-                    quantity = ingredientReward.quantity,
-                )
-            },
-            baseReward = baseReward.toSectionResponse(),
-            bonusReward = bonusReward?.toSectionResponse(),
+        return buildRewardSummary(
+            soup = soup,
+            rewardedIngredients = reward.rewardedIngredients,
+            baseReward = baseReward.copy(point = soup.baseRewardPoint),
+            bonusReward = bonusReward?.copy(point = soup.bonusRewardPoint),
         )
     }
 
@@ -110,18 +104,11 @@ class SoupRewardService(
             ingredientHistorySourceType = IngredientHistorySourceType.SOUP_REROLL,
         )
 
-        return SoupRewardSummary(
-            rewardGrade = reward.rewardGrade.name,
-            ecoJam = reward.ecoJam,
-            point = reward.point,
-            rewardedIngredients = reward.rewardedIngredients.map { ingredientReward ->
-                SoupRewardIngredientResponse(
-                    ingredientId = requireNotNull(ingredientReward.ingredient.id),
-                    ingredientName = ingredientReward.ingredient.name,
-                    quantity = ingredientReward.quantity,
-                )
-            },
-            baseReward = reward.toSectionResponse(),
+        return buildRewardSummary(
+            soup = soup,
+            rewardedIngredients = reward.rewardedIngredients,
+            baseReward = reward.copy(point = soup.baseRewardPoint),
+            bonusReward = null,
         )
     }
 
@@ -237,17 +224,31 @@ class SoupRewardService(
     ) {
         soup.rewardGrade = reward.rewardGrade
         soup.rewardEcoJam = reward.ecoJam
-        soup.rewardPoint = reward.point
+        soup.rewardPoint = 0
         soup.baseRewardGrade = baseReward.rewardGrade
         soup.baseRewardEcoJam = baseReward.ecoJam
-        soup.baseRewardPoint = baseReward.point
+        soup.baseRewardPoint = 0
         soup.bonusRewardGrade = bonusReward?.rewardGrade
         soup.bonusRewardEcoJam = bonusReward?.ecoJam ?: 0
-        soup.bonusRewardPoint = bonusReward?.point ?: 0
+        soup.bonusRewardPoint = 0
 
         soup.user.increaseEcoJam(reward.ecoJam)
-        soup.user.increasePoint(reward.point)
-        saveHistories(soup, reward, ecoJamHistorySourceType, pointHistorySourceType)
+        val grantedPoint = pointAwardService.award(
+            user = soup.user,
+            requestedAmount = reward.point,
+            sourceType = pointHistorySourceType,
+            sourceId = requireNotNull(soup.id),
+        )
+        val adjustedBaseRewardPoint = baseReward.point.coerceAtMost(grantedPoint)
+        val adjustedBonusRewardPoint = bonusReward?.point?.let { bonusPoint ->
+            (grantedPoint - adjustedBaseRewardPoint).coerceAtLeast(0).coerceAtMost(bonusPoint)
+        } ?: 0
+
+        soup.rewardPoint = grantedPoint
+        soup.baseRewardPoint = adjustedBaseRewardPoint
+        soup.bonusRewardPoint = adjustedBonusRewardPoint
+
+        saveHistories(soup, reward.copy(point = grantedPoint), ecoJamHistorySourceType)
 
         reward.rewardedIngredients.forEach { ingredientReward ->
             val userIngredient = userIngredientRepository.findByUserAndIngredient(soup.user, ingredientReward.ingredient)
@@ -331,7 +332,6 @@ class SoupRewardService(
         soup: Soup,
         reward: RewardResult,
         ecoJamHistorySourceType: EcoJamHistorySourceType,
-        pointHistorySourceType: PointHistorySourceType,
     ) {
         val soupId = requireNotNull(soup.id)
 
@@ -345,17 +345,28 @@ class SoupRewardService(
                 ),
             )
         }
+    }
 
-        if (reward.point > 0) {
-            pointHistoryRepository.save(
-                PointHistory.earn(
-                    user = soup.user,
-                    amount = reward.point,
-                    sourceType = pointHistorySourceType,
-                    sourceId = soupId,
-                ),
-            )
-        }
+    private fun buildRewardSummary(
+        soup: Soup,
+        rewardedIngredients: List<IngredientReward>,
+        baseReward: RewardResult,
+        bonusReward: RewardResult?,
+    ): SoupRewardSummary {
+        return SoupRewardSummary(
+            rewardGrade = soup.rewardGrade.name,
+            ecoJam = soup.rewardEcoJam,
+            point = soup.rewardPoint,
+            rewardedIngredients = rewardedIngredients.map { ingredientReward ->
+                SoupRewardIngredientResponse(
+                    ingredientId = requireNotNull(ingredientReward.ingredient.id),
+                    ingredientName = ingredientReward.ingredient.name,
+                    quantity = ingredientReward.quantity,
+                )
+            },
+            baseReward = baseReward.toSectionResponse(),
+            bonusReward = bonusReward?.toSectionResponse(),
+        )
     }
 
     private fun randomCommonIngredient(): Ingredient = ingredientRepository.findAllByType(IngredientType.COMMON)

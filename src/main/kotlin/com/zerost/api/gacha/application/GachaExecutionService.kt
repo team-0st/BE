@@ -19,8 +19,7 @@ import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientHistorySourceType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
-import com.zerost.api.point.domain.PointHistory
-import com.zerost.api.point.domain.PointHistoryRepository
+import com.zerost.api.point.application.PointAwardService
 import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.user.domain.User
 import com.zerost.api.user.domain.UserRepository
@@ -38,7 +37,7 @@ class GachaExecutionService(
     private val userIngredientRepository: UserIngredientRepository,
     private val ingredientHistoryRepository: IngredientHistoryRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
-    private val pointHistoryRepository: PointHistoryRepository,
+    private val pointAwardService: PointAwardService,
     private val gachaRandomProvider: GachaRandomProvider,
 ) {
 
@@ -159,7 +158,12 @@ class GachaExecutionService(
         gachaId: Long,
     ) {
         if (gacha.resultPoint > 0) {
-            user.increasePoint(gacha.resultPoint)
+            gacha.resultPoint = pointAwardService.award(
+                user = user,
+                requestedAmount = gacha.resultPoint,
+                sourceType = PointHistorySourceType.GACHA,
+                sourceId = gachaId,
+            )
         }
 
         if (gacha.resultEcoJam > 0) {
@@ -212,17 +216,6 @@ class GachaExecutionService(
                     user = user,
                     amount = gacha.resultEcoJam,
                     sourceType = EcoJamHistorySourceType.GACHA,
-                    sourceId = gachaId,
-                )
-            )
-        }
-
-        if (gacha.resultPoint > 0) {
-            pointHistoryRepository.save(
-                PointHistory.earn(
-                    user = user,
-                    amount = gacha.resultPoint,
-                    sourceType = PointHistorySourceType.GACHA,
                     sourceId = gachaId,
                 )
             )

@@ -7,6 +7,8 @@ import com.zerost.api.ingredient.domain.IngredientHistoryRepository
 import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.point.application.PointPolicyProperties
+import com.zerost.api.point.application.PointAwardService
 import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.recipe.domain.RecipeType
 import com.zerost.api.soup.domain.SoupRepository
@@ -57,6 +59,7 @@ class SoupRerollServiceTest {
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
+    private val pointAwardService = PointAwardService(userRepository, pointHistoryRepository, PointPolicyProperties())
     private val randomProvider = mock(RandomProvider::class.java)
     private val soupRewardService = SoupRewardService(
         ingredientRepository = ingredientRepository,
@@ -65,6 +68,7 @@ class SoupRerollServiceTest {
         ingredientHistoryRepository = ingredientHistoryRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
         pointHistoryRepository = pointHistoryRepository,
+        pointAwardService = pointAwardService,
         soupRewardPolicyRepository = soupRewardPolicyRepository,
         soupRewardPolicyIngredientRepository = soupRewardPolicyIngredientRepository,
         soupBonusRewardPolicyRepository = soupBonusRewardPolicyRepository,

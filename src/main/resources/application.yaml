@@ -29,6 +29,9 @@ app:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:}
   public-assets:
     base-url: ${APP_PUBLIC_ASSETS_BASE_URL:https://assets.zero-st.com}
+  point:
+    policy:
+      max-cumulative-earn-amount-per-user: ${APP_POINT_POLICY_MAX_CUMULATIVE_EARN_AMOUNT_PER_USER:}
   storage:
     s3:
       bucket: ${APP_STORAGE_S3_BUCKET}

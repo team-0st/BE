@@ -13,6 +13,8 @@ import com.zerost.api.ingredient.domain.IngredientRepository
 import com.zerost.api.ingredient.domain.IngredientType
 import com.zerost.api.ingredient.domain.UserIngredient
 import com.zerost.api.ingredient.domain.UserIngredientRepository
+import com.zerost.api.point.application.PointPolicyProperties
+import com.zerost.api.point.application.PointAwardService
 import com.zerost.api.point.domain.PointHistoryRepository
 import com.zerost.api.support.createIngredient
 import com.zerost.api.support.createUser
@@ -39,6 +41,7 @@ class GachaExecutionServiceTest {
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
+    private val pointAwardService = PointAwardService(userRepository, pointHistoryRepository, PointPolicyProperties())
     private val gachaRandomProvider = mock(GachaRandomProvider::class.java)
 
     private val gachaExecutionService = GachaExecutionService(
@@ -49,7 +52,7 @@ class GachaExecutionServiceTest {
         userIngredientRepository = userIngredientRepository,
         ingredientHistoryRepository = ingredientHistoryRepository,
         ecoJamHistoryRepository = ecoJamHistoryRepository,
-        pointHistoryRepository = pointHistoryRepository,
+        pointAwardService = pointAwardService,
         gachaRandomProvider = gachaRandomProvider,
     )
 
