@@ -6,7 +6,10 @@ import com.zerost.api.common.exception.BusinessException
 import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewItemResponse
 import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewPageResponse
+import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewedPageResponse
 import com.zerost.api.file.application.FileUploadService
+import com.zerost.api.communitymission.presentation.dto.AdminCommunityMissionProofReviewedItemResponse
+
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
@@ -51,6 +54,54 @@ class AdminCommunityMissionReviewQueryService(
                     userId = requireNotNull(proof.user.id),
                     nickname = proof.user.nickname,
                     submittedAt = proof.submittedAt.toString(),
+                    imageKeys = imageKeys,
+                    imageUrls = imageKeys.map { fileUploadService.createPresignedGetUrl(it) },
+                )
+            },
+            page = proofPage.number,
+            size = proofPage.size,
+            totalElements = proofPage.totalElements,
+            totalPages = proofPage.totalPages,
+            hasNext = proofPage.hasNext(),
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun getReviewedProofs(
+        page: Int,
+        size: Int,
+    ): AdminCommunityMissionProofReviewedPageResponse {
+        validatePageRequest(page, size)
+
+        val pageable = PageRequest.of(
+            page,
+            size,
+            Sort.by(
+                Sort.Order.desc("reviewedAt"),
+                Sort.Order.desc("id"),
+            ),
+        )
+        val statuses = listOf(
+            CommunityMissionProofStatus.APPROVED,
+            CommunityMissionProofStatus.REJECTED,
+        )
+        val proofPage = communityMissionProofRepository.findAllByStatusIn(statuses, pageable)
+
+        return AdminCommunityMissionProofReviewedPageResponse(
+            items = proofPage.content.map { proof ->
+                val imageKeys = proof.images.sortedBy { it.imageOrder }.map { it.imageKey }
+                AdminCommunityMissionProofReviewedItemResponse(
+                    proofId = requireNotNull(proof.id),
+                    communityMissionId = requireNotNull(proof.communityMission.id),
+                    communityMissionTitle = proof.communityMission.title,
+                    requirementId = requireNotNull(proof.proofRequirement.id),
+                    proofOrder = proof.proofRequirement.proofOrder,
+                    requirementTitle = proof.proofRequirement.title,
+                    userId = requireNotNull(proof.user.id),
+                    nickname = proof.user.nickname,
+                    status = proof.status.name,
+                    submittedAt = proof.submittedAt.toString(),
+                    reviewedAt = proof.reviewedAt?.toString(),
                     imageKeys = imageKeys,
                     imageUrls = imageKeys.map { fileUploadService.createPresignedGetUrl(it) },
                 )
