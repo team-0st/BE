@@ -10,8 +10,7 @@ import com.zerost.api.common.exception.ErrorCode
 import com.zerost.api.ecojam.domain.EcoJamHistory
 import com.zerost.api.ecojam.domain.EcoJamHistoryRepository
 import com.zerost.api.ecojam.domain.EcoJamHistorySourceType
-import com.zerost.api.point.domain.PointHistory
-import com.zerost.api.point.domain.PointHistoryRepository
+import com.zerost.api.point.application.PointAwardService
 import com.zerost.api.point.domain.PointHistorySourceType
 import com.zerost.api.user.domain.UserRepository
 import org.slf4j.LoggerFactory
@@ -22,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional
 class AdminAssetGrantService(
     private val userRepository: UserRepository,
     private val ecoJamHistoryRepository: EcoJamHistoryRepository,
-    private val pointHistoryRepository: PointHistoryRepository,
+    private val pointAwardService: PointAwardService,
 ) {
 
     @Transactional(readOnly = true)
@@ -62,7 +61,7 @@ class AdminAssetGrantService(
             val user = userRepository.findByIdForUpdate(userId)
                 .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND) }
 
-            when (request.assetType) {
+            val actualGrantedAmount = when (request.assetType) {
                 AdminAssetType.ECO_JAM -> {
                     user.increaseEcoJam(grantedAmount)
                     ecoJamHistoryRepository.save(
@@ -78,25 +77,24 @@ class AdminAssetGrantService(
                         grantedAmount = grantedAmount,
                         balanceAfter = user.ecoJam,
                     )
+                    grantedAmount
                 }
                 AdminAssetType.POINT -> {
-                    user.increasePoint(grantedAmount)
-                    pointHistoryRepository.save(
-                        PointHistory.earn(
-                            user = user,
-                            amount = grantedAmount,
-                            sourceType = PointHistorySourceType.ADMIN_GRANT,
-                            sourceId = adminUserId,
-                        ),
+                    val awardedPoint = pointAwardService.award(
+                        user = user,
+                        requestedAmount = grantedAmount,
+                        sourceType = PointHistorySourceType.ADMIN_GRANT,
+                        sourceId = adminUserId,
                     )
                     results += AdminAssetGrantItemResult(
                         userId = userId,
-                        grantedAmount = grantedAmount,
+                        grantedAmount = awardedPoint,
                         balanceAfter = user.point,
                     )
+                    awardedPoint
                 }
             }
-            totalGrantedAmount += grantedAmount
+            totalGrantedAmount += actualGrantedAmount
         }
 
         log.info(
