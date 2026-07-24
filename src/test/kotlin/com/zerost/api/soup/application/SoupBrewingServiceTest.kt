@@ -62,7 +62,7 @@ class SoupBrewingServiceTest {
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
-    private val pointAwardService = PointAwardService(pointHistoryRepository, PointPolicyProperties())
+    private val pointAwardService = PointAwardService(userRepository, pointHistoryRepository, PointPolicyProperties())
     private val randomProvider = mock(RandomProvider::class.java)
     private val soupRewardService = SoupRewardService(
         ingredientRepository = ingredientRepository,

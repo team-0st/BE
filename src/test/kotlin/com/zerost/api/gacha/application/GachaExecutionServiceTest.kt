@@ -41,7 +41,7 @@ class GachaExecutionServiceTest {
     private val ingredientHistoryRepository = mock(IngredientHistoryRepository::class.java)
     private val ecoJamHistoryRepository = mock(EcoJamHistoryRepository::class.java)
     private val pointHistoryRepository = mock(PointHistoryRepository::class.java)
-    private val pointAwardService = PointAwardService(pointHistoryRepository, PointPolicyProperties())
+    private val pointAwardService = PointAwardService(userRepository, pointHistoryRepository, PointPolicyProperties())
     private val gachaRandomProvider = mock(GachaRandomProvider::class.java)
 
     private val gachaExecutionService = GachaExecutionService(
