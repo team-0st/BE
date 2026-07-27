@@ -1,4 +1,4 @@
-# ZeroSt Backend
+# ZEROST
 
 제로웨이스트 실천을 **미션, 재료 수집, 레시피, 스프 제작, 가챠 보상**으로 연결한 게이미피케이션 백엔드입니다.  
 사용자가 친환경 행동을 인증하고, 그 결과를 재료와 보상으로 돌려받아 다시 다음 행동으로 이어지도록 Kotlin + Spring Boot 기반으로 구현했습니다.
@@ -127,13 +127,13 @@ BE/
   </tr>
   <tr>
     <td width="33.33%" align="center">
-      <video src="docs/assets/soup-brew-demo.mp4" controls width="220"></video>
+      <video src="https://github.com/user-attachments/assets/298136ee-ea63-4445-afa7-d79177672f66" controls width="220"></video>
     </td>
     <td width="33.33%" align="center">
-      <video src="docs/assets/soup-reroll-demo.mp4" controls width="220"></video>
+      <video src="https://github.com/user-attachments/assets/940565f4-2390-4e3a-9d20-e119db364365" controls width="220"></video>
     </td>
     <td width="33.33%" align="center">
-      <video src="docs/assets/gacha-demo.mp4" controls width="220"></video>
+      <video src="https://github.com/user-attachments/assets/94dae366-b658-4f4f-ae4f-280ee80aade5" controls width="220"></video>
     </td>
   </tr>
 </table>
