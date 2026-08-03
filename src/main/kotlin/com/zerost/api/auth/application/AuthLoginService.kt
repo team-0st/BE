@@ -1,0 +1,94 @@
+package com.zerost.api.auth.application
+
+import com.zerost.api.common.exception.BusinessException
+import com.zerost.api.common.exception.ErrorCode
+import com.zerost.api.profile.application.ProfileCharacterImageUrlResolver
+import com.zerost.api.auth.presentation.dto.LoginResponse
+import com.zerost.api.auth.domain.RefreshToken
+import com.zerost.api.auth.domain.RefreshTokenRepository
+import com.zerost.api.user.domain.UserRepository
+import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.util.UUID
+
+@Service
+class AuthLoginService(
+    private val userRepository: UserRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val authTokenProvider: AuthTokenProvider,
+    private val authTokenProperties: AuthTokenProperties,
+    private val refreshTokenHasher: RefreshTokenHasher,
+    private val profileCharacterImageUrlResolver: ProfileCharacterImageUrlResolver,
+) {
+
+    @Transactional
+    fun login(phoneNumber: String, password: String): LoginResponse {
+        val user = userRepository.findByPhoneNumber(phoneNumber)
+            .orElseThrow {
+                log.warn("login_failed reason=user_not_found phoneNumber={}", maskPhoneNumber(phoneNumber))
+                BusinessException(ErrorCode.INVALID_LOGIN_CREDENTIALS)
+            }
+
+        val passwordHash = user.passwordHash
+        if (!user.onboardingCompleted || passwordHash.isNullOrBlank() || !passwordEncoder.matches(password, passwordHash)) {
+            log.warn(
+                "login_failed reason=invalid_credentials userId={} phoneNumber={}",
+                user.id,
+                maskPhoneNumber(phoneNumber),
+            )
+            throw BusinessException(ErrorCode.INVALID_LOGIN_CREDENTIALS)
+        }
+
+        refreshTokenRepository.deleteAllByUserId(requireNotNull(user.id))
+
+        val accessToken = authTokenProvider.createAccessToken(user)
+        val refreshToken = UUID.randomUUID().toString()
+        val refreshTokenHash = refreshTokenHasher.hash(refreshToken)
+        val refreshTokenExpiresAt = LocalDateTime.now().plusSeconds(authTokenProperties.refreshTokenExpirationSeconds)
+
+        refreshTokenRepository.save(
+            RefreshToken(
+                user = user,
+                tokenHash = refreshTokenHash,
+                expiresAt = refreshTokenExpiresAt,
+            ),
+        )
+
+        log.info(
+            "login_succeeded userId={} role={} onboardingCompleted={}",
+            user.id,
+            user.role.name,
+            user.onboardingCompleted,
+        )
+
+        return LoginResponse(
+            userId = requireNotNull(user.id),
+            nickname = requireNotNull(user.nickname),
+            phoneNumber = requireNotNull(user.phoneNumber),
+            onboardingCompleted = user.onboardingCompleted,
+            profileCharacterCode = user.getEffectiveProfileCharacterCode().name,
+            profileCharacterImageUrl = profileCharacterImageUrlResolver.resolve(user.getEffectiveProfileCharacterCode()),
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+            tokenType = "Bearer",
+            accessTokenExpiresIn = authTokenProperties.accessTokenExpirationSeconds,
+            refreshTokenExpiresIn = authTokenProperties.refreshTokenExpirationSeconds,
+        )
+    }
+
+    private fun maskPhoneNumber(phoneNumber: String): String {
+        return if (phoneNumber.length >= 8) {
+            "${phoneNumber.take(3)}-****-${phoneNumber.takeLast(4)}"
+        } else {
+            "***"
+        }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(AuthLoginService::class.java)
+    }
+}

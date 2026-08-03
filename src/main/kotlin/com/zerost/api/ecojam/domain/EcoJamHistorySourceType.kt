@@ -1,0 +1,13 @@
+package com.zerost.api.ecojam.domain
+
+enum class EcoJamHistorySourceType {
+    SOUP,
+    SOUP_REROLL,
+    GACHA,
+    MISSION,
+    COMMUNITY_MISSION,
+    CHECKIN,
+    RECIPE_UNLOCK,
+    SIGNUP,
+    ADMIN_GRANT,
+}

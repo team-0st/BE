@@ -38,6 +38,22 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	// Flyway
+	implementation("org.springframework.boot:spring-boot-flyway")
+	implementation("org.flywaydb:flyway-mysql")
+
+	// Swagger
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+
+	// S3
+	implementation(platform("software.amazon.awssdk:bom:2.32.6"))
+	implementation("software.amazon.awssdk:s3")
+
+	// JWT
+	implementation("io.jsonwebtoken:jjwt-api:0.12.7")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.7")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.7")
 }
 
 kotlin {

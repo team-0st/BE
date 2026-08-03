@@ -1,0 +1,38 @@
+aws_region   = "ap-northeast-2"
+project_name = "zerost"
+vpc_cidr     = "10.0.0.0/16"
+public_subnet_cidrs = [
+  "10.0.1.0/24",
+  "10.0.2.0/24",
+]
+private_subnet_cidrs = [
+  "10.0.11.0/24",
+  "10.0.12.0/24",
+]
+availability_zones = [
+  "ap-northeast-2a",
+  "ap-northeast-2c",
+]
+instance_type        = "t3.micro"
+key_name             = "replace-with-your-keypair-name"
+ami_id               = "replace-with-your-ami-id"
+app_port             = 8080
+allowed_ssh_cidr     = "0.0.0.0/0"
+db_name              = "zerost"
+db_username          = "replace-with-your-db-username"
+db_password          = "replace-with-your-db-password"
+db_instance_class    = "db.t3.micro"
+db_allocated_storage = 20
+db_engine_version    = "8.0"
+ecr_repository_name  = "zerost-api"
+upload_bucket_name   = "replace-with-your-upload-bucket-name"
+github_repository    = "team-0st/BE"
+github_oidc_branches = [
+  "main",
+  "develop",
+]
+public_assets_domain                = "assets.zero-st.com"
+public_assets_origin_prefix         = "public"
+public_assets_enable_custom_domain  = false
+public_assets_attach_custom_domain  = false
+public_assets_acm_certificate_arn   = ""

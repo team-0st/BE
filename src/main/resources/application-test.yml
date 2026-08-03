@@ -1,0 +1,39 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  servlet:
+    multipart:
+      max-file-size: 5242880
+      max-request-size: 6291456
+
+  datasource:
+    url: jdbc:h2:mem:zerost-test;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+  flyway:
+    enabled: true
+
+app:
+  auth:
+    token:
+      secret: test-secret-key-test-secret-key-1234
+      access-token-expiration-seconds: 3600
+      refresh-token-expiration-seconds: 1209600
+  cors:
+    allowed-origins:
+      - http://localhost:3000
+  public-assets:
+    base-url: https://assets.zero-st.com
+  storage:
+    s3:
+      bucket: test-bucket
+      region: ap-northeast-2
+      max-file-size: 5242880
+      presigned-url-duration-seconds: 600
