@@ -58,7 +58,7 @@ MISSION_QUERY_BASELINE sql=7 firstRunMs=165.00 avgMs=28.40 minMs=18.32 maxMs=41.
 테스트 결과 파일에서 측정 로그만 다시 확인하려면:
 
 ```bash
-rg "MISSION_QUERY_BASELINE" build/test-results build/reports
+grep -RIn "MISSION_QUERY_BASELINE" build/test-results build/reports
 ```
 
 ## 4. 부하테스트 시나리오
@@ -131,6 +131,17 @@ k6 run \
 
 아래 명령어에서 `ACCESS_TOKEN`만 바꿔서 사용하면 됩니다.
 
+### 반복 실행 방식
+
+같은 시나리오를 여러 번 측정할 때는 쉘 루프로 한 번에 실행하는 방식을 권장합니다.
+
+- 워밍업:
+  - 1회 실행
+- 실제 측정:
+  - `for i in 1 2 3` 형태로 3회 실행
+- 스파이크:
+  - 필요하면 2회만 실행
+
 #### 0. 워밍업 1회
 
 ```bash
@@ -143,58 +154,62 @@ k6 run \
 #### 1. 단일 사용자 반복 조회 3회
 
 ```bash
-k6 run \
-  -e BASE_URL=https://dev-api.zero-st.com \
-  -e ACCESS_TOKEN='여기에_액세스_토큰' \
-  -e SMALL_VUS=0 \
-  -e MEDIUM_VUS=0 \
-  -e SPIKE_VUS=0 \
-  scripts/loadtest/mission-list.k6.js
+for i in 1 2 3; do
+  echo "== single-user run $i =="
+  k6 run \
+    -e BASE_URL=https://dev-api.zero-st.com \
+    -e ACCESS_TOKEN='여기에_액세스_토큰' \
+    -e SMALL_VUS=0 \
+    -e MEDIUM_VUS=0 \
+    -e SPIKE_VUS=0 \
+    scripts/loadtest/mission-list.k6.js
+done
 ```
-
-위 명령어를 3회 반복 실행합니다.
 
 #### 2. 10 VU 소규모 동시 요청 3회
 
 ```bash
-k6 run \
-  -e BASE_URL=https://dev-api.zero-st.com \
-  -e ACCESS_TOKEN='여기에_액세스_토큰' \
-  -e SMOKE_VUS=0 \
-  -e MEDIUM_VUS=0 \
-  -e SPIKE_VUS=0 \
-  scripts/loadtest/mission-list.k6.js
+for i in 1 2 3; do
+  echo "== 10-vu run $i =="
+  k6 run \
+    -e BASE_URL=https://dev-api.zero-st.com \
+    -e ACCESS_TOKEN='여기에_액세스_토큰' \
+    -e SMOKE_VUS=0 \
+    -e MEDIUM_VUS=0 \
+    -e SPIKE_VUS=0 \
+    scripts/loadtest/mission-list.k6.js
+done
 ```
-
-위 명령어를 3회 반복 실행합니다.
 
 #### 3. 30 VU 중간 부하 3회
 
 ```bash
-k6 run \
-  -e BASE_URL=https://dev-api.zero-st.com \
-  -e ACCESS_TOKEN='여기에_액세스_토큰' \
-  -e SMOKE_VUS=0 \
-  -e SMALL_VUS=0 \
-  -e SPIKE_VUS=0 \
-  scripts/loadtest/mission-list.k6.js
+for i in 1 2 3; do
+  echo "== 30-vu run $i =="
+  k6 run \
+    -e BASE_URL=https://dev-api.zero-st.com \
+    -e ACCESS_TOKEN='여기에_액세스_토큰' \
+    -e SMOKE_VUS=0 \
+    -e SMALL_VUS=0 \
+    -e SPIKE_VUS=0 \
+    scripts/loadtest/mission-list.k6.js
+done
 ```
-
-위 명령어를 3회 반복 실행합니다.
 
 #### 4. 50 VU 스파이크 2회
 
 ```bash
-k6 run \
-  -e BASE_URL=https://dev-api.zero-st.com \
-  -e ACCESS_TOKEN='여기에_액세스_토큰' \
-  -e SMOKE_VUS=0 \
-  -e SMALL_VUS=0 \
-  -e MEDIUM_VUS=0 \
-  scripts/loadtest/mission-list.k6.js
+for i in 1 2; do
+  echo "== 50-vu spike run $i =="
+  k6 run \
+    -e BASE_URL=https://dev-api.zero-st.com \
+    -e ACCESS_TOKEN='여기에_액세스_토큰' \
+    -e SMOKE_VUS=0 \
+    -e SMALL_VUS=0 \
+    -e MEDIUM_VUS=0 \
+    scripts/loadtest/mission-list.k6.js
+done
 ```
-
-위 명령어를 2회 반복 실행합니다.
 
 ### 시나리오 수치 조정 예시
 
