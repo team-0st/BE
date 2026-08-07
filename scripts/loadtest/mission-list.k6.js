@@ -8,8 +8,19 @@ if (!accessToken) {
   throw new Error("ACCESS_TOKEN environment variable is required.");
 }
 
+function parseVuValue(envName, defaultValue) {
+  const rawValue = __ENV[envName];
+  const parsedValue = rawValue === undefined || rawValue === "" ? defaultValue : Number(rawValue);
+
+  if (!Number.isFinite(parsedValue) || !Number.isInteger(parsedValue) || parsedValue < 0) {
+    throw new Error(`${envName} must be a non-negative integer.`);
+  }
+
+  return parsedValue;
+}
+
 function constantVuScenario(vusEnvName, defaultVus, durationEnvName, defaultDuration, startTimeEnvName, defaultStartTime, tag) {
-  const vus = Number(__ENV[vusEnvName] || defaultVus);
+  const vus = parseVuValue(vusEnvName, defaultVus);
   if (vus <= 0) {
     return null;
   }
@@ -74,6 +85,7 @@ export const options = {
   thresholds: {
     http_req_failed: ["rate<0.01"],
     http_req_duration: ["p(95)<1000"],
+    checks: ["rate==1"],
   },
 };
 

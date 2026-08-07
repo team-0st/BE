@@ -118,7 +118,7 @@ class MissionQueryServiceMeasurementTest(
                 "avgMs=${"%.2f".format(avgElapsedMs)} minMs=${"%.2f".format(minElapsedMs)} maxMs=${"%.2f".format(maxElapsedMs)}",
         )
 
-        assertTrue(statementCount > 0)
+        assertTrue(statementCount <= 4)
         assertTrue(avgElapsedMs >= 0.0)
     }
 

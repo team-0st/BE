@@ -6,7 +6,7 @@
 
 - 기능 회귀 없이 미션 목록 조회 성능을 비교한다.
 - 개선 전후 SQL 수 차이를 확인한다.
-- 단건 호출 시간과 간단 부하 상황에서의 응답 시간 차이를 확인한다.
+- 단건 호출 시간과 부하 구간별 응답 시간 분포를 확인한다.
 
 ## 2. 측정 항목
 
@@ -97,6 +97,22 @@ grep -RIn "MISSION_QUERY_BASELINE" build/test-results build/reports
   - `50 VU`
   - `30초`
 
+### 시나리오 E. 100 VU 스파이크
+
+- 목적:
+  - 구조 변경이 짧은 고부하 구간에서 어떻게 보이는지 확인
+- 설정:
+  - `100 VU`
+  - `30초`
+
+### 시나리오 F. 200 VU 스파이크
+
+- 목적:
+  - dev 환경에서 더 높은 순간 부하를 관찰
+- 설정:
+  - `200 VU`
+  - `30초`
+
 ## 5. k6 실행 예시
 
 ### dev 환경 예시
@@ -118,14 +134,6 @@ k6 run \
   - `avg`, `p95`, `http_req_failed`를 각각 기록
 - 결과 정리:
   - 3회 결과의 평균값 또는 중간값 사용
-
-포트폴리오 용도로는 아래 3개 시나리오만 우선 비교해도 충분합니다.
-
-- `1 VU`
-- `10 VU`
-- `30 VU`
-
-`50 VU`는 스파이크 참고 자료로 선택적으로 사용하면 됩니다.
 
 ### 시나리오별 복붙용 실행 명령어
 
@@ -211,6 +219,38 @@ for i in 1 2; do
 done
 ```
 
+#### 5. 100 VU 스파이크 3회
+
+```bash
+for i in 1 2 3; do
+  echo "== 100-vu spike run $i =="
+  k6 run \
+    -e BASE_URL=https://dev-api.zero-st.com \
+    -e ACCESS_TOKEN='여기에_액세스_토큰' \
+    -e SMOKE_VUS=0 \
+    -e SMALL_VUS=0 \
+    -e MEDIUM_VUS=0 \
+    -e SPIKE_VUS=100 \
+    scripts/loadtest/mission-list.k6.js
+done
+```
+
+#### 6. 200 VU 스파이크 2회
+
+```bash
+for i in 1 2; do
+  echo "== 200-vu spike run $i =="
+  k6 run \
+    -e BASE_URL=https://dev-api.zero-st.com \
+    -e ACCESS_TOKEN='여기에_액세스_토큰' \
+    -e SMOKE_VUS=0 \
+    -e SMALL_VUS=0 \
+    -e MEDIUM_VUS=0 \
+    -e SPIKE_VUS=200 \
+    scripts/loadtest/mission-list.k6.js
+done
+```
+
 ### 시나리오 수치 조정 예시
 
 ```bash
@@ -245,6 +285,6 @@ k6 run \
   - 단건 평균 시간이 어느 정도였는지
 - 개선 후:
   - SQL 수가 얼마나 줄었는지
-  - avg / p95가 얼마나 개선됐는지
+  - avg / p95가 어떤 구간에서 변했는지
 - 해석:
-  - 미션별 today completion 조회가 반복되던 구조를 배치 조회로 바꾸면서 조회 수를 줄였고, 동시 요청 상황에서 응답 시간 분포도 함께 안정화됐다
+  - 미션별 today completion 조회가 반복되던 구조를 배치 조회로 바꾸면서 조회 수를 줄였고, 응답 시간 결과는 부하 구간에 따라 혼합된 양상으로 나타났다
