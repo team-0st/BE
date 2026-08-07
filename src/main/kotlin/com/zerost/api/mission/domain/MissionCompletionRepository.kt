@@ -25,6 +25,13 @@ interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
         end: LocalDateTime,
     ): MissionCompletion?
 
+    fun findAllByUserIdAndMissionIdInAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderByMissionIdAscSubmittedAtDesc(
+        userId: Long,
+        missionIds: Collection<Long>,
+        start: LocalDateTime,
+        end: LocalDateTime,
+    ): List<MissionCompletion>
+
     fun countByUserIdAndStatus(userId: Long, status: MissionCompletionStatus): Long
 
     @EntityGraph(attributePaths = ["user", "mission"])

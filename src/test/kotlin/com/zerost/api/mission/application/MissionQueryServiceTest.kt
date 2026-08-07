@@ -57,21 +57,13 @@ class MissionQueryServiceTest {
             ),
         )
         `when`(
-            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+            missionCompletionRepository.findAllByUserIdAndMissionIdInAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderByMissionIdAscSubmittedAtDesc(
                 1L,
-                1L,
+                listOf(1L, 2L, 3L, 4L),
                 start,
                 end,
             ),
-        ).thenReturn(completion)
-        `when`(
-            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
-                1L,
-                2L,
-                start,
-                end,
-            ),
-        ).thenReturn(null)
+        ).thenReturn(listOf(completion))
 
         val response = missionQueryService.getMissions(1L)
 
