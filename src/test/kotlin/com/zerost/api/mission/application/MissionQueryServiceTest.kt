@@ -89,7 +89,7 @@ class MissionQueryServiceTest {
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
-            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
                 1L,
                 1L,
                 start,

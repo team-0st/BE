@@ -61,7 +61,7 @@ class MissionQueryService(
 
         val todayRange = getTodayRange()
         val todayCompletion = missionCompletionRepository
-            .findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+            .findTopByUserIdAndMissionIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
                 userId = requireNotNull(user.id),
                 missionId = missionId,
                 start = todayRange.first,

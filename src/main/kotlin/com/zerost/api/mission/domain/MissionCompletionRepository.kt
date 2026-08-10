@@ -25,6 +25,13 @@ interface MissionCompletionRepository : JpaRepository<MissionCompletion, Long> {
         end: LocalDateTime,
     ): MissionCompletion?
 
+    fun findTopByUserIdAndMissionIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
+        userId: Long,
+        missionId: Long,
+        start: LocalDateTime,
+        end: LocalDateTime,
+    ): MissionCompletion?
+
     fun findAllByUserIdAndMissionIdInAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderByMissionIdAscSubmittedAtDesc(
         userId: Long,
         missionIds: Collection<Long>,
