@@ -57,21 +57,13 @@ class MissionQueryServiceTest {
             ),
         )
         `when`(
-            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+            missionCompletionRepository.findAllByUserIdAndMissionIdInAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderByMissionIdAscSubmittedAtDesc(
                 1L,
-                1L,
+                listOf(1L, 2L, 3L, 4L),
                 start,
                 end,
             ),
-        ).thenReturn(completion)
-        `when`(
-            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
-                1L,
-                2L,
-                start,
-                end,
-            ),
-        ).thenReturn(null)
+        ).thenReturn(listOf(completion))
 
         val response = missionQueryService.getMissions(1L)
 
@@ -97,7 +89,7 @@ class MissionQueryServiceTest {
         `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
         `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
         `when`(
-            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
                 1L,
                 1L,
                 start,
@@ -112,6 +104,47 @@ class MissionQueryServiceTest {
         assertEquals(false, response.rewardClaimable)
         assertEquals(false, response.rewardClaimed)
         assertEquals(null, response.rewardClaimedAt)
+    }
+
+    @Test
+    fun `자정 경계 제출 이력은 목록과 상세 모두 오늘 상태로 포함하지 않는다`() {
+        val user = createUser()
+        val mission = createMission(id = 1L, title = "텀블러 사용하기")
+        val specialMission = createMission(id = 2L, title = "플로깅 인증")
+        val (start, end) = todayRange()
+
+        `when`(userRepository.findById(1L)).thenReturn(Optional.of(user))
+        `when`(dailyMissionSelectionService.getTodaySelections()).thenReturn(
+            DailyMissionSelections(
+                generalMissions = listOf(mission),
+                specialMission = specialMission,
+            ),
+        )
+        `when`(
+            missionCompletionRepository.findAllByUserIdAndMissionIdInAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderByMissionIdAscSubmittedAtDesc(
+                1L,
+                listOf(1L, 2L),
+                start,
+                end,
+            ),
+        ).thenReturn(emptyList())
+        `when`(missionRepository.findById(1L)).thenReturn(Optional.of(mission))
+        `when`(
+            missionCompletionRepository.findTopByUserIdAndMissionIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
+                1L,
+                1L,
+                start,
+                end,
+            ),
+        ).thenReturn(null)
+
+        val listResponse = missionQueryService.getMissions(1L)
+        val detailResponse = missionQueryService.getMission(1L, 1L)
+
+        assertNull(listResponse.generalMissions[0].todayStatus)
+        assertNull(detailResponse.todayStatus)
+        assertEquals(false, listResponse.generalMissions[0].rewardClaimable)
+        assertEquals(false, detailResponse.rewardClaimable)
     }
 
     @Test

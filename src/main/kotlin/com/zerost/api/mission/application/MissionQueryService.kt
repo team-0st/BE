@@ -36,12 +36,18 @@ class MissionQueryService(
 
         val todayRange = getTodayRange()
         val selections = dailyMissionSelectionService.getTodaySelections()
+        val missionIds = (selections.generalMissions + selections.specialMission).mapNotNull { it.id }
+        val todayCompletionsByMissionId = loadTodayCompletionsByMissionId(
+            userId = requireNotNull(user.id),
+            missionIds = missionIds,
+            todayRange = todayRange,
+        )
 
         return DailyMissionSectionsResponse(
             generalMissions = selections.generalMissions.map { mission ->
-                mission.toSummaryResponse(requireNotNull(user.id), todayRange)
+                mission.toSummaryResponse(todayCompletionsByMissionId)
             },
-            specialMission = selections.specialMission.toSummaryResponse(requireNotNull(user.id), todayRange),
+            specialMission = selections.specialMission.toSummaryResponse(todayCompletionsByMissionId),
         )
     }
 
@@ -55,7 +61,7 @@ class MissionQueryService(
 
         val todayRange = getTodayRange()
         val todayCompletion = missionCompletionRepository
-            .findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+            .findTopByUserIdAndMissionIdAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderBySubmittedAtDesc(
                 userId = requireNotNull(user.id),
                 missionId = missionId,
                 start = todayRange.first,
@@ -107,17 +113,30 @@ class MissionQueryService(
         return today.atStartOfDay() to today.plusDays(1).atStartOfDay()
     }
 
-    private fun Mission.toSummaryResponse(
+    private fun loadTodayCompletionsByMissionId(
         userId: Long,
+        missionIds: List<Long>,
         todayRange: Pair<LocalDateTime, LocalDateTime>,
-    ): MissionSummaryResponse {
-        val todayCompletion = missionCompletionRepository
-            .findTopByUserIdAndMissionIdAndSubmittedAtBetweenOrderBySubmittedAtDesc(
+    ): Map<Long, MissionCompletion> {
+        if (missionIds.isEmpty()) {
+            return emptyMap()
+        }
+
+        return missionCompletionRepository
+            .findAllByUserIdAndMissionIdInAndSubmittedAtGreaterThanEqualAndSubmittedAtLessThanOrderByMissionIdAscSubmittedAtDesc(
                 userId = userId,
-                missionId = requireNotNull(id),
+                missionIds = missionIds,
                 start = todayRange.first,
                 end = todayRange.second,
             )
+            .groupBy { requireNotNull(it.mission.id) }
+            .mapValues { (_, completions) -> completions.first() }
+    }
+
+    private fun Mission.toSummaryResponse(
+        todayCompletionsByMissionId: Map<Long, MissionCompletion>,
+    ): MissionSummaryResponse {
+        val todayCompletion = todayCompletionsByMissionId[requireNotNull(id)]
 
         return MissionSummaryResponse(
             id = requireNotNull(id),
